@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env/
+.DS_Store
+
+# MODFLOW run outputs are created only in temporary directories and should not
+# normally appear in the repository.
+*.hds
+*.bud
+*.cbc
+*.lst
