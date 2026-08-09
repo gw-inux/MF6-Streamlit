@@ -51,8 +51,13 @@ def main() -> None:
             assert any(name.endswith("_IN") for name in budget_names)
             assert any(name.endswith("_OUT") for name in budget_names)
 
-        tracks = run_modpath(pumping, effective_porosity=0.25)
-        assert tracks.backward.requested_particles == PARTICLES_PER_WELL * len(wells)
+        particle_counts = (40, 80, 120)
+        tracks = run_modpath(
+            pumping,
+            effective_porosity=0.25,
+            backward_particle_counts=particle_counts,
+        )
+        assert tracks.backward.requested_particles == sum(particle_counts)
         assert tracks.forward.requested_particles == NLAY * nrow * 2
         assert tracks.backward.pathline_count > 0
         assert tracks.forward.pathline_count > 0
@@ -60,7 +65,8 @@ def main() -> None:
         print(f"Dynamic grid: {NLAY} x {nrow} x {ncol}")
         print(f"Wells: {len(wells)}")
         print(f"Pumping rates: {pump_params.pumping_rates} m3/day")
-        print(f"Backward particles: {tracks.backward.requested_particles}")
+        print(f"Backward particles by well: {particle_counts}")
+        print(f"Backward particles total: {tracks.backward.requested_particles}")
         print(f"Forward particles: {tracks.forward.requested_particles}")
         print("Smoke test PASSED")
     finally:

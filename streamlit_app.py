@@ -216,6 +216,8 @@ def plot_plan_view(
     dh: float,
     color_fill: bool,
     tracking: TrackingResult | None = None,
+    section_row: int | None = None,
+    section_col: int | None = None,
 ):
     """Plot head contours with optional color fill and one tracking direction."""
     x = (np.arange(params.ncol) + 0.5) * DELR
@@ -248,6 +250,29 @@ def plot_plan_view(
         s=9,
         alpha=0.30,
     )
+
+    # Mark the currently selected section traces subtly in plan view.
+    if section_row is not None:
+        section_y = (params.nrow - section_row - 0.5) * DELC
+        ax.axhline(
+            section_y, color="0.25", linewidth=0.65, linestyle="--",
+            alpha=0.40, zorder=4,
+        )
+        ax.text(
+            0.01 * params.ncol * DELR, section_y + 0.08 * DELC,
+            f"row {section_row + 1}", color="0.30", fontsize=7, alpha=0.70, zorder=4,
+        )
+    if section_col is not None:
+        section_x = (section_col + 0.5) * DELR
+        ax.axvline(
+            section_x, color="0.25", linewidth=0.65, linestyle=":",
+            alpha=0.40, zorder=4,
+        )
+        ax.text(
+            section_x + 0.08 * DELR, 0.985 * params.nrow * DELC,
+            f"column {section_col + 1}", color="0.30", fontsize=7,
+            alpha=0.70, rotation=90, va="top", zorder=4,
+        )
 
     if tracking is not None:
         _plot_layer_track_segments(ax, tracking, layer)
@@ -384,6 +409,35 @@ def _plot_section_background(
     ax.grid(alpha=0.12)
 
 
+def _plot_potentiometric_head_profiles(
+    ax,
+    horizontal_centres: np.ndarray,
+    section_top_to_bottom: np.ndarray,
+) -> None:
+    """Overlay hydraulic-head profiles for all layers on a vertical section.
+
+    The test model is confined, so these curves are potentiometric-head
+    profiles rather than a true phreatic water table.  Plotting head as an
+    elevation makes the pumping drawdown immediately visible, including head
+    values above the physical model top.
+    """
+    linestyles = ("-", "--", "-.")
+    for layer in range(NLAY):
+        ax.plot(
+            horizontal_centres,
+            section_top_to_bottom[layer],
+            linewidth=1.35,
+            linestyle=linestyles[layer % len(linestyles)],
+            zorder=5,
+            label=f"Head profile L{layer + 1}",
+        )
+
+    finite = np.asarray(section_top_to_bottom, dtype=float)
+    finite = finite[np.isfinite(finite)]
+    head_max = float(np.max(finite)) if finite.size else TOP
+    ax.set_ylim(float(BOTM[-1]), max(TOP, head_max) + 0.6)
+
+
 def plot_row_cross_section(
     head: np.ndarray,
     params: ModelParameters,
@@ -410,6 +464,7 @@ def plot_row_cross_section(
         show_contours,
         "x (m)",
     )
+    _plot_potentiometric_head_profiles(ax, x_centres, section)
 
     for idx, (well_row, well_col) in enumerate(params.well_positions, start=1):
         if well_row == row:
@@ -459,6 +514,7 @@ def plot_column_cross_section(
         show_contours,
         "y (m)",
     )
+    _plot_potentiometric_head_profiles(ax, y_centres, section)
 
     for idx, (well_row, well_col) in enumerate(params.well_positions, start=1):
         if well_col == col:
@@ -493,12 +549,13 @@ def show_cumulative_budget(items: list[tuple[str, float]]) -> None:
     """Show the final cumulative MODFLOW budget as signed component bars."""
     st.markdown("#### Cumulative mass balance")
     st.caption(
-        "The final cumulative MODFLOW 6 listing-file budget is shown below. "
-        "Inflow components are positive and outflow components negative. "
-        "For this steady-state demonstration the stress period is one day."
+        "The final cumulative external MODFLOW 6 budget is shown below. "
+        "The listing-file cumulative table is used first, with the binary cell-budget "
+        "file as a fallback for CHD/WEL components. Inflow is positive and outflow "
+        "negative. The stress period is one day."
     )
     if not items:
-        st.warning("No cumulative budget table could be parsed from the MODFLOW listing file.")
+        st.warning("No cumulative external budget could be read from the MODFLOW outputs.")
         return
 
     def normalise(name: str) -> str:
@@ -566,7 +623,9 @@ def show_cumulative_budget(items: list[tuple[str, float]]) -> None:
         with matplotlib_render_lock():
             _show_matplotlib(fig)
     else:
-        st.warning("The budget table was parsed, but no inflow/outflow components were found.")
+        st.warning("The budget was read, but no inflow/outflow components were identified for plotting.")
+        with st.expander("Budget diagnostic", expanded=False):
+            st.code("\n".join(f"{name}: {value}" for name, value in items), language="text")
 
     error_text = "not available" if balance_error is None else f"{float(balance_error):,.6g} m³"
     discrepancy_text = "not available" if discrepancy is None else f"{float(discrepancy):,.6g} %"
@@ -661,13 +720,15 @@ with st.expander("General model parameters", expanded=True):
 with st.expander("Pumping-well parameters", expanded=True):
     number_wells = st.slider("Number of pumping wells", min_value=1, max_value=3, value=1, step=1)
     st.caption(
-        "Each well has an independent row, column and pumping rate. Positive pumping "
-        "rates are entered as extraction magnitudes."
+        "Each well has an independent row, column, pumping rate, and backward-particle "
+        "count. Pumping rates are positive extraction magnitudes; particle counts affect "
+        "MODPATH only."
     )
 
     defaults = default_well_positions(nrow, ncol, number_wells)
     well_positions: list[tuple[int, int]] = []
     pumping_rates: list[float] = []
+    backward_particle_counts: list[int] = []
     well_cols = st.columns(number_wells)
     for i in range(number_wells):
         default_row, default_col = defaults[i]
@@ -699,8 +760,22 @@ with st.expander("Pumping-well parameters", expanded=True):
                 key=f"well_rate_{i}",
                 help="MODFLOW receives the corresponding negative WEL flux.",
             )
+            particle_count = st.number_input(
+                "Backward particles",
+                min_value=10,
+                max_value=500,
+                value=PARTICLES_PER_WELL,
+                step=10,
+                key=f"well_particles_{i}",
+                help=(
+                    "Number of particles released throughout this pumping cell "
+                    "for backward MODPATH tracking. Changing this value does not "
+                    "require rerunning MODFLOW."
+                ),
+            )
             well_positions.append((int(row_1based) - 1, int(col_1based) - 1))
             pumping_rates.append(float(rate))
+            backward_particle_counts.append(int(particle_count))
 
 params = ModelParameters(
     head_left=float(head_left),
@@ -722,10 +797,14 @@ if has_duplicate_wells:
 with matplotlib_render_lock():
     _show_matplotlib(plot_model_grid(params))
 
+backward_total = int(sum(backward_particle_counts))
+backward_detail = ", ".join(
+    f"W{i + 1}: {count}" for i, count in enumerate(backward_particle_counts)
+)
 st.caption(
-    f"Backward tracking uses {params.backward_particle_count} particles "
-    f"({PARTICLES_PER_WELL} per well). Forward tracking uses "
-    f"{params.forward_particle_count} particles (one per CHD cell)."
+    f"Backward tracking will use {backward_total} particles ({backward_detail}). "
+    f"Forward tracking will use {params.forward_particle_count} particles "
+    "(one per CHD cell)."
 )
 
 current_flow_signature = params.signature()
@@ -765,11 +844,18 @@ if "flow_result" in st.session_state:
             format="%.2f",
             help="Controls particle velocity/travel time but not the steady-flow head solution.",
         )
-    current_modpath_signature = (st.session_state.flow_signature, float(effective_porosity))
+    current_modpath_signature = (
+        st.session_state.flow_signature,
+        float(effective_porosity),
+        tuple(backward_particle_counts),
+    )
     if "modpath_signature" in st.session_state and st.session_state.modpath_signature != current_modpath_signature:
         st.session_state.pop("modpath_result", None)
         st.session_state.pop("modpath_signature", None)
-        st.info("Effective porosity changed. MODFLOW remains valid; rerun MODPATH only.")
+        st.info(
+            "Effective porosity or backward-particle counts changed. "
+            "MODFLOW remains valid; rerun MODPATH only."
+        )
     with mp2:
         st.write("")
         st.write("")
@@ -781,6 +867,7 @@ if "flow_result" in st.session_state:
                     mp_result = run_modpath(
                         st.session_state.flow_result,
                         effective_porosity=float(effective_porosity),
+                        backward_particle_counts=tuple(backward_particle_counts),
                     )
             st.session_state.modpath_result = mp_result
             st.session_state.modpath_signature = current_modpath_signature
@@ -853,6 +940,16 @@ if "flow_result" in st.session_state:
         elif particle_display == "Backward":
             selected_tracking = mp_result.backward
 
+    # Resolve cross-section locations before the plan plot is rendered.  The
+    # actual widgets remain in the cross-section expander below; Streamlit
+    # session state lets the selected traces be shown in plan view immediately.
+    section_row_key = f"section_row_{result_params.nrow}_{result_params.ncol}"
+    section_col_key = f"section_col_{result_params.nrow}_{result_params.ncol}"
+    default_section_row = result_params.well_positions[0][0] + 1
+    default_section_col = result_params.well_positions[0][1] + 1
+    section_row_for_plot = int(st.session_state.get(section_row_key, default_section_row)) - 1
+    section_col_for_plot = int(st.session_state.get(section_col_key, default_section_col)) - 1
+
     # Plan view first, full-width in the centered page.
     with matplotlib_render_lock():
         _show_matplotlib(
@@ -863,6 +960,8 @@ if "flow_result" in st.session_state:
                 float(contour_interval),
                 bool(color_fill),
                 selected_tracking,
+                section_row=section_row_for_plot,
+                section_col=section_col_for_plot,
             )
         )
 
@@ -883,18 +982,18 @@ if "flow_result" in st.session_state:
                 "Cross-section row",
                 min_value=1,
                 max_value=result_params.nrow,
-                value=result_params.well_positions[0][0] + 1,
+                value=default_section_row,
                 step=1,
-                key=f"section_row_{result_params.nrow}_{result_params.ncol}",
+                key=section_row_key,
             )
         with c2:
             section_col = st.number_input(
                 "Cross-section column",
                 min_value=1,
                 max_value=result_params.ncol,
-                value=result_params.well_positions[0][1] + 1,
+                value=default_section_col,
                 step=1,
-                key=f"section_col_{result_params.nrow}_{result_params.ncol}",
+                key=section_col_key,
             )
 
         c3, c4 = st.columns(2)
@@ -908,9 +1007,11 @@ if "flow_result" in st.session_state:
             )
 
         st.caption(
-            "The vertical scale is exaggerated so the three 10-m-thick layers are "
-            "visible. When pathlines are selected above, the cross sections show only "
-            "pathline portions that intersect the selected row or column cell."
+            "The vertical scale is exaggerated so the three 10-m-thick layers are visible. "
+            "The three line profiles show potentiometric head in layers 1–3; because this "
+            "test model is confined they are not a true phreatic water table. When pathlines "
+            "are selected above, only portions intersecting the selected row or column cell "
+            "are shown."
         )
 
         with matplotlib_render_lock():

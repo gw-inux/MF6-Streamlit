@@ -8,9 +8,9 @@ This version keeps the proven split workflow:
 
 The grid size and one to three pumping-well locations are configurable. All
 wells are screened in layer 3, and each well has its own pumping rate (entered
-as a positive extraction magnitude). Backward tracking releases 60 particles
-per well; forward tracking releases one particle in every constant-head cell
-on both lateral boundaries.
+as a positive extraction magnitude). Backward tracking uses a user-defined number of particles for each well;
+forward tracking releases one particle in every constant-head cell on both lateral
+boundaries.
 """
 
 from __future__ import annotations
@@ -49,8 +49,8 @@ WELL_COL = DEFAULT_NCOL // 2
 MF6_TIMEOUT_SECONDS = 20
 MP7_TIMEOUT_SECONDS = 20
 
-PARTICLES_PER_WELL = 60
-BACKWARD_PARTICLE_COUNT = PARTICLES_PER_WELL  # default one-well case
+PARTICLES_PER_WELL = 100  # default backward-particle count per well
+BACKWARD_PARTICLE_COUNT = PARTICLES_PER_WELL  # backward-compatible one-well default
 FORWARD_PARTICLE_COUNT = NLAY * DEFAULT_NROW * 2
 
 WORKSPACE_PREFIX = "mf6_streamlit_"
@@ -347,40 +347,127 @@ def _validate_modflow_outputs(workspace: Path, params: ModelParameters) -> np.nd
     return head
 
 
-def _read_cumulative_budget(workspace: Path) -> list[tuple[str, float]]:
-    """Read the final cumulative budget table from the MODFLOW 6 list file.
+def _normalise_budget_name(name: object) -> str:
+    """Return a clean MODFLOW budget field name."""
+    if isinstance(name, (bytes, np.bytes_)):
+        text = name.decode("ascii", errors="replace")
+    else:
+        text = str(name)
+    return text.replace("\x00", "").strip()
 
-    Failure to parse the optional diagnostic does not invalidate an otherwise
-    successful numerical run; an empty list is returned instead.
+
+def _read_binary_external_budget(workspace: Path) -> list[tuple[str, float]]:
+    """Fallback external budget from the binary cell-budget file.
+
+    The model contains only CHD and WEL external stresses.  For the single
+    one-day steady stress period, the final rates multiplied by the elapsed
+    simulation time are also the cumulative volumes.  This fallback avoids
+    relying on listing-file formatting while retaining the same IN/OUT terms.
     """
-
-    list_file = workspace / f"{MODEL_NAME}.lst"
-    if not list_file.is_file():
+    budget_file = workspace / f"{MODEL_NAME}.cbc"
+    if not budget_file.is_file():
         return []
+
     try:
-        budget = flopy.utils.Mf6ListBudget(str(list_file), timeunit="days")
-        if not budget.isvalid():
-            return []
-        data = budget.get_data(incremental=False)
-        if data is None:
+        cbc = flopy.utils.CellBudgetFile(str(budget_file), precision="auto")
+        names = [str(n).strip().upper() for n in cbc.get_unique_record_names(decode=True)]
+        times = cbc.get_times()
+        elapsed_days = float(times[-1]) if times else 1.0
+        elapsed_days = max(elapsed_days, 0.0)
+
+        items: list[tuple[str, float]] = []
+        total_in = 0.0
+        total_out = 0.0
+
+        for package in ("CHD", "WEL"):
+            matching = next((n for n in names if n == package), None)
+            if matching is None:
+                continue
+            records = cbc.get_data(text=matching)
+            if not records:
+                continue
+            raw_record = records[-1]
+            if getattr(getattr(raw_record, "dtype", None), "names", None) and "q" in raw_record.dtype.names:
+                values = np.asarray(raw_record["q"], dtype=float).ravel()
+            else:
+                record = np.ma.asarray(raw_record, dtype=float)
+                values = record.compressed() if np.ma.isMaskedArray(record) else np.asarray(record).ravel()
+            values = values[np.isfinite(values)]
+            if values.size == 0:
+                continue
+
+            rate_in = float(values[values > 0.0].sum())
+            rate_out = float(-values[values < 0.0].sum())
+            volume_in = rate_in * elapsed_days
+            volume_out = rate_out * elapsed_days
+
+            if volume_in > 0.0:
+                items.append((f"{package}_IN", volume_in))
+                total_in += volume_in
+            if volume_out > 0.0:
+                items.append((f"{package}_OUT", volume_out))
+                total_out += volume_out
+
+        if not items:
             return []
 
-        # ``ListBudget.get_data`` stores names as a fixed-width byte field.
-        # Calling ``str`` on that value produces strings such as
-        # ``b'CHD_IN'``, which breaks suffix-based IN/OUT detection in the UI.
-        # Decode bytes here so every downstream consumer receives clean labels.
-        items: list[tuple[str, float]] = []
-        for row in data:
-            raw_name = row["name"]
-            if isinstance(raw_name, (bytes, np.bytes_)):
-                name = raw_name.decode("ascii", errors="replace")
-            else:
-                name = str(raw_name)
-            name = name.replace("\x00", "").strip()
-            items.append((name, float(row["value"])))
+        error = total_in - total_out
+        denominator = 0.5 * (total_in + total_out)
+        discrepancy = 100.0 * error / denominator if denominator > 0.0 else 0.0
+        items.extend(
+            [
+                ("TOTAL_IN", total_in),
+                ("TOTAL_OUT", total_out),
+                ("IN-OUT", error),
+                ("PERCENT_DISCREPANCY", discrepancy),
+            ]
+        )
         return items
     except Exception:
         return []
+
+
+def _read_cumulative_budget(workspace: Path) -> list[tuple[str, float]]:
+    """Read the final cumulative water budget with a binary-file fallback.
+
+    ``Mf6ListBudget.get_cumulative`` exposes the cumulative table directly as
+    one record per time step with named fields (CHD_IN, WEL_OUT, TOTAL_IN,
+    etc.).  This is more robust here than reconstructing the table through
+    ``get_data``.  If a deployed FloPy/MF6 combination still yields no external
+    IN/OUT component fields, the binary cell-budget file is used as a fallback.
+    """
+    list_file = workspace / f"{MODEL_NAME}.lst"
+    items: list[tuple[str, float]] = []
+
+    if list_file.is_file():
+        try:
+            budget = flopy.utils.Mf6ListBudget(str(list_file), timeunit="days")
+            cumulative = budget.get_cumulative() if budget.isvalid() else None
+            if cumulative is not None and len(cumulative):
+                last = cumulative[-1]
+                metadata = {"totim", "time_step", "stress_period"}
+                for field in cumulative.dtype.names or ():
+                    if field in metadata:
+                        continue
+                    value = float(last[field])
+                    if np.isfinite(value):
+                        items.append((_normalise_budget_name(field), value))
+        except Exception:
+            items = []
+
+    # Require at least one real external component.  TOTAL/PERCENT entries alone
+    # are not enough for the requested component bar plot.
+    component_names = [name.upper() for name, _ in items]
+    has_components = any(
+        name.endswith("_IN") or name.endswith("_OUT")
+        for name in component_names
+        if not name.startswith("TOTAL_")
+    )
+    if has_components:
+        return items
+
+    binary_items = _read_binary_external_budget(workspace)
+    return binary_items if binary_items else items
 
 
 def run_modflow(params: ModelParameters) -> FlowResult:
@@ -445,12 +532,33 @@ def _cell_xyz(params: ModelParameters, layer: int, row: int, col: int, localx: f
     return float(x), float(y), float(z)
 
 
-def _backward_particle_data(params: ModelParameters) -> tuple[flopy.modpath.ParticleData, np.ndarray, np.ndarray]:
-    # Use a denser 5 x 4 x 3 distribution in each pumping cell.
-    # This gives 60 backward particles per well while remaining lightweight.
-    local_x = (np.arange(5, dtype=float) + 0.5) / 5.0
-    local_y = (np.arange(4, dtype=float) + 0.5) / 4.0
-    local_z = (np.arange(3, dtype=float) + 0.5) / 3.0
+def _radical_inverse(index: int, base: int) -> float:
+    """Low-discrepancy coordinate in (0, 1) for deterministic particle seeding."""
+    value = 0.0
+    factor = 1.0 / float(base)
+    i = int(index)
+    while i > 0:
+        value += factor * (i % base)
+        i //= base
+        factor /= float(base)
+    return value
+
+
+def _backward_particle_data(
+    params: ModelParameters,
+    particle_counts: tuple[int, ...],
+) -> tuple[flopy.modpath.ParticleData, np.ndarray, np.ndarray]:
+    """Create exactly the requested number of backward particles per well.
+
+    A deterministic low-discrepancy distribution is used instead of requiring
+    the requested count to factor into a regular 3-D subdivision.  This permits
+    arbitrary practical counts while spreading release points throughout each
+    pumping cell rather than clustering them at the cell centre.
+    """
+    if len(particle_counts) != len(params.well_positions):
+        raise ValueError("Provide one backward-particle count for each pumping well.")
+    if any(int(count) < 1 for count in particle_counts):
+        raise ValueError("Each backward-particle count must be at least 1.")
 
     locs: list[tuple[int, int, int]] = []
     lx: list[float] = []
@@ -459,19 +567,28 @@ def _backward_particle_data(params: ModelParameters) -> tuple[flopy.modpath.Part
     xyz: list[tuple[float, float, float]] = []
     layers: list[int] = []
 
-    for row, col in params.well_positions:
-        for zloc in local_z:
-            for yloc in local_y:
-                for xloc in local_x:
-                    locs.append((WELL_LAYER, row, col))
-                    lx.append(float(xloc)); ly.append(float(yloc)); lz.append(float(zloc))
-                    xyz.append(_cell_xyz(params, WELL_LAYER, row, col, float(xloc), float(yloc), float(zloc)))
-                    layers.append(WELL_LAYER)
+    eps = 1.0e-4
+    for (row, col), count in zip(params.well_positions, particle_counts):
+        count = int(count)
+        for ip in range(count):
+            # Hammersley-like coordinates: one stratified coordinate and two
+            # radical-inverse coordinates.  Clip only to avoid cell faces.
+            xloc = (ip + 0.5) / count
+            yloc = _radical_inverse(ip + 1, 2)
+            zloc = _radical_inverse(ip + 1, 3)
+            xloc = float(np.clip(xloc, eps, 1.0 - eps))
+            yloc = float(np.clip(yloc, eps, 1.0 - eps))
+            zloc = float(np.clip(zloc, eps, 1.0 - eps))
 
-    if len(locs) != params.backward_particle_count:
+            locs.append((WELL_LAYER, row, col))
+            lx.append(xloc); ly.append(yloc); lz.append(zloc)
+            xyz.append(_cell_xyz(params, WELL_LAYER, row, col, xloc, yloc, zloc))
+            layers.append(WELL_LAYER)
+
+    expected = int(sum(int(c) for c in particle_counts))
+    if len(locs) != expected:
         raise RuntimeError(
-            f"Backward particle construction produced {len(locs)} particles; "
-            f"expected {params.backward_particle_count}."
+            f"Backward particle construction produced {len(locs)} particles; expected {expected}."
         )
 
     pdata = flopy.modpath.ParticleData(
@@ -607,7 +724,11 @@ def _run_one_modpath(*, gwf, workspace: Path, executable: Path, direction: str,
     )
 
 
-def run_modpath(flow_result: FlowResult, effective_porosity: float = 0.25) -> ModpathResult:
+def run_modpath(
+    flow_result: FlowResult,
+    effective_porosity: float = 0.25,
+    backward_particle_counts: tuple[int, ...] | None = None,
+) -> ModpathResult:
     if not (0.0 < effective_porosity <= 1.0):
         raise ValueError("Effective porosity must be greater than 0 and no more than 1.")
 
@@ -621,7 +742,15 @@ def run_modpath(flow_result: FlowResult, effective_porosity: float = 0.25) -> Mo
     mp7_executable = locate_mp7()
     _sim, gwf = _load_existing_gwf(workspace, mf6_executable)
 
-    backward_data, backward_xyz, backward_layers = _backward_particle_data(params)
+    if backward_particle_counts is None:
+        backward_particle_counts = tuple(PARTICLES_PER_WELL for _ in params.well_positions)
+    backward_particle_counts = tuple(int(c) for c in backward_particle_counts)
+    if len(backward_particle_counts) != len(params.well_positions):
+        raise ValueError("Provide one backward-particle count for each pumping well.")
+
+    backward_data, backward_xyz, backward_layers = _backward_particle_data(
+        params, backward_particle_counts
+    )
     forward_data, forward_xyz, forward_layers = _forward_particle_data(params)
 
     total_started = time.perf_counter()
