@@ -222,13 +222,25 @@ def plot_plan_view(
     """Plot head contours with optional color fill and one tracking direction."""
     x = (np.arange(params.ncol) + 0.5) * DELR
     y = (np.arange(params.nrow) + 0.5) * DELC
-    xx, yy = np.meshgrid(x, y)
+    
+    # Extend coordinates to the actual model boundaries
+    x_fill = np.concatenate(([0.0], x, [ncol * DELR]))
+    y_fill = np.concatenate(([0.0], y, [nrow * DELC]))
+
+    # Extend the outermost head values to the model boundaries
+    head_fill = np.pad(
+        head_layer,
+        pad_width=1,
+        mode="edge",
+    )
+    
+    xx, yy = np.meshgrid(x_fill, y_fill)
     zz = np.flipud(head[layer])
     levels = _contour_levels(zz, dh)
 
     fig, ax = plt.subplots(figsize=(7.2, 5.2))
     if color_fill:
-        filled = ax.contourf(xx, yy, zz, levels=levels, extend="both")
+        filled = ax.contourf(xx, yy, zz, head_fill, levels=levels, extend="both")
         fig.colorbar(filled, ax=ax, label="Hydraulic head (m)")
 
     contours = ax.contour(xx, yy, zz, levels=levels, linewidths=0.75)
