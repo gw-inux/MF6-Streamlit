@@ -220,31 +220,82 @@ def plot_plan_view(
     section_col: int | None = None,
 ):
     """Plot head contours with optional color fill and one tracking direction."""
+
+    # ------------------------------------------------------------------
+    # Cell-center coordinates
+    # ------------------------------------------------------------------
     x = (np.arange(params.ncol) + 0.5) * DELR
     y = (np.arange(params.nrow) + 0.5) * DELC
-    
-    # Extend coordinates to the actual model boundaries
-    x_fill = np.concatenate(([0.0], x, [ncol * DELR]))
-    y_fill = np.concatenate(([0.0], y, [nrow * DELC]))
 
-    # Extend the outermost head values to the model boundaries
+    xx, yy = np.meshgrid(x, y)
+
+    # Flip the MODFLOW row orientation for plotting
+    zz = np.flipud(head[layer])
+
+    # Contour levels
+    levels = _contour_levels(zz, dh)
+
+    # ------------------------------------------------------------------
+    # Extended data for color fill
+    #
+    # contourf() normally ends at the outermost cell centers. To fill
+    # the complete model domain, extend coordinates to the model edges
+    # and repeat the outermost head values.
+    # ------------------------------------------------------------------
+    x_fill = np.concatenate(
+        ([0.0], x, [params.ncol * DELR])
+    )
+    y_fill = np.concatenate(
+        ([0.0], y, [params.nrow * DELC])
+    )
+
+    xx_fill, yy_fill = np.meshgrid(x_fill, y_fill)
+
     head_fill = np.pad(
-        head_layer,
+        zz,
         pad_width=1,
         mode="edge",
     )
-    
-    xx, yy = np.meshgrid(x_fill, y_fill)
-    zz = np.flipud(head[layer])
-    levels = _contour_levels(zz, dh)
 
+    # ------------------------------------------------------------------
+    # Plot
+    # ------------------------------------------------------------------
     fig, ax = plt.subplots(figsize=(7.2, 5.2))
-    if color_fill:
-        filled = ax.contourf(xx, yy, zz, head_fill, levels=levels, extend="both")
-        fig.colorbar(filled, ax=ax, label="Hydraulic head (m)")
 
-    contours = ax.contour(xx, yy, zz, levels=levels, linewidths=0.75)
-    ax.clabel(contours, inline=True, fontsize=8, fmt="%.2g")
+    if color_fill:
+        filled = ax.contourf(
+            xx_fill,
+            yy_fill,
+            head_fill,
+            levels=levels,
+            extend="both",
+        )
+
+        fig.colorbar(
+            filled,
+            ax=ax,
+            label="Hydraulic head (m)",
+        )
+
+    # Head contour lines remain based on the actual cell-center values
+    contours = ax.contour(
+        xx,
+        yy,
+        zz,
+        levels=levels,
+        linewidths=0.75,
+    )
+
+    ax.clabel(
+        contours,
+        inline=True,
+        fontsize=8,
+        fmt="%.2g",
+    )
+
+    # Explicitly show the complete model extent
+    ax.set_xlim(0.0, params.ncol * DELR)
+    ax.set_ylim(0.0, params.nrow * DELC)
 
     boundary_y = (np.arange(params.nrow) + 0.5) * DELC
     ax.scatter(
