@@ -114,7 +114,7 @@ def plot_model_grid(params: ModelParameters):
             col + 0.5,
             row + 0.5,
             marker="*",
-            markersize=11,
+            markersize=9,
             linestyle="none",
             zorder=4,
         )
