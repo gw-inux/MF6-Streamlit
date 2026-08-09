@@ -694,6 +694,9 @@ with st.expander("General model parameters", expanded=True):
         k_layer1 = st.number_input(
             "K layer 1 (m/day)", min_value=0.001, max_value=1000.0, value=10.0, format="%.3f"
         )
+        k_layer2 = st.number_input(
+            "K layer 2 (m/day)", min_value=0.001, max_value=1000.0, value=0.10, format="%.3f"
+        )
         k_layer3 = st.number_input(
             "K layer 3 (m/day)", min_value=0.001, max_value=1000.0, value=5.0, format="%.3f"
         )
@@ -713,9 +716,7 @@ with st.expander("General model parameters", expanded=True):
             value=31.0,
             step=0.5,
         )
-        k_layer2 = st.number_input(
-            "K layer 2 (m/day)", min_value=0.001, max_value=1000.0, value=0.10, format="%.3f"
-        )
+
         vertical_anisotropy = st.number_input(
             "Vertical anisotropy Kz/Kx (-)",
             min_value=0.001,
@@ -870,7 +871,7 @@ if "flow_result" in st.session_state:
     with mp2:
         st.write("")
         st.write("")
-        run_mp7_clicked = st.button("Run MODPATH")
+        run_mp7_clicked = st.button("Run MODPATH", type="primary")
     if run_mp7_clicked:
         try:
             with st.spinner("Running backward and forward MODPATH 7 tracking..."):
