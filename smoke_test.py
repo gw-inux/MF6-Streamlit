@@ -20,8 +20,14 @@ def main() -> None:
 
     baseline = pumping = None
     try:
-        base_params = ModelParameters(nrow=nrow, ncol=ncol, well_positions=wells, pumping_rate=0.0)
-        pump_params = ModelParameters(nrow=nrow, ncol=ncol, well_positions=wells, pumping_rate=100.0)
+        base_params = ModelParameters(
+            nrow=nrow, ncol=ncol, well_positions=wells,
+            pumping_rates=(0.0, 0.0, 0.0),
+        )
+        pump_params = ModelParameters(
+            nrow=nrow, ncol=ncol, well_positions=wells,
+            pumping_rates=(75.0, 100.0, 125.0),
+        )
         baseline = run_modflow(base_params)
         pumping = run_modflow(pump_params)
 
@@ -46,6 +52,7 @@ def main() -> None:
 
         print(f"Dynamic grid: {NLAY} x {nrow} x {ncol}")
         print(f"Wells: {len(wells)}")
+        print(f"Pumping rates: {pump_params.pumping_rates} m3/day")
         print(f"Backward particles: {tracks.backward.requested_particles}")
         print(f"Forward particles: {tracks.forward.requested_particles}")
         print("Smoke test PASSED")

@@ -7,10 +7,10 @@ This version keeps the proven split workflow:
 2. ``run_modpath`` reuses that existing flow solution. MODFLOW is not rerun.
 
 The grid size and one to three pumping-well locations are configurable. All
-wells are screened in layer 3 and use the same pumping rate (entered as a
-positive extraction magnitude). Backward tracking releases 20 particles per
-well; forward tracking releases one particle in every constant-head cell on
-both lateral boundaries.
+wells are screened in layer 3, and each well has its own pumping rate (entered
+as a positive extraction magnitude). Backward tracking releases 20 particles
+per well; forward tracking releases one particle in every constant-head cell
+on both lateral boundaries.
 """
 
 from __future__ import annotations
@@ -61,13 +61,14 @@ class ModelParameters:
     """Parameters defining one flow-model realization.
 
     ``well_positions`` contains zero-based ``(row, column)`` pairs. Wells are
-    fixed to layer 3 for this teaching model. ``pumping_rate`` is the positive
-    extraction magnitude *per well*; MODFLOW receives a negative WEL flux.
+    fixed to layer 3 for this teaching model. ``pumping_rates`` contains one
+    positive extraction magnitude for each well; MODFLOW receives the
+    corresponding negative WEL fluxes.
     """
 
     head_left: float = 32.0
     head_right: float = 31.0
-    pumping_rate: float = 300.0
+    pumping_rates: tuple[float, ...] = (300.0,)
     k_layer1: float = 10.0
     k_layer2: float = 0.10
     k_layer3: float = 5.0
@@ -83,6 +84,11 @@ class ModelParameters:
             raise ValueError("Define between one and three pumping wells.")
         if len(set(self.well_positions)) != len(self.well_positions):
             raise ValueError("Pumping wells must occupy different cells.")
+        if len(self.pumping_rates) != len(self.well_positions):
+            raise ValueError("Provide exactly one pumping rate for each well.")
+        for rate in self.pumping_rates:
+            if not np.isfinite(rate) or rate < 0.0:
+                raise ValueError("Pumping rates must be finite and non-negative.")
         for row, col in self.well_positions:
             if not (0 <= row < self.nrow):
                 raise ValueError(f"Well row {row + 1} is outside the model grid.")
@@ -106,7 +112,7 @@ class ModelParameters:
         return (
             self.head_left,
             self.head_right,
-            self.pumping_rate,
+            self.pumping_rates,
             self.k_layer1,
             self.k_layer2,
             self.k_layer3,
@@ -299,8 +305,8 @@ def build_simulation(params: ModelParameters, workspace: Path, executable: Path)
     flopy.mf6.ModflowGwfchd(gwf, stress_period_data={0: chd_data}, save_flows=True, pname="CHD")
 
     well_data = [
-        ((WELL_LAYER, row, col), -abs(params.pumping_rate))
-        for row, col in params.well_positions
+        ((WELL_LAYER, row, col), -abs(rate))
+        for (row, col), rate in zip(params.well_positions, params.pumping_rates)
     ]
     flopy.mf6.ModflowGwfwel(gwf, stress_period_data={0: well_data}, save_flows=True, pname="WEL")
 

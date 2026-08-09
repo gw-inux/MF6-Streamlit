@@ -30,7 +30,7 @@ from mf6_model import (
     run_modpath,
 )
 
-st.set_page_config(page_title="MODFLOW + MODPATH Cloud Test", page_icon="💧", layout="wide")
+st.set_page_config(page_title="MODFLOW + MODPATH Cloud Test", page_icon="💧", layout="centered")
 
 
 @st.cache_resource
@@ -214,19 +214,91 @@ def discard_flow_workspace() -> None:
 
 
 def show_cumulative_budget(items: list[tuple[str, float]]) -> None:
+    """Show cumulative MODFLOW water-budget components as a signed bar plot.
+
+    Inflow terms are plotted above zero and outflow terms below zero. The
+    overall balance error (IN - OUT) and percentage discrepancy are printed
+    numerically below the plot.
+    """
     st.markdown("#### Cumulative mass balance")
     st.caption(
-        "Values are read directly from the final MODFLOW 6 cumulative budget table. "
-        "Because this steady-state test uses a 1-day stress period, cumulative flow volumes are reported over that 1-day period."
+        "Cumulative volumes are read from the final MODFLOW 6 listing-file budget. "
+        "Inflow is plotted positive and outflow negative. This steady-state test "
+        "uses a 1-day stress period, so the cumulative volumes refer to that period."
     )
     if not items:
         st.warning("No cumulative budget table could be parsed from the MODFLOW listing file.")
         return
-    lines = ["| Budget term | Cumulative value |", "|---|---:|"]
+
+    def normalise(name: str) -> str:
+        return name.strip().upper().replace(" ", "_")
+
+    values = {normalise(name): float(value) for name, value in items}
+
+    # Component terms normally look like CHD_IN, CHD_OUT, WEL_OUT, etc.
+    # Exclude totals and diagnostic entries from the bars.
+    components: list[tuple[str, float]] = []
     for name, value in items:
-        unit = "%" if "PERCENT" in name.upper() else "m³"
-        lines.append(f"| {name.replace('_', ' ')} | {value:,.4g} {unit} |")
-    st.markdown("\n".join(lines))
+        key = normalise(name)
+        if key.startswith("TOTAL") or "PERCENT" in key or "DISCREP" in key or key in {"IN-OUT", "IN_OUT"}:
+            continue
+        if key.endswith("_IN"):
+            components.append((name.replace("_", " "), abs(float(value))))
+        elif key.endswith("_OUT"):
+            components.append((name.replace("_", " "), -abs(float(value))))
+
+    total_in = next((v for k, v in values.items() if k in {"TOTAL_IN", "TOTAL_IN:"}), None)
+    total_out = next((v for k, v in values.items() if k in {"TOTAL_OUT", "TOTAL_OUT:"}), None)
+    balance_error = next((v for k, v in values.items() if k in {"IN-OUT", "IN_OUT", "IN-OUT:"}), None)
+    discrepancy = next((v for k, v in values.items() if "PERCENT" in k and "DISCREP" in k), None)
+
+    if balance_error is None and total_in is not None and total_out is not None:
+        balance_error = float(total_in) - float(total_out)
+    if discrepancy is None and total_in is not None and total_out is not None:
+        denominator = 0.5 * (abs(float(total_in)) + abs(float(total_out)))
+        discrepancy = 100.0 * (float(total_in) - float(total_out)) / denominator if denominator > 0.0 else 0.0
+
+    if not components and total_in is not None and total_out is not None:
+        components = [("Total in", abs(float(total_in))), ("Total out", -abs(float(total_out)))]
+
+    if components:
+        labels = [label for label, _ in components]
+        bar_values = np.asarray([value for _, value in components], dtype=float)
+        palette = plt.rcParams["axes.prop_cycle"].by_key().get("color", ["C0", "C1"])
+        colors = [palette[0] if value >= 0.0 else palette[min(1, len(palette) - 1)] for value in bar_values]
+
+        fig, ax = plt.subplots(figsize=(7.2, 4.0))
+        bars = ax.bar(labels, bar_values, color=colors)
+        ax.axhline(0.0, linewidth=0.8)
+        ax.set_ylabel("Cumulative volume (m³)")
+        ax.set_title("MODFLOW cumulative water budget")
+        ax.tick_params(axis="x", rotation=30)
+        ax.grid(axis="y", alpha=0.2)
+
+        scale = max(float(np.max(np.abs(bar_values))), 1.0)
+        for bar, value in zip(bars, bar_values):
+            offset = 0.02 * scale if value >= 0 else -0.02 * scale
+            va = "bottom" if value >= 0 else "top"
+            ax.text(
+                bar.get_x() + bar.get_width() / 2.0,
+                value + offset,
+                f"{value:,.3g}",
+                ha="center",
+                va=va,
+                fontsize=8,
+            )
+        fig.tight_layout()
+        st.pyplot(fig, clear_figure=True)
+        plt.close(fig)
+    else:
+        st.warning("The cumulative budget was available, but no inflow/outflow terms could be identified for plotting.")
+
+    error_text = "not available" if balance_error is None else f"{float(balance_error):,.6g} m³"
+    discrepancy_text = "not available" if discrepancy is None else f"{float(discrepancy):,.6g} %"
+    st.markdown(
+        f"**Balance error (IN − OUT):** {error_text}  \n"
+        f"**Percent discrepancy:** {discrepancy_text}"
+    )
 
 
 st.title("💧 MODFLOW 6 + MODPATH 7 Cloud Test")
@@ -259,12 +331,16 @@ with b2:
     k_layer2 = st.number_input("K layer 2 (m/day)", min_value=0.001, max_value=1000.0, value=0.10, format="%.3f")
     k_layer3 = st.number_input("K layer 3 (m/day)", min_value=0.001, max_value=1000.0, value=5.0, format="%.3f")
 with b3:
-    pumping_rate = st.number_input("Pumping rate per well (m³/day)", min_value=0.0, max_value=800.0, value=300.0, step=50.0, help="Positive extraction magnitude; MODFLOW receives a negative WEL flux for every active well.")
-    vertical_anisotropy = st.number_input("Vertical anisotropy Kz/Kx (-)", min_value=0.001, max_value=1.0, value=0.10, format="%.3f")
+    vertical_anisotropy = st.number_input(
+        "Vertical anisotropy Kz/Kx (-)", min_value=0.001, max_value=1.0,
+        value=0.10, format="%.3f"
+    )
 
-st.markdown("#### Well positions")
+st.markdown("#### Pumping wells")
+st.caption("Each well has an independent position and pumping rate. Positive rates represent groundwater extraction.")
 defaults = default_well_positions(nrow, ncol, number_wells)
 well_positions: list[tuple[int, int]] = []
+pumping_rates: list[float] = []
 well_cols = st.columns(number_wells)
 for i in range(number_wells):
     default_row, default_col = defaults[i]
@@ -279,10 +355,16 @@ for i in range(number_wells):
             key=f"well_col_{i}_{nrow}_{ncol}",
             help="Boundary columns 1 and the last column are reserved for CHD cells.",
         )
+        rate = st.number_input(
+            "Pumping rate (m³/day)", min_value=0.0, max_value=800.0,
+            value=300.0, step=50.0, key=f"well_rate_{i}",
+            help="Positive extraction magnitude; MODFLOW receives a negative WEL flux.",
+        )
         well_positions.append((int(row_1based) - 1, int(col_1based) - 1))
+        pumping_rates.append(float(rate))
 
 params = ModelParameters(
-    head_left=float(head_left), head_right=float(head_right), pumping_rate=float(pumping_rate),
+    head_left=float(head_left), head_right=float(head_right), pumping_rates=tuple(pumping_rates),
     k_layer1=float(k_layer1), k_layer2=float(k_layer2), k_layer3=float(k_layer3),
     vertical_anisotropy=float(vertical_anisotropy), nrow=int(nrow), ncol=int(ncol),
     well_positions=tuple(well_positions),
@@ -369,7 +451,10 @@ if "flow_result" in st.session_state:
     st.subheader("Results")
 
     well_heads = [head[WELL_LAYER, row, col] for row, col in result_params.well_positions]
-    well_text = ", ".join(f"W{i + 1}: {h:.3f} m" for i, h in enumerate(well_heads))
+    well_text = ", ".join(
+        f"W{i + 1}: {h:.3f} m (Q = {rate:.0f} m³/day)"
+        for i, (h, rate) in enumerate(zip(well_heads, result_params.pumping_rates))
+    )
     st.markdown(
         f"**MODFLOW:** `{flow_result.mf6_version}`  \n"
         f"Runtime: **{flow_result.runtime_seconds:.3f} s**  \n"
@@ -377,21 +462,35 @@ if "flow_result" in st.session_state:
         f"Minimum / maximum simulated head: **{np.min(head):.3f} / {np.max(head):.3f} m**"
     )
 
-    p1, p2, p3, p4 = st.columns([1, 1, 1, 1.7])
-    with p1:
-        display_layer = st.selectbox("Head layer", options=list(range(NLAY)), format_func=lambda i: f"Layer {i + 1}", index=WELL_LAYER)
-    with p2:
-        contour_interval = st.number_input("Contour interval Δh (m)", min_value=0.01, max_value=20.0, value=1.0, step=0.25, format="%.2f")
-    with p3:
-        color_fill = st.toggle("Color fill", value=True)
-    with p4:
-        particle_options = ["No particles"]
-        if "modpath_result" in st.session_state:
-            particle_options += ["Forward", "Backward"]
-        particle_display = st.radio("Particles / pathlines", particle_options, horizontal=True)
-
     selected_tracking = None
     if "modpath_result" in st.session_state:
+        p1, p2, p3, p4 = st.columns([1, 1, 1, 1.7])
+    else:
+        p1, p2, p3 = st.columns(3)
+        p4 = None
+
+    with p1:
+        display_layer = st.selectbox(
+            "Head layer", options=list(range(NLAY)),
+            format_func=lambda i: f"Layer {i + 1}", index=WELL_LAYER
+        )
+    with p2:
+        contour_interval = st.number_input(
+            "Contour interval Δh (m)", min_value=0.01, max_value=20.0,
+            value=1.0, step=0.25, format="%.2f"
+        )
+    with p3:
+        color_fill = st.toggle("Color fill", value=True)
+
+    # The particle/pathline display control is intentionally hidden until a
+    # MODPATH calculation has completed successfully.
+    if p4 is not None:
+        with p4:
+            particle_display = st.radio(
+                "Particles / pathlines",
+                ["No particles", "Forward", "Backward"],
+                horizontal=True,
+            )
         mp_result = st.session_state.modpath_result
         if particle_display == "Forward":
             selected_tracking = mp_result.forward
