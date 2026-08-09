@@ -44,6 +44,13 @@ def main() -> None:
         assert (Path(pumping.workspace) / f"{MODEL_NAME}.hds").is_file()
         assert (Path(pumping.workspace) / f"{MODEL_NAME}.cbc").is_file()
 
+        # Budget names must be decoded text (not strings such as b'CHD_IN').
+        if pumping.cumulative_budget:
+            budget_names = [name for name, _value in pumping.cumulative_budget]
+            assert all(not name.startswith("b'") for name in budget_names)
+            assert any(name.endswith("_IN") for name in budget_names)
+            assert any(name.endswith("_OUT") for name in budget_names)
+
         tracks = run_modpath(pumping, effective_porosity=0.25)
         assert tracks.backward.requested_particles == PARTICLES_PER_WELL * len(wells)
         assert tracks.forward.requested_particles == NLAY * nrow * 2

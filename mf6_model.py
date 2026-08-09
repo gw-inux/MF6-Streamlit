@@ -8,7 +8,7 @@ This version keeps the proven split workflow:
 
 The grid size and one to three pumping-well locations are configurable. All
 wells are screened in layer 3, and each well has its own pumping rate (entered
-as a positive extraction magnitude). Backward tracking releases 20 particles
+as a positive extraction magnitude). Backward tracking releases 60 particles
 per well; forward tracking releases one particle in every constant-head cell
 on both lateral boundaries.
 """
@@ -49,7 +49,7 @@ WELL_COL = DEFAULT_NCOL // 2
 MF6_TIMEOUT_SECONDS = 20
 MP7_TIMEOUT_SECONDS = 20
 
-PARTICLES_PER_WELL = 20
+PARTICLES_PER_WELL = 60
 BACKWARD_PARTICLE_COUNT = PARTICLES_PER_WELL  # default one-well case
 FORWARD_PARTICLE_COUNT = NLAY * DEFAULT_NROW * 2
 
@@ -364,7 +364,21 @@ def _read_cumulative_budget(workspace: Path) -> list[tuple[str, float]]:
         data = budget.get_data(incremental=False)
         if data is None:
             return []
-        return [(str(row["name"]).strip(), float(row["value"])) for row in data]
+
+        # ``ListBudget.get_data`` stores names as a fixed-width byte field.
+        # Calling ``str`` on that value produces strings such as
+        # ``b'CHD_IN'``, which breaks suffix-based IN/OUT detection in the UI.
+        # Decode bytes here so every downstream consumer receives clean labels.
+        items: list[tuple[str, float]] = []
+        for row in data:
+            raw_name = row["name"]
+            if isinstance(raw_name, (bytes, np.bytes_)):
+                name = raw_name.decode("ascii", errors="replace")
+            else:
+                name = str(raw_name)
+            name = name.replace("\x00", "").strip()
+            items.append((name, float(row["value"])))
+        return items
     except Exception:
         return []
 
@@ -432,9 +446,11 @@ def _cell_xyz(params: ModelParameters, layer: int, row: int, col: int, localx: f
 
 
 def _backward_particle_data(params: ModelParameters) -> tuple[flopy.modpath.ParticleData, np.ndarray, np.ndarray]:
+    # Use a denser 5 x 4 x 3 distribution in each pumping cell.
+    # This gives 60 backward particles per well while remaining lightweight.
     local_x = (np.arange(5, dtype=float) + 0.5) / 5.0
-    local_y = (np.arange(2, dtype=float) + 0.5) / 2.0
-    local_z = (np.arange(2, dtype=float) + 0.5) / 2.0
+    local_y = (np.arange(4, dtype=float) + 0.5) / 4.0
+    local_z = (np.arange(3, dtype=float) + 0.5) / 3.0
 
     locs: list[tuple[int, int, int]] = []
     lx: list[float] = []
