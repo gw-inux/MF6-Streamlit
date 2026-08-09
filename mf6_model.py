@@ -1,7 +1,17 @@
-"""MODFLOW 6 model and execution utilities for the Streamlit cloud test.
+"""MODFLOW 6 + MODPATH 7 model utilities for the Streamlit cloud test.
 
-The module deliberately contains no Streamlit code.  Keeping the numerical model
-separate from the user interface makes the model easier to test and reuse.
+The numerical model is intentionally kept separate from Streamlit.  One call to
+``run_model`` creates a temporary workspace, runs MODFLOW 6, runs two MODPATH 7
+particle-tracking simulations, reads all required results into memory, and then
+removes the temporary files.
+
+Particle-tracking configurations
+--------------------------------
+1. Backward tracking from the pumping well:
+   20 particles are distributed inside the pumping cell (5 x 2 x 2).
+2. Forward tracking from the specified-head boundaries:
+   one particle is placed in every left- and right-boundary cell
+   (3 layers x 21 rows x 2 sides = 126 particles).
 """
 
 from __future__ import annotations
@@ -21,7 +31,7 @@ import numpy as np
 
 MODEL_NAME = "three_layer_test"
 
-# Fixed discretization for the first cloud deployment test.
+# Fixed discretization for this deployment test.
 # Odd row/column counts place the pumping well exactly in the grid centre.
 NLAY = 3
 NROW = 21
@@ -35,7 +45,11 @@ WELL_LAYER = 2  # zero-based index -> layer 3
 WELL_ROW = NROW // 2
 WELL_COL = NCOL // 2
 
-MODEL_TIMEOUT_SECONDS = 20
+MF6_TIMEOUT_SECONDS = 20
+MP7_TIMEOUT_SECONDS = 20
+
+BACKWARD_PARTICLE_COUNT = 20
+FORWARD_PARTICLE_COUNT = NLAY * NROW * 2
 
 
 @dataclass(frozen=True)
@@ -44,6 +58,10 @@ class ModelParameters:
 
     Pumping is entered as a positive extraction magnitude in m3/day.  The WEL
     package receives the corresponding negative MODFLOW flow rate.
+
+    Effective porosity does not affect the MODFLOW heads.  MODPATH requires it
+    to calculate particle velocities and travel times.  For steady-state flow,
+    changing porosity changes travel time but not the geometric streamline.
     """
 
     head_left: float = 32.0
@@ -53,6 +71,7 @@ class ModelParameters:
     k_layer2: float = 0.10
     k_layer3: float = 5.0
     vertical_anisotropy: float = 0.10
+    effective_porosity: float = 0.25
 
     def signature(self) -> tuple[float, ...]:
         """Return a hashable representation used to invalidate old results."""
@@ -64,64 +83,123 @@ class ModelParameters:
             self.k_layer2,
             self.k_layer3,
             self.vertical_anisotropy,
+            self.effective_porosity,
         )
 
 
 @dataclass
+class ParticleTrack:
+    """One MODPATH pathline copied out of the temporary workspace."""
+
+    x: np.ndarray
+    y: np.ndarray
+    z: np.ndarray
+    time: np.ndarray
+    layer: np.ndarray
+
+
+@dataclass
+class TrackingResult:
+    """Results for one MODPATH tracking direction."""
+
+    direction: str
+    requested_particles: int
+    tracks: list[ParticleTrack]
+    start_xyz: np.ndarray
+    runtime_seconds: float
+    mp7_version: str
+    stdout: str
+
+    @property
+    def pathline_count(self) -> int:
+        return len(self.tracks)
+
+    @property
+    def max_travel_time(self) -> float:
+        if not self.tracks:
+            return 0.0
+        maxima = [float(np.max(track.time)) for track in self.tracks if track.time.size]
+        return max(maxima, default=0.0)
+
+
+@dataclass
 class ModelResult:
-    """Small result object returned after a successful MODFLOW run."""
+    """Results returned after successful MODFLOW and MODPATH runs."""
 
     head: np.ndarray
     runtime_seconds: float
+    mf6_runtime_seconds: float
     mf6_executable: str
     mf6_version: str
-    stdout: str
+    mf6_stdout: str
+    mp7_executable: str
+    backward: TrackingResult
+    forward: TrackingResult
 
 
-def locate_mf6() -> Path:
-    """Locate the MODFLOW 6 executable.
+def _set_executable_permission(path: Path) -> None:
+    """Ensure a bundled native executable can be started on Linux."""
 
-    Resolution order:
-    1. MF6_EXE environment variable (useful for local development).
-    2. A bundled executable in ``bin/`` next to this source file.
-    3. ``mf6`` available on PATH (the default for the supplied Conda setup).
+    if os.name != "nt":
+        current_mode = path.stat().st_mode
+        path.chmod(current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-    This makes the same code usable with both deployment strategies discussed
-    for the educational apps: Conda-installed MF6 or a repository-bundled
-    Linux executable.
-    """
+
+def _locate_executable(
+    *,
+    env_var: str,
+    linux_name: str,
+    windows_name: str,
+    display_name: str,
+) -> Path:
+    """Locate one bundled/native executable using a common resolution order."""
 
     candidates: list[Path] = []
 
-    env_exe = os.environ.get("MF6_EXE")
+    env_exe = os.environ.get(env_var)
     if env_exe:
         candidates.append(Path(env_exe).expanduser())
 
     project_root = Path(__file__).resolve().parent
-    bundled_name = "mf6.exe" if os.name == "nt" else "mf6"
+    bundled_name = windows_name if os.name == "nt" else linux_name
     candidates.append(project_root / "bin" / bundled_name)
 
-    on_path = shutil.which("mf6")
+    on_path = shutil.which(windows_name if os.name == "nt" else linux_name)
     if on_path:
         candidates.append(Path(on_path))
 
     for candidate in candidates:
         candidate = candidate.resolve()
         if candidate.is_file():
-            # Git normally preserves executable permissions, but explicitly
-            # setting them makes deployment more tolerant of copied files.
-            if os.name != "nt":
-                current_mode = candidate.stat().st_mode
-                candidate.chmod(
-                    current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
-                )
+            _set_executable_permission(candidate)
             return candidate
 
     searched = "\n".join(f"  - {p}" for p in candidates) or "  - no candidates"
     raise FileNotFoundError(
-        "MODFLOW 6 executable 'mf6' was not found. Searched:\n"
-        f"{searched}\n"
-        "Install modflow6 in the environment, add bin/mf6, or set MF6_EXE."
+        f"{display_name} executable was not found. Searched:\n{searched}\n"
+        f"Add bin/{bundled_name}, put the executable on PATH, or set {env_var}."
+    )
+
+
+def locate_mf6() -> Path:
+    """Locate the MODFLOW 6 executable."""
+
+    return _locate_executable(
+        env_var="MF6_EXE",
+        linux_name="mf6",
+        windows_name="mf6.exe",
+        display_name="MODFLOW 6",
+    )
+
+
+def locate_mp7() -> Path:
+    """Locate the MODPATH 7 executable."""
+
+    return _locate_executable(
+        env_var="MP7_EXE",
+        linux_name="mp7",
+        windows_name="mp7.exe",
+        display_name="MODPATH 7",
     )
 
 
@@ -144,12 +222,20 @@ def get_mf6_version(executable: Path) -> str:
     return text.splitlines()[0] if text else "Version not reported"
 
 
+def _extract_mp7_version(output: str) -> str:
+    """Extract the MODPATH version line from normal program output."""
+
+    for line in output.splitlines():
+        if "MODPATH VERSION" in line.upper():
+            return line.strip()
+    return "MODPATH version not reported"
+
+
 def _initial_head(params: ModelParameters) -> np.ndarray:
     """Create a linear left-to-right initial head field for all three layers."""
 
     line = np.linspace(params.head_left, params.head_right, NCOL)
-    initial = np.broadcast_to(line, (NLAY, NROW, NCOL)).copy()
-    return initial
+    return np.broadcast_to(line, (NLAY, NROW, NCOL)).copy()
 
 
 def build_simulation(
@@ -203,7 +289,7 @@ def build_simulation(
 
     flopy.mf6.ModflowGwfic(gwf, strt=_initial_head(params))
 
-    # Horizontal conductivity differs by layer.  K33 is vertical hydraulic
+    # Horizontal conductivity differs by layer. K33 is vertical hydraulic
     # conductivity; a ratio below 1 represents vertical anisotropy.
     k = np.empty((NLAY, NROW, NCOL), dtype=float)
     k[0, :, :] = params.k_layer1
@@ -213,7 +299,7 @@ def build_simulation(
 
     flopy.mf6.ModflowGwfnpf(
         gwf,
-        icelltype=0,  # all cells confined: intentionally simple for first test
+        icelltype=0,  # all cells confined: intentionally simple for this test
         k=k,
         k33=k33,
         save_flows=True,
@@ -221,7 +307,7 @@ def build_simulation(
     )
 
     # Specified-head boundaries are applied to the complete left and right model
-    # faces in all layers.  This creates a regional left-to-right gradient.
+    # faces in all layers. This creates a regional left-to-right gradient.
     chd_data = []
     for layer in range(NLAY):
         for row in range(NROW):
@@ -245,8 +331,8 @@ def build_simulation(
         pname="WEL",
     )
 
-    # Save heads and the cell-by-cell budget.  The head file is read immediately
-    # after each run, before the temporary workspace is deleted.
+    # MODPATH 7 needs both binary heads and cell-by-cell flow information.
+    # The DIS binary grid file (*.grb) is written automatically by MODFLOW 6.
     flopy.mf6.ModflowGwfoc(
         gwf,
         head_filerecord=[f"{MODEL_NAME}.hds"],
@@ -258,47 +344,193 @@ def build_simulation(
     return sim
 
 
-def run_model(params: ModelParameters) -> ModelResult:
-    """Build, execute, validate, and read one isolated MODFLOW simulation.
+def _node_number(layer: int, row: int, col: int) -> int:
+    """Return the zero-based MODPATH node number for a structured DIS cell."""
 
-    A new temporary directory is created for every call.  This is essential for
-    a multi-user Streamlit application because simultaneous users must never
-    write to the same MODFLOW input/output files.
-    """
+    return layer * NROW * NCOL + row * NCOL + col
 
-    executable = locate_mf6()
-    version = get_mf6_version(executable)
+
+def _backward_nodes() -> list[int]:
+    """Return the single pumping-cell node used for backward tracking."""
+
+    return [_node_number(WELL_LAYER, WELL_ROW, WELL_COL)]
+
+
+def _forward_boundary_nodes() -> list[int]:
+    """Return every left- and right-CHD cell as a MODPATH starting node."""
+
+    nodes: list[int] = []
+    for layer in range(NLAY):
+        for row in range(NROW):
+            nodes.append(_node_number(layer, row, 0))
+            nodes.append(_node_number(layer, row, NCOL - 1))
+    return nodes
+
+
+def _read_pathlines(pathline_file: Path) -> list[ParticleTrack]:
+    """Read a MODPATH 7 pathline file and detach it from the workspace."""
+
+    if not pathline_file.is_file():
+        raise RuntimeError(f"Expected MODPATH pathline file was not created: {pathline_file}")
+
+    pathline_reader = flopy.utils.PathlineFile(pathline_file)
+    raw_tracks = pathline_reader.get_alldata()
+
+    tracks: list[ParticleTrack] = []
+    for rec in raw_tracks:
+        if rec.size == 0:
+            continue
+        tracks.append(
+            ParticleTrack(
+                x=np.asarray(rec["x"], dtype=float).copy(),
+                y=np.asarray(rec["y"], dtype=float).copy(),
+                z=np.asarray(rec["z"], dtype=float).copy(),
+                time=np.asarray(rec["time"], dtype=float).copy(),
+                layer=np.asarray(rec["k"], dtype=int).copy(),
+            )
+        )
+    return tracks
+
+
+def _run_modpath(
+    *,
+    gwf: flopy.mf6.ModflowGwf,
+    workspace: Path,
+    executable: Path,
+    direction: str,
+    nodes: list[int],
+    column_divisions: int,
+    row_divisions: int,
+    layer_divisions: int,
+    porosity: float,
+    modelname: str,
+) -> TrackingResult:
+    """Create, execute, validate, and read one MODPATH 7 simulation."""
+
+    mp = flopy.modpath.Modpath7.create_mp7(
+        modelname=modelname,
+        trackdir=direction,
+        flowmodel=gwf,
+        exe_name=str(executable),
+        model_ws=str(workspace),
+        columncelldivisions=column_divisions,
+        rowcelldivisions=row_divisions,
+        layercelldivisions=layer_divisions,
+        nodes=nodes,
+        porosity=porosity,
+    )
+
+    # Compute the explicit release coordinates before running.  They are useful
+    # for plotting starting points after the temporary workspace is deleted.
+    # The convenience constructor uses a NodeParticleData template internally.
+    # Accessing the package internals is unnecessary: recreate the same template
+    # explicitly only for coordinate calculation.
+    subdivision = flopy.modpath.CellDataType(
+        columncelldivisions=column_divisions,
+        rowcelldivisions=row_divisions,
+        layercelldivisions=layer_divisions,
+    )
+    release_data = flopy.modpath.NodeParticleData(
+        subdivisiondata=subdivision,
+        nodes=nodes,
+    )
+    start_xyz = np.asarray(list(release_data.to_coords(gwf.modelgrid)), dtype=float)
+
+    mp.write_input()
 
     started = time.perf_counter()
+    try:
+        completed = subprocess.run(
+            [str(executable), mp.namefile],
+            cwd=workspace,
+            capture_output=True,
+            text=True,
+            timeout=MP7_TIMEOUT_SECONDS,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(
+            f"MODPATH exceeded the {MP7_TIMEOUT_SECONDS}-second safety timeout."
+        ) from exc
+    except OSError as exc:
+        raise RuntimeError(f"MODPATH could not be started: {exc}") from exc
 
-    with tempfile.TemporaryDirectory(prefix="mf6_streamlit_") as temp_dir:
+    runtime = time.perf_counter() - started
+    output = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
+
+    normal_termination = "NORMAL TERMINATION" in output.upper()
+    if completed.returncode != 0 or not normal_termination:
+        tail = "\n".join(output.splitlines()[-50:])
+        raise RuntimeError(
+            f"MODPATH ({direction}) did not terminate normally.\n\n"
+            f"Return code: {completed.returncode}\n"
+            f"Last MODPATH messages:\n{tail}"
+        )
+
+    tracks = _read_pathlines(workspace / f"{modelname}.mppth")
+
+    expected_particles = len(nodes) * column_divisions * row_divisions * layer_divisions
+    if start_xyz.shape != (expected_particles, 3):
+        raise RuntimeError(
+            f"Unexpected number of {direction} particle release points: "
+            f"{start_xyz.shape[0]}; expected {expected_particles}."
+        )
+
+    return TrackingResult(
+        direction=direction,
+        requested_particles=expected_particles,
+        tracks=tracks,
+        start_xyz=start_xyz.copy(),
+        runtime_seconds=runtime,
+        mp7_version=_extract_mp7_version(output),
+        stdout=output,
+    )
+
+
+def run_model(params: ModelParameters) -> ModelResult:
+    """Run MODFLOW 6 and both requested MODPATH 7 tracking configurations.
+
+    The complete workflow stays inside one temporary directory because MODPATH
+    requires MODFLOW's binary head, budget, and grid files.  Results are copied
+    into NumPy arrays before that directory is removed.
+    """
+
+    mf6_executable = locate_mf6()
+    mp7_executable = locate_mp7()
+    mf6_version = get_mf6_version(mf6_executable)
+
+    total_started = time.perf_counter()
+
+    with tempfile.TemporaryDirectory(prefix="mf6_mp7_streamlit_") as temp_dir:
         workspace = Path(temp_dir)
-        sim = build_simulation(params, workspace, executable)
+        sim = build_simulation(params, workspace, mf6_executable)
         sim.write_simulation()
 
+        mf6_started = time.perf_counter()
         try:
             completed = subprocess.run(
-                [str(executable)],
+                [str(mf6_executable)],
                 cwd=workspace,
                 capture_output=True,
                 text=True,
-                timeout=MODEL_TIMEOUT_SECONDS,
+                timeout=MF6_TIMEOUT_SECONDS,
                 check=False,
             )
         except subprocess.TimeoutExpired as exc:
             raise RuntimeError(
-                f"MODFLOW exceeded the {MODEL_TIMEOUT_SECONDS}-second safety timeout."
+                f"MODFLOW exceeded the {MF6_TIMEOUT_SECONDS}-second safety timeout."
             ) from exc
         except OSError as exc:
             raise RuntimeError(f"MODFLOW could not be started: {exc}") from exc
+        mf6_runtime = time.perf_counter() - mf6_started
 
-        output = "\n".join(
+        mf6_output = "\n".join(
             part for part in (completed.stdout, completed.stderr) if part
         )
 
-        normal_termination = "NORMAL TERMINATION OF SIMULATION" in output.upper()
+        normal_termination = "NORMAL TERMINATION OF SIMULATION" in mf6_output.upper()
         if completed.returncode != 0 or not normal_termination:
-            tail = "\n".join(output.splitlines()[-40:])
+            tail = "\n".join(mf6_output.splitlines()[-40:])
             raise RuntimeError(
                 "MODFLOW did not terminate normally.\n\n"
                 f"Return code: {completed.returncode}\n"
@@ -306,10 +538,11 @@ def run_model(params: ModelParameters) -> ModelResult:
             )
 
         head_file = workspace / f"{MODEL_NAME}.hds"
-        if not head_file.is_file():
+        budget_file = workspace / f"{MODEL_NAME}.cbc"
+        if not head_file.is_file() or not budget_file.is_file():
             raise RuntimeError(
-                "MODFLOW reported normal termination, but the expected head file "
-                f"was not created: {head_file.name}"
+                "MODFLOW terminated normally, but the head/budget files required "
+                "for MODPATH were not created."
             )
 
         head = flopy.utils.HeadFile(head_file).get_data()
@@ -317,18 +550,57 @@ def run_model(params: ModelParameters) -> ModelResult:
 
         if head.shape != (NLAY, NROW, NCOL):
             raise RuntimeError(
-                f"Unexpected head-array shape {head.shape}; "
-                f"expected {(NLAY, NROW, NCOL)}."
+                f"Unexpected head-array shape {head.shape}; expected {(NLAY, NROW, NCOL)}."
             )
         if not np.all(np.isfinite(head)):
             raise RuntimeError("The MODFLOW head array contains non-finite values.")
 
-    runtime = time.perf_counter() - started
+        # MODPATH must receive the GWF object that generated the head/budget files.
+        gwf = sim.get_model(MODEL_NAME)
+
+        # 20 particles in the pumping cell: 5 x 2 x 2 subdivisions.
+        backward = _run_modpath(
+            gwf=gwf,
+            workspace=workspace,
+            executable=mp7_executable,
+            direction="backward",
+            nodes=_backward_nodes(),
+            column_divisions=5,
+            row_divisions=2,
+            layer_divisions=2,
+            porosity=params.effective_porosity,
+            modelname=f"{MODEL_NAME}_mp_backward",
+        )
+
+        # One particle at the centre of every CHD cell on both lateral faces.
+        forward = _run_modpath(
+            gwf=gwf,
+            workspace=workspace,
+            executable=mp7_executable,
+            direction="forward",
+            nodes=_forward_boundary_nodes(),
+            column_divisions=1,
+            row_divisions=1,
+            layer_divisions=1,
+            porosity=params.effective_porosity,
+            modelname=f"{MODEL_NAME}_mp_forward",
+        )
+
+        if backward.requested_particles != BACKWARD_PARTICLE_COUNT:
+            raise RuntimeError("Backward-particle count does not match the model design.")
+        if forward.requested_particles != FORWARD_PARTICLE_COUNT:
+            raise RuntimeError("Forward-particle count does not match the model design.")
+
+    total_runtime = time.perf_counter() - total_started
 
     return ModelResult(
         head=head,
-        runtime_seconds=runtime,
-        mf6_executable=str(executable),
-        mf6_version=version,
-        stdout=output,
+        runtime_seconds=total_runtime,
+        mf6_runtime_seconds=mf6_runtime,
+        mf6_executable=str(mf6_executable),
+        mf6_version=mf6_version,
+        mf6_stdout=mf6_output,
+        mp7_executable=str(mp7_executable),
+        backward=backward,
+        forward=forward,
     )

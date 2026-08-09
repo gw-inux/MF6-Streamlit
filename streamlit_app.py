@@ -1,4 +1,4 @@
-"""Minimal Streamlit + MODFLOW 6 cloud-deployment test."""
+"""Minimal Streamlit + MODFLOW 6 + MODPATH 7 cloud-deployment test."""
 
 from __future__ import annotations
 
@@ -9,9 +9,11 @@ import numpy as np
 import streamlit as st
 
 from mf6_model import (
+    BACKWARD_PARTICLE_COUNT,
     BOTM,
     DELC,
     DELR,
+    FORWARD_PARTICLE_COUNT,
     NCOL,
     NLAY,
     NROW,
@@ -20,14 +22,16 @@ from mf6_model import (
     WELL_LAYER,
     WELL_ROW,
     ModelParameters,
-    locate_mf6,
+    TrackingResult,
     get_mf6_version,
+    locate_mf6,
+    locate_mp7,
     run_model,
 )
 
 
 st.set_page_config(
-    page_title="MODFLOW 6 Cloud Test",
+    page_title="MODFLOW + MODPATH Cloud Test",
     page_icon="💧",
     layout="wide",
 )
@@ -35,15 +39,15 @@ st.set_page_config(
 
 @st.cache_resource
 def model_run_semaphore() -> threading.BoundedSemaphore:
-    """Limit simultaneous MF6 processes in this Streamlit server process."""
+    """Limit simultaneous native model processes in this Streamlit server."""
 
-    # Community Cloud currently provides at most a small number of CPU cores.
-    # Two concurrent tiny models are sufficient for this deployment experiment.
+    # The complete workflow now includes one MF6 run followed by two MP7 runs.
+    # Two simultaneous workflows remain a conservative Community Cloud limit.
     return threading.BoundedSemaphore(value=2)
 
 
-def plot_plan_view(head: np.ndarray, layer: int):
-    """Plot heads for one model layer in physically meaningful x/y coordinates."""
+def plot_plan_view(head: np.ndarray, layer: int, tracking: TrackingResult):
+    """Plot hydraulic head and MODPATH pathlines in plan projection."""
 
     x_edges = np.arange(NCOL + 1) * DELR
     y_edges = np.arange(NROW + 1) * DELC
@@ -51,7 +55,8 @@ def plot_plan_view(head: np.ndarray, layer: int):
     fig, ax = plt.subplots(figsize=(8.0, 4.8))
 
     # MODFLOW row 0 is conventionally shown at the top/north.  Flipping the
-    # array lets the y axis increase upward while preserving that convention.
+    # head array makes the y axis increase upward, consistent with FloPy's
+    # global particle coordinates returned by MODPATH.
     mesh = ax.pcolormesh(
         x_edges,
         y_edges,
@@ -60,14 +65,91 @@ def plot_plan_view(head: np.ndarray, layer: int):
     )
     fig.colorbar(mesh, ax=ax, label="Hydraulic head (m)")
 
+    # Pathlines are shown as a plan-view projection.  They may move between
+    # layers; the vertical projection is shown separately in the next figure.
+    for track in tracking.tracks:
+        ax.plot(track.x, track.y, color="black", linewidth=0.8, alpha=0.65)
+
+    if tracking.start_xyz.size:
+        ax.scatter(
+            tracking.start_xyz[:, 0],
+            tracking.start_xyz[:, 1],
+            s=16,
+            facecolors="white",
+            edgecolors="black",
+            linewidths=0.6,
+            label="Particle starts",
+            zorder=4,
+        )
+
     well_x = (WELL_COL + 0.5) * DELR
     well_y = (NROW - WELL_ROW - 0.5) * DELC
-    ax.plot(well_x, well_y, marker="x", markersize=9, mew=2, label="Pumping well")
+    ax.plot(
+        well_x,
+        well_y,
+        marker="x",
+        color="red",
+        markersize=9,
+        mew=2,
+        linestyle="none",
+        label="Pumping well",
+        zorder=5,
+    )
 
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
-    ax.set_title(f"Hydraulic head — layer {layer + 1}")
+    ax.set_title(f"Heads in layer {layer + 1} with pathline projection")
     ax.set_aspect("equal")
+    ax.legend(loc="best")
+    fig.tight_layout()
+    return fig
+
+
+def plot_vertical_pathlines(tracking: TrackingResult):
+    """Plot all pathlines as an x-z projection through the layered system."""
+
+    fig, ax = plt.subplots(figsize=(8.0, 4.2))
+
+    for track in tracking.tracks:
+        ax.plot(track.x, track.z, color="black", linewidth=0.8, alpha=0.65)
+
+    if tracking.start_xyz.size:
+        ax.scatter(
+            tracking.start_xyz[:, 0],
+            tracking.start_xyz[:, 2],
+            s=16,
+            facecolors="white",
+            edgecolors="black",
+            linewidths=0.6,
+            label="Particle starts",
+            zorder=4,
+        )
+
+    # Layer boundaries make vertical movement through the three layers easier
+    # to interpret.  The plot is an x-z projection; y is intentionally omitted.
+    ax.axhline(TOP, color="0.5", linewidth=0.8)
+    for bottom in BOTM:
+        ax.axhline(bottom, color="0.5", linewidth=0.8)
+
+    well_x = (WELL_COL + 0.5) * DELR
+    well_z = 0.5 * (BOTM[WELL_LAYER - 1] + BOTM[WELL_LAYER])
+    ax.plot(
+        well_x,
+        well_z,
+        marker="x",
+        color="red",
+        markersize=9,
+        mew=2,
+        linestyle="none",
+        label="Pumping well",
+        zorder=5,
+    )
+
+    ax.set_xlim(0.0, NCOL * DELR)
+    ax.set_ylim(BOTM[-1], TOP)
+    ax.set_xlabel("x (m)")
+    ax.set_ylabel("Elevation z (m)")
+    ax.set_title("Pathlines — vertical x-z projection")
     ax.legend(loc="best")
     fig.tight_layout()
     return fig
@@ -93,11 +175,11 @@ def plot_head_profiles(head: np.ndarray):
     return fig
 
 
-st.title("💧 MODFLOW 6 Cloud Test")
+st.title("💧 MODFLOW 6 + MODPATH 7 Cloud Test")
 st.write(
-    "This small application tests whether MODFLOW 6 can be executed directly "
-    "inside a Streamlit deployment. The model is intentionally simple and "
-    "steady-state so that deployment issues are easy to diagnose."
+    "This application runs a small three-layer MODFLOW 6 model on the Streamlit "
+    "server and then performs MODPATH 7 particle tracking using the calculated "
+    "heads and cell-by-cell flows."
 )
 
 with st.expander("Model definition", expanded=True):
@@ -108,8 +190,13 @@ with st.expander("Model definition", expanded=True):
 - **Boundaries:** specified heads on the complete left and right faces in all layers.
 - **Well:** one pumping well in the centre of layer {WELL_LAYER + 1}.
 - **Flow formulation:** all layers confined; steady-state; no recharge.
-- **Vertical conductivity:** `Kz = anisotropy × Kx` in each layer.
+- **Backward MODPATH:** {BACKWARD_PARTICLE_COUNT} particles in the pumping cell (5 × 2 × 2 subdivisions).
+- **Forward MODPATH:** one particle per specified-head cell on both lateral faces ({FORWARD_PARTICLE_COUNT} particles total).
         """
+    )
+    st.caption(
+        "MODPATH is advective particle tracking. It does not represent dispersion, "
+        "diffusion, or chemical retardation."
     )
 
 # -----------------------------------------------------------------------------
@@ -173,6 +260,18 @@ with col3:
         value=0.10,
         format="%.3f",
     )
+    effective_porosity = st.number_input(
+        "Effective porosity for MODPATH (-)",
+        min_value=0.01,
+        max_value=0.60,
+        value=0.25,
+        step=0.05,
+        format="%.2f",
+        help=(
+            "Porosity controls particle velocity and travel time. For this steady "
+            "flow field it does not change the geometric pathline."
+        ),
+    )
 
 params = ModelParameters(
     head_left=float(head_left),
@@ -182,33 +281,35 @@ params = ModelParameters(
     k_layer2=float(k_layer2),
     k_layer3=float(k_layer3),
     vertical_anisotropy=float(vertical_anisotropy),
+    effective_porosity=float(effective_porosity),
 )
 
-# Hide stale results immediately when a model parameter changes.  Streamlit will
-# rerun the Python script when a widget changes, but MODFLOW itself is executed
-# only after the dedicated button is pressed.
+# Hide stale results immediately when a model or particle-velocity parameter
+# changes.  Native executables run only after the dedicated button is pressed.
 if (
     "last_run_signature" in st.session_state
     and st.session_state.last_run_signature != params.signature()
 ):
     st.session_state.pop("model_result", None)
     st.session_state.pop("last_run_signature", None)
-    st.info("Model parameters changed. Press **Run MODFLOW** to calculate new results.")
+    st.info(
+        "Model parameters changed. Press **Run MODFLOW + MODPATH** to calculate new results."
+    )
 
-run_clicked = st.button("Run MODFLOW", type="primary")
+run_clicked = st.button("Run MODFLOW + MODPATH", type="primary")
 
 if run_clicked:
     try:
-        with st.spinner("Running MODFLOW 6..."):
+        with st.spinner("Running MODFLOW 6 and MODPATH 7..."):
             with model_run_semaphore():
                 result = run_model(params)
         st.session_state.model_result = result
         st.session_state.last_run_signature = params.signature()
-        st.success("MODFLOW terminated normally.")
+        st.success("MODFLOW and both MODPATH simulations terminated normally.")
     except Exception as exc:
         st.session_state.pop("model_result", None)
         st.session_state.pop("last_run_signature", None)
-        st.error("The MODFLOW run failed.")
+        st.error("The MODFLOW / MODPATH workflow failed.")
         st.exception(exc)
 
 # -----------------------------------------------------------------------------
@@ -225,14 +326,46 @@ if "model_result" in st.session_state:
         f"""
 **Run summary**  
 MODFLOW: `{result.mf6_version}`  
-Runtime including model writing and output reading: **{result.runtime_seconds:.3f} s**  
+MODPATH: `{result.backward.mp7_version}`  
+Total workflow runtime: **{result.runtime_seconds:.3f} s**  
+MODFLOW runtime: **{result.mf6_runtime_seconds:.3f} s**  
+Backward MODPATH runtime: **{result.backward.runtime_seconds:.3f} s**  
+Forward MODPATH runtime: **{result.forward.runtime_seconds:.3f} s**  
 Head at the pumping cell (layer {WELL_LAYER + 1}): **{well_head:.3f} m**  
 Minimum / maximum simulated head: **{np.min(head):.3f} / {np.max(head):.3f} m**
         """
     )
 
+    st.subheader("Particle tracking")
+    tracking_option = st.radio(
+        "Tracking visualization",
+        options=["Backward from pumping well", "Forward from specified-head boundaries"],
+        horizontal=True,
+    )
+
+    if tracking_option.startswith("Backward"):
+        tracking = result.backward
+        st.markdown(
+            f"**Backward tracking:** {tracking.requested_particles} particles were "
+            "released inside the pumping cell and tracked backward toward their "
+            "hydraulic source locations."
+        )
+    else:
+        tracking = result.forward
+        st.markdown(
+            f"**Forward tracking:** {tracking.requested_particles} particles were "
+            "released — one in every specified-head boundary cell on the left and "
+            "right sides. Particles placed in boundary cells acting as outflow may "
+            "terminate very quickly at that boundary."
+        )
+
+    st.caption(
+        f"MODPATH returned {tracking.pathline_count} particle pathline records. "
+        "The white circles show the defined release locations."
+    )
+
     display_layer = st.selectbox(
-        "Layer shown in plan view",
+        "Head layer shown below the plan-view pathlines",
         options=list(range(NLAY)),
         format_func=lambda i: f"Layer {i + 1}",
         index=WELL_LAYER,
@@ -240,25 +373,44 @@ Minimum / maximum simulated head: **{np.min(head):.3f} / {np.max(head):.3f} m**
 
     left, right = st.columns(2)
     with left:
-        fig = plot_plan_view(head, display_layer)
+        fig = plot_plan_view(head, display_layer, tracking)
         st.pyplot(fig, clear_figure=True)
         plt.close(fig)
 
     with right:
+        fig = plot_vertical_pathlines(tracking)
+        st.pyplot(fig, clear_figure=True)
+        plt.close(fig)
+
+    with st.expander("Hydraulic-head profile"):
         fig = plot_head_profiles(head)
         st.pyplot(fig, clear_figure=True)
         plt.close(fig)
 
     with st.expander("MODFLOW console output"):
-        st.code(result.stdout, language="text")
+        st.code(result.mf6_stdout, language="text")
+
+    with st.expander("MODPATH console output"):
+        st.markdown("**Backward tracking**")
+        st.code(result.backward.stdout, language="text")
+        st.markdown("**Forward tracking**")
+        st.code(result.forward.stdout, language="text")
 
 with st.expander("Deployment diagnostic"):
     try:
         mf6_path = locate_mf6()
         mf6_version = get_mf6_version(mf6_path)
         st.write(f"MODFLOW executable: `{mf6_path}`")
-        st.write(f"Version check: `{mf6_version}`")
-        st.success("The MODFLOW executable is available to the Streamlit process.")
+        st.write(f"MODFLOW version check: `{mf6_version}`")
+        st.success("MODFLOW 6 is available to the Streamlit process.")
     except Exception as exc:
-        st.error("MODFLOW executable is not available.")
+        st.error("MODFLOW 6 executable is not available.")
+        st.exception(exc)
+
+    try:
+        mp7_path = locate_mp7()
+        st.write(f"MODPATH executable: `{mp7_path}`")
+        st.success("MODPATH 7 is available to the Streamlit process.")
+    except Exception as exc:
+        st.error("MODPATH 7 executable is not available.")
         st.exception(exc)
