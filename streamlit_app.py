@@ -546,37 +546,52 @@ def discard_flow_workspace() -> None:
 
 
 def show_cumulative_budget(items: list[tuple[str, float]]) -> None:
-    """Show the final cumulative MODFLOW budget as signed component bars."""
+    """Plot the parsed cumulative MODFLOW budget components.
+
+    Only package-specific ``*_IN`` and ``*_OUT`` terms are plotted.  Aggregate
+    ``TOTAL_*`` fields are deliberately excluded from the bars.  The MODFLOW
+    ``IN-OUT`` balance error and percent discrepancy are shown numerically.
+
+    The normalizer accepts both ordinary names (``CHD_IN``) and the literal
+    byte-string representations occasionally returned through some
+    FloPy/Numpy combinations (``b'CHD_IN'``).
+    """
     st.markdown("#### Cumulative mass balance")
     st.caption(
-        "The final cumulative external MODFLOW 6 budget is shown below. "
-        "The listing-file cumulative table is used first, with the binary cell-budget "
-        "file as a fallback for CHD/WEL components. Inflow is positive and outflow "
-        "negative. The stress period is one day."
+        "The final cumulative MODFLOW 6 listing-file budget is shown below. "
+        "Package-specific inflow/outflow terms are plotted directly; aggregate "
+        "TOTAL terms are omitted. The stress period is one day."
     )
     if not items:
-        st.warning("No cumulative external budget could be read from the MODFLOW outputs.")
+        st.info("No cumulative external budget could be read from the MODFLOW outputs.")
         return
 
-    def normalise(name: str) -> str:
-        return name.replace("\x00", "").strip().rstrip(":").upper().replace(" ", "_")
+    def normalise(name: object) -> str:
+        if isinstance(name, (bytes, np.bytes_)):
+            text = name.decode("ascii", errors="replace")
+        else:
+            text = str(name)
+        text = text.replace("\x00", "").strip().rstrip(":")
+        if (
+            len(text) >= 3
+            and text[0] in {"b", "B"}
+            and text[1] in {"'", '"'}
+            and text[-1] == text[1]
+        ):
+            text = text[2:-1]
+        return text.strip().upper().replace(" ", "_")
 
-    values = {normalise(name): float(value) for name, value in items}
+    # Keep every parsed value, including zero-valued package terms.  This means
+    # the bar plot corresponds directly to the MODFLOW cumulative-budget table.
+    normalized_items = [(normalise(name), float(value)) for name, value in items]
+    values = {name: value for name, value in normalized_items}
 
     components: list[tuple[str, float]] = []
-    for raw_name, raw_value in items:
-        key = normalise(raw_name)
-        if key.startswith("TOTAL_") or "PERCENT" in key or "DISCREP" in key or key in {"IN-OUT", "IN_OUT"}:
+    for key, value in normalized_items:
+        if key.startswith("TOTAL_"):
             continue
-        if key.endswith("_IN"):
-            components.append((key.replace("_", " ").title(), abs(float(raw_value))))
-        elif key.endswith("_OUT"):
-            components.append((key.replace("_", " ").title(), -abs(float(raw_value))))
-
-    raw_total_in = values.get("TOTAL_IN")
-    raw_total_out = values.get("TOTAL_OUT")
-    total_in = None if raw_total_in is None else abs(float(raw_total_in))
-    total_out = None if raw_total_out is None else abs(float(raw_total_out))
+        if key.endswith("_IN") or key.endswith("_OUT"):
+            components.append((key.replace("_", " ").title(), value))
 
     balance_error = values.get("IN-OUT", values.get("IN_OUT"))
     discrepancy = next(
@@ -584,24 +599,23 @@ def show_cumulative_budget(items: list[tuple[str, float]]) -> None:
         None,
     )
 
-    if balance_error is None and total_in is not None and total_out is not None:
-        balance_error = total_in - total_out
-    if discrepancy is None and total_in is not None and total_out is not None:
-        denominator = 0.5 * (total_in + total_out)
-        discrepancy = 100.0 * (total_in - total_out) / denominator if denominator > 0.0 else 0.0
-
-    # This fallback is mainly defensive. Under a normal MF6 listing parse the
-    # component terms (e.g. CHD IN / CHD OUT / WEL OUT) should now be present.
-    if not components and total_in is not None and total_out is not None:
-        components = [("Total In", total_in), ("Total Out", -total_out)]
+    # Defensive derivation for nonstandard listings.  The standard MF6 listing
+    # already provides IN-OUT and PERCENT_DISCREPANCY, as seen in the diagnostic
+    # output from the deployed test app.
+    if balance_error is None and components:
+        balance_error = float(sum(value for _label, value in components))
+    if discrepancy is None and components:
+        total_in = sum(value for label, value in components if label.upper().endswith(" IN"))
+        total_out_abs = sum(abs(value) for label, value in components if label.upper().endswith(" OUT"))
+        denominator = 0.5 * (total_in + total_out_abs)
+        discrepancy = 100.0 * float(balance_error) / denominator if denominator > 0.0 else 0.0
 
     if components:
         labels = [label for label, _ in components]
         bar_values = np.asarray([value for _, value in components], dtype=float)
-        colors = ["#4c78a8" if value >= 0.0 else "#e45756" for value in bar_values]
 
         fig, ax = plt.subplots(figsize=(7.0, 4.0))
-        bars = ax.bar(labels, bar_values, color=colors)
+        bars = ax.bar(labels, bar_values)
         ax.axhline(0.0, color="0.25", linewidth=0.8)
         ax.set_ylabel("Cumulative volume (m³)")
         ax.set_title("MODFLOW cumulative water budget")
@@ -610,6 +624,9 @@ def show_cumulative_budget(items: list[tuple[str, float]]) -> None:
 
         scale = max(float(np.max(np.abs(bar_values))), 1.0)
         for bar, value in zip(bars, bar_values):
+            # Put labels just above positive bars and just below negative bars.
+            # Zero-valued terms remain visible numerically even though the bar
+            # itself has no height.
             offset = 0.025 * scale if value >= 0.0 else -0.025 * scale
             ax.text(
                 bar.get_x() + bar.get_width() / 2.0,
@@ -623,19 +640,13 @@ def show_cumulative_budget(items: list[tuple[str, float]]) -> None:
         with matplotlib_render_lock():
             _show_matplotlib(fig)
     else:
-        st.warning("The budget was read, but no inflow/outflow components were identified for plotting.")
-        with st.expander("Budget diagnostic", expanded=False):
-            st.code("\n".join(f"{name}: {value}" for name, value in items), language="text")
+        st.info("No package-specific *_IN or *_OUT terms were present in the parsed budget.")
 
     error_text = "not available" if balance_error is None else f"{float(balance_error):,.6g} m³"
     discrepancy_text = "not available" if discrepancy is None else f"{float(discrepancy):,.6g} %"
-    totals_text = ""
-    if total_in is not None and total_out is not None:
-        totals_text = f"  \n**Total IN / OUT:** {total_in:,.6g} / {total_out:,.6g} m³"
     st.markdown(
         f"**Balance error (IN − OUT):** {error_text}  \n"
         f"**Percent discrepancy:** {discrepancy_text}"
-        f"{totals_text}"
     )
 
 

@@ -348,12 +348,26 @@ def _validate_modflow_outputs(workspace: Path, params: ModelParameters) -> np.nd
 
 
 def _normalise_budget_name(name: object) -> str:
-    """Return a clean MODFLOW budget field name."""
+    """Return a clean MODFLOW budget field name.
+
+    Some FloPy/Numpy combinations expose listing-budget field names as real
+    byte strings, while others expose their *string representation*, for
+    example ``"b'CHD_IN'"``.  Normalize both forms so downstream code always
+    receives ordinary names such as ``CHD_IN``.
+    """
     if isinstance(name, (bytes, np.bytes_)):
         text = name.decode("ascii", errors="replace")
     else:
         text = str(name)
-    return text.replace("\x00", "").strip()
+
+    text = text.replace("\x00", "").strip().rstrip(":")
+
+    # Strip a literal byte-string wrapper that can survive conversion through
+    # a structured NumPy dtype, e.g. "b'WEL_OUT'" or 'b"WEL_OUT"'.
+    if len(text) >= 3 and text[0] in {"b", "B"} and text[1] in {"'", '"'} and text[-1] == text[1]:
+        text = text[2:-1]
+
+    return text.strip()
 
 
 def _read_binary_external_budget(workspace: Path) -> list[tuple[str, float]]:
@@ -405,7 +419,7 @@ def _read_binary_external_budget(workspace: Path) -> list[tuple[str, float]]:
                 items.append((f"{package}_IN", volume_in))
                 total_in += volume_in
             if volume_out > 0.0:
-                items.append((f"{package}_OUT", volume_out))
+                items.append((f"{package}_OUT", -volume_out))
                 total_out += volume_out
 
         if not items:
@@ -417,7 +431,7 @@ def _read_binary_external_budget(workspace: Path) -> list[tuple[str, float]]:
         items.extend(
             [
                 ("TOTAL_IN", total_in),
-                ("TOTAL_OUT", total_out),
+                ("TOTAL_OUT", -total_out),
                 ("IN-OUT", error),
                 ("PERCENT_DISCREPANCY", discrepancy),
             ]
