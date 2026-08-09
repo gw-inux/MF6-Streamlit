@@ -407,6 +407,15 @@ def _run_modpath(
 ) -> TrackingResult:
     """Create, execute, validate, and read one MODPATH 7 simulation."""
 
+    # FloPy accepts node numbers as an integer, nested sequence, or NumPy array.
+    # A flat Python list containing exactly one node (for example [well_node])
+    # is an awkward corner case in NodeParticleData: it can be interpreted as
+    # an incompletely nested node specification and raises a TypeError.
+    # Normalizing to a 1-D NumPy integer array avoids that ambiguity and works
+    # identically for both the single-node backward case and the many-node
+    # forward case.
+    node_spec = np.asarray(nodes, dtype=np.int32)
+
     mp = flopy.modpath.Modpath7.create_mp7(
         modelname=modelname,
         trackdir=direction,
@@ -416,7 +425,7 @@ def _run_modpath(
         columncelldivisions=column_divisions,
         rowcelldivisions=row_divisions,
         layercelldivisions=layer_divisions,
-        nodes=nodes,
+        nodes=node_spec,
         porosity=porosity,
     )
 
@@ -432,7 +441,7 @@ def _run_modpath(
     )
     release_data = flopy.modpath.NodeParticleData(
         subdivisiondata=subdivision,
-        nodes=nodes,
+        nodes=node_spec,
     )
     start_xyz = np.asarray(list(release_data.to_coords(gwf.modelgrid)), dtype=float)
 
