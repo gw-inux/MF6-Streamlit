@@ -118,7 +118,7 @@ def plot_model_grid(params: ModelParameters):
             linestyle="none",
             zorder=4,
         )
-        ax.text(col + 1.0, row + 0.5, str(idx), va="center", fontsize=8, zorder=4)
+        ax.text(col + 1.0, row + 0.4, str(idx), va="center", fontsize=8, zorder=4)
 
     ax.set_xlim(0, params.ncol)
     ax.set_ylim(params.nrow, 0)
