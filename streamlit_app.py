@@ -285,12 +285,12 @@ def plot_plan_view(
                 well_x,
                 well_y,
                 marker="*",
-                markersize=10,
+                markersize=7,
                 linestyle="none",
                 label="Pumping well(s)" if idx == 1 else None,
                 zorder=7,
             )
-            ax.text(well_x + 0.20 * DELR, well_y, str(idx), fontsize=8, va="center", zorder=7)
+            ax.text(well_x + 0.50 * DELR, well_y, str(idx), fontsize=7, va="center", zorder=7)
 
     ax.set_xlim(0.0, params.ncol * DELR)
     ax.set_ylim(0.0, params.nrow * DELC)
