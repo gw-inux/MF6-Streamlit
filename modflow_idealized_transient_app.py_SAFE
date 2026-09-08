@@ -47,8 +47,8 @@ st.markdown(
     The model starts as a **steady-state investigation**. When the transient
     periods are activated, MODFLOW first computes the steady-state reference
     condition and then simulates **1 day + 7 days** of transient response.
-    If a pumping well is active, its abstraction rate can be specified
-    independently for the steady-state period and for each transient period.
+    If a pumping well is active, pumping starts when the first transient period
+    begins.
     """
 )
 
@@ -209,23 +209,18 @@ def build_well_stress_period_data(
     transient_active: bool,
     well_row: int,
     well_col: int,
-    steady_well_rate: float,
-    transient1_well_rate: float,
-    transient2_well_rate: float,
+    well_rate: float,
 ):
     """
-    Build WEL stress-period data with an independently specified rate for
-    every active stress period.
-
-    Rates follow the MODFLOW sign convention (negative = abstraction).
+    Build WEL stress-period data.
 
     Steady-only mode:
-        stress period 0 -> steady_well_rate
+        pumping is active in the steady-state model, matching the original app.
 
     Transient mode:
-        stress period 0 -> steady_well_rate
-        stress period 1 -> transient1_well_rate (1-day period)
-        stress period 2 -> transient2_well_rate (7-day period)
+        stress period 0 -> zero pumping (steady-state reference)
+        stress period 1 -> pumping starts
+        stress period 2 -> pumping continues
     """
     if not active_wel:
         return None
@@ -234,12 +229,12 @@ def build_well_stress_period_data(
 
     if transient_active:
         return {
-            0: [[*cell, float(steady_well_rate)]],
-            1: [[*cell, float(transient1_well_rate)]],
-            2: [[*cell, float(transient2_well_rate)]],
+            0: [[*cell, 0.0]],
+            1: [[*cell, float(well_rate)]],
+            2: [[*cell, float(well_rate)]],
         }
 
-    return {0: [[*cell, float(steady_well_rate)]]}
+    return {0: [[*cell, float(well_rate)]]}
 
 
 def elapsed_time_from_totim(times, transient_active: bool, steady_offset: float):
@@ -390,19 +385,27 @@ def plot_boundary_features(ax, features, nrow, delr, delc):
 
 
 def plot_observation_point(ax, obs_row, obs_col, nrow, delr, delc):
-    """Plot the observation cell with the same x symbol used in the legend."""
+    """Plot the observation cell using a visible open-square/cross symbol."""
     x = (obs_col - 0.5) * delr
     y = (nrow - obs_row + 0.5) * delc
 
     ax.plot(
         x,
         y,
-        marker="x",
-        markersize=8,
-        markeredgewidth=1.6,
-        color="darkgreen",
+        marker="s",
+        markersize=10,
+        markerfacecolor="none",
+        markeredgecolor="darkgreen",
         linestyle="None",
         label="Observation point",
+    )
+    ax.plot(
+        x,
+        y,
+        marker="x",
+        markersize=6,
+        color="darkgreen",
+        linestyle="None",
     )
 
 
@@ -687,11 +690,10 @@ transient_active = st.toggle(
 
 if transient_active:
     st.info(
-        "Transient experiment: the pumping rate can be specified independently "
-        "for all three stress periods. Defaults are no pumping during the "
-        "steady-state reference, pumping during the 1-day transient period, "
-        "and no pumping during the following 7-day period. Recharge, CHD, "
-        "and river conditions remain constant through time."
+        "Transient experiment: the first stress period establishes the "
+        "steady-state reference **without pumping**. If the well is active, "
+        "pumping starts at the beginning of the 1-day transient period and "
+        "continues through the following 7-day period."
     )
 
 col1, col2, col3 = st.columns(3)
@@ -839,64 +841,21 @@ with col2:
                 )
             )
 
-            if transient_active:
-                st.markdown("**Pumping by stress period**")
-
-                steady_well_rate_abs = float(
-                    st.number_input(
-                        "Steady-state abstraction [m³/d]",
-                        value=0.0,
-                        min_value=0.0,
-                        step=10.0,
-                        help=(
-                            "Default is no pumping while the steady-state "
-                            "reference condition is established."
-                        ),
-                    )
+            well_rate_abs = float(
+                st.number_input(
+                    "Abstraction rate [m³/d]",
+                    value=150.0,
+                    min_value=0.0,
+                    step=10.0,
                 )
-
-                transient1_well_rate_abs = float(
-                    st.number_input(
-                        "Transient period 1 abstraction (1 day) [m³/d]",
-                        value=150.0,
-                        min_value=0.0,
-                        step=10.0,
-                    )
-                )
-
-                transient2_well_rate_abs = float(
-                    st.number_input(
-                        "Transient period 2 abstraction (7 days) [m³/d]",
-                        value=0.0,
-                        min_value=0.0,
-                        step=10.0,
-                    )
-                )
-            else:
-                steady_well_rate_abs = float(
-                    st.number_input(
-                        "Abstraction rate [m³/d]",
-                        value=150.0,
-                        min_value=0.0,
-                        step=10.0,
-                    )
-                )
-                transient1_well_rate_abs = 0.0
-                transient2_well_rate_abs = 0.0
-
-            steady_well_rate = -steady_well_rate_abs
-            transient1_well_rate = -transient1_well_rate_abs
-            transient2_well_rate = -transient2_well_rate_abs
+            )
+            well_rate = -well_rate_abs
 
         else:
             well_row = default_well_row
             well_col = default_well_col
-            steady_well_rate_abs = 0.0
-            transient1_well_rate_abs = 0.0
-            transient2_well_rate_abs = 0.0
-            steady_well_rate = 0.0
-            transient1_well_rate = 0.0
-            transient2_well_rate = 0.0
+            well_rate_abs = 0.0
+            well_rate = 0.0
 
         active_riv = st.checkbox(
             "Activate river boundary",
@@ -1081,9 +1040,7 @@ current_model_signature = {
     "active_wel": bool(active_wel),
     "well_row": int(well_row),
     "well_col": int(well_col),
-    "steady_well_rate": float(steady_well_rate),
-    "transient1_well_rate": float(transient1_well_rate),
-    "transient2_well_rate": float(transient2_well_rate),
+    "well_rate": float(well_rate),
     "active_riv": bool(active_riv),
     "river_row": int(river_row),
     "river_length_cols": int(river_length_cols),
@@ -1152,20 +1109,17 @@ with st.expander("Model setup preview and information", expanded=True):
     show_matplotlib(fig_prev)
 
     if transient_active:
-        if active_wel:
-            well_timing_text = (
-                f"steady: {steady_well_rate_abs:.2f} m³/d; "
-                f"1-day transient: {transient1_well_rate_abs:.2f} m³/d; "
-                f"7-day transient: {transient2_well_rate_abs:.2f} m³/d"
-            )
-        else:
-            well_timing_text = "not active"
+        well_timing_text = (
+            "starts with first transient period"
+            if active_wel
+            else "not active"
+        )
         simulation_text = (
             "steady-state reference + 1 day transient + 7 days transient"
         )
     else:
         well_timing_text = (
-            f"steady abstraction: {steady_well_rate_abs:.2f} m³/d"
+            "active in steady-state period"
             if active_wel
             else "not active"
         )
@@ -1311,9 +1265,7 @@ if run_clicked:
             transient_active=transient_active,
             well_row=well_row,
             well_col=well_col,
-            steady_well_rate=steady_well_rate,
-            transient1_well_rate=transient1_well_rate,
-            transient2_well_rate=transient2_well_rate,
+            well_rate=well_rate,
         )
 
         if wel_spd is not None:
@@ -1450,9 +1402,7 @@ if run_clicked:
             "active_wel": bool(active_wel),
             "well_row": int(well_row),
             "well_col": int(well_col),
-            "steady_well_rate_abs": float(steady_well_rate_abs),
-            "transient1_well_rate_abs": float(transient1_well_rate_abs),
-            "transient2_well_rate_abs": float(transient2_well_rate_abs),
+            "well_rate_abs": float(well_rate_abs),
             "active_riv": bool(active_riv),
             "riv_cells": list(riv_cells),
             "boundary_features": boundary_features,
