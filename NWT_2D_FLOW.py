@@ -1929,8 +1929,7 @@ if INTRO_FIGURE.exists():
     )
 else:
     st.info(
-        "**Figure placeholder:** place the conceptual Freeze/Cohen source "
-        "figure at `FIGS/potentiometric_cross_section_concept.png`."
+        "**Figure placeholder:**"
     )
 
 WT_METHOD_MAP = {
