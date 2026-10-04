@@ -1,5 +1,5 @@
-streamlit==1.61.1
-flopy==3.10.0
+streamlit==1.65.0
+flopy==3.11.0
 matplotlib>=3.8,<4
 numpy>=1.26,<3
 scipy
