@@ -1919,14 +1919,16 @@ how a 2-D section can reveal the three-dimensional character of groundwater flow
 )
 
 if INTRO_FIGURE.exists():
-    st.image(
-        str(INTRO_FIGURE),
-        caption=(
-            "Conceptual potentiometric cross section used as motivation for "
-            "the numerical experiment. From [Cherry and Cohen, 2020](https://books.gw-project.org/conceptual-and-visual-understanding-of-hydraulic-head-and-groundwater-flow/)"
-        ),
-        use_container_width=True,
-    )
+    left_co, cent_co, last_co = st.columns((2, 6, 2))
+
+    with cent_co:
+        st.image(
+            str(INTRO_FIGURE),
+            use_container_width=True,
+        )
+        st.markdown(
+            "**Fig. 1 —** Conceptual potentiometric cross section used as motivation for the numerical experiment. From [Cherry and Cohen, 2020](https://books.gw-project.org/conceptual-and-visual-understanding-of-hydraulic-head-and-groundwater-flow/)"
+        )
 else:
     st.info(
         "**Figure placeholder:**"
