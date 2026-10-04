@@ -91,7 +91,7 @@ class Config:
     n_particles_left: int = 4
     n_particles_below: int = 4
     contour_interval: float = 5.0
-    water_table_method: str = "smooth_pchip"
+    water_table_method: str = "zero_pressure_pchip"
     water_table_smoothing_m: float = 500.0
     show_dupuit: bool = False
 
@@ -1927,7 +1927,7 @@ if INTRO_FIGURE.exists():
             use_container_width=True,
         )
         st.markdown(
-            "**Fig. 1 —** Conceptual potentiometric cross section used as motivation for the numerical experiment. From [Cherry and Cohen, 2020](https://books.gw-project.org/conceptual-and-visual-understanding-of-hydraulic-head-and-groundwater-flow/)"
+            "**Fig. 1 —** Conceptual potentiometric cross section used as motivation for the numerical experiment. From [Cohen and Cherry, 2020](https://books.gw-project.org/conceptual-and-visual-understanding-of-hydraulic-head-and-groundwater-flow/)"
         )
 else:
     st.info(
@@ -1937,10 +1937,10 @@ else:
 WT_METHOD_MAP = {
     "Linear through computed heads": "linear",
     "PCHIP through computed heads": "pchip",
-    "Local quadratic + PCHIP (recommended)": "smooth_pchip",
-    "Zero-pressure extrapolation + PCHIP": "zero_pressure_pchip",
+    "Local quadratic + PCHIP": "smooth_pchip",
+    "Zero-pressure extrapolation + PCHIP (recommended)": "zero_pressure_pchip",
 }
-DEFAULT_WT_LABEL = "Local quadratic + PCHIP (recommended)"
+DEFAULT_WT_LABEL = "Zero-pressure extrapolation + PCHIP (recommended)"
 
 PRESET_A = "Preset A"
 PRESET_B = "Preset B"
@@ -2605,7 +2605,7 @@ else:
     contour_interval = int(st.session_state.get("ind_plot_contour_interval", 5))
     show_dupuit = bool(st.session_state.get("ind_post_show_dupuit", False))
 
-water_table_method = "smooth_pchip"
+water_table_method = "zero_pressure_pchip"
 water_table_smoothing_m = float(
     st.session_state.get("post_wt_smoothing_length_m", 500.0)
 )
@@ -2936,7 +2936,7 @@ if using_preset:
                     "recharge and ignores vertical gradients/anisotropy."
                 ),
             )
-    water_table_method = "smooth_pchip"
+    water_table_method = "zero_pressure_pchip"
     water_table_smoothing_m = float(
         st.session_state.get("post_wt_smoothing_length_m", 500.0)
     )
@@ -3041,7 +3041,7 @@ else:
                     st.session_state.get("post_wt_smoothing_length_m", 500.0)
                 )
         else:
-            water_table_method = "smooth_pchip"
+            water_table_method = "zero_pressure_pchip"
             water_table_smoothing_m = float(
                 st.session_state.get("post_wt_smoothing_length_m", 500.0)
             )
