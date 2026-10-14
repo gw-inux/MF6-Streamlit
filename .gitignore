@@ -12,3 +12,4 @@ venv/
 *.cbc
 *.lst
 NWT_Fieldcase_Streamlit.py
+NWT_Fieldcase_Streamlit_web.py_safe

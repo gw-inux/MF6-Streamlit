@@ -57,6 +57,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+# --- Authors, institutions, and year
+year = 2026
+authors = {
+    "Thomas Reimann": [1],  # Author 1 belongs to Institution 1
+}
+institutions = {
+    1: "TU Dresden"
+}
+index_symbols = ["¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"]
+author_list = [f"{name}{''.join(index_symbols[i-1] for i in indices)}" for name, indices in authors.items()]
+institution_list = [f"{index_symbols[i-1]} {inst}" for i, inst in institutions.items()]
+institution_text = " | ".join(institution_list)  # Institutions in one line
+
 ROOT = Path(__file__).resolve().parent
 # Separate from the repository to avoid writing simulation outputs to Git.
 EXECUTABLE_CACHE = Path(tempfile.gettempdir()) / 'gwp_fieldcase_usgs_bin'
@@ -1729,7 +1742,8 @@ def _render_results(st, result, exe_mp):
                        'inflow cells, 147 RIV cells, areal RCH and optional wells.')
             st.caption('The eastern CHD replaces the original WEL inflow and changes '
                        'the conceptual model. Its 375.6 m initial head is provisional.')
-            rows=[{'Well':f'W{i}','Row':w.row,'Column':w.col,
+            rows=[{'Well':f'W{i}','Cell number x-direction':w.row,
+                   'Cell number y-direction':w.col,
                    'Pumping active':bool(opts.pump_on and w.enabled and
                                          opts.pump_per_well_m3_day>0)}
                   for i,w in enumerate(opts.wells,1)]
@@ -1894,8 +1908,6 @@ def main():
             pump_rate=st.number_input('Pumping rate per active well (m³/day)',
                                       min_value=0.,max_value=30000.,value=3000.,
                                       step=250.,key='fc_rate',disabled=not pump_on)
-            st.caption('Select the well cell by its one-based row and column numbers. '
-                       'Well markers are plotted at cell centers.')
             wells=[]
             for idx,(r0,c0) in enumerate(WELL_CELLS,1):
                 st.markdown(f'**Well {idx}**')
@@ -1904,10 +1916,10 @@ def main():
                     enabled=st.checkbox('Use',value=True,key=f'fc_w{idx}_on',
                                         disabled=not pump_on)
                 with c2:
-                    row=st.number_input('Row',min_value=1,max_value=100,value=r0,
+                    row=st.number_input('Cell number x-direction',min_value=1,max_value=100,value=r0,
                                         step=1,key=f'fc_w{idx}_row')
                 with c3:
-                    col=st.number_input('Column',min_value=1,max_value=70,value=c0,
+                    col=st.number_input('Cell number y-direction',min_value=1,max_value=70,value=c0,
                                         step=1,key=f'fc_w{idx}_col')
                 wells.append(Well(int(row),int(col),enabled))
             if pump_on and pump_rate>10000:
@@ -1940,9 +1952,8 @@ def main():
             st.caption(f'FLUXTOL passed to NWT: {fluxday/SEC_DAY:.6g} m³/s; '
                        'the default 500 m³/day is a diagnostic preset and does '
                        'not guarantee a satisfactory mass balance.')
-            exe_mf=st.text_input('MODFLOW-NWT executable',
-                                 value='MODFLOW-NWT_64.exe' if os.name == 'nt' else 'mfnwt',key='fc_mfnwt_exe')
-            st.caption('On Streamlit Cloud use Linux **mfnwt** from `bin/` (or the official USGS auto-download). Windows uses `MODFLOW-NWT_64.exe`.')
+            # The executable is an internal deployment setting, not a user control.
+            exe_mf = 'MODFLOW-NWT_64.exe' if os.name == 'nt' else 'mfnwt'
             solver=SolverSettings(headtol_m=float(headtol),
                 fluxtol_m3_day=float(fluxday),maxiterout=int(niter),
                 complexity=str(complexity),linear_method=str(linear_method))
@@ -2119,3 +2130,11 @@ if __name__ == '__main__':
         self_test()
     else:
         main()
+
+'---'
+# Render footer with authors, institutions, and license logo in a single line
+columns_lic = st.columns((5,1))
+with columns_lic[0]:
+    st.markdown(f'Developed by {", ".join(author_list)} ({year}). <br> {institution_text}', unsafe_allow_html=True)
+with columns_lic[1]:
+    st.image('FIGS/CC_BY-SA_icon.png')
