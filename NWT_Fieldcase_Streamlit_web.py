@@ -56,6 +56,7 @@ from matplotlib.patches import Patch, Rectangle
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import streamlit as st
 
 # --- Authors, institutions, and year
 year = 2026
@@ -1861,10 +1862,10 @@ def inject_expander_styles(st):
 # 10. STREAMLIT UI: input expanders, preview, model run and failure handling
 # =============================================================================
 def main():
-    try:
-        import streamlit as st
-    except ImportError as exc:
-        raise SystemExit('Streamlit missing; install streamlit and flopy.') from exc
+#    try:
+#        import streamlit as st
+#    except ImportError as exc:
+#        raise SystemExit('Streamlit missing; install streamlit and flopy.') from exc
     st.set_page_config(page_title='Groundwater · Flow and catchments',
                        page_icon='💧',layout='centered')
     inject_expander_styles(st)
