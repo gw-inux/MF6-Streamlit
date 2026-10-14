@@ -11,3 +11,4 @@ venv/
 *.bud
 *.cbc
 *.lst
+NWT_Fieldcase_Streamlit.py
