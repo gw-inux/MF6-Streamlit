@@ -1720,9 +1720,17 @@ def _render_results(st, result, exe_mp):
                     table[col]=table[col].round(2)
             st.dataframe(table,hide_index=True,use_container_width=True)
             if abs(lst['percent_discrepancy']) > 1.0:
-                st.warning('Listing-file budget discrepancy exceeds 1%. '
-                           f'Only discrepancies above ±{MAX_BUDGET_DISCREPANCY_PERCENT:g}% '
-                           'cause rejection; inspect results critically.')
+                st.warning(
+                    'Listing-file budget discrepancy exceeds 1%. '
+                    'Solution controls should be adjusted to achieve a discrepancy within ±1% '
+                    'before using the results. '
+                    f'Solutions with discrepancies outside of ±{MAX_BUDGET_DISCREPANCY_PERCENT:g}% '
+                    'are not presented in this module. '
+                    f'For cases with mass balance outside of ±{MAX_BUDGET_DISCREPANCY_PERCENT:g}%, '
+                    'the solution controls should be adjusted or, in some cases, model inputs '
+                    'such as the magnitude of pumping could be adjusted because the magnitude '
+                    'may be too large for the groundwater system to support.'
+                )
             st.caption('All displayed component IN/OUT rates come from the '
                        'incremental MODFLOW listing budget. Positive WEL inflow '
                        'represents bedrock inflow; negative WEL flow represents '
