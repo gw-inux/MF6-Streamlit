@@ -4,7 +4,7 @@ Cloud entrypoint: NWT_Boundary_Streamlit_web.py
 Run: python -m streamlit run NWT_Boundary_Streamlit_web.py
 Place beside the other apps in MF6-Streamlit; reuse its existing bin/mfnwt.
 This cloud variant changes executable resolution only; model/UI behavior
-matches the reviewed local version 1.2.0.
+matches the local version 1.3.2.
 
 TABLE OF CONTENTS (search for the numbered headings below)
   01. Constants, defaults and grid geometry
@@ -13,9 +13,12 @@ TABLE OF CONTENTS (search for the numbered headings below)
   04. Execution, output checks and water budget
   05. Run history and Q-h series management
   06. Cross-section, budget and Q-h figures
-  07. Streamlit style and input controls
+      06a. EVT arrows, dimensions and optional recharge: annotate_evt_recharge
+      06b. Model sketch and computed heads: cross_section_figure
+  07. Streamlit style and input controls (panel colors: inject_styles)
   08. Post-processing, downloads and deletion controls
-  09. Main interface
+      Learning expanders: render_learning_panels; outdated plots: stale_figure
+  09. Main interface (page width and input-expander arrangement)
 
 Maintenance notes
 -----------------
@@ -65,7 +68,7 @@ import numpy as np
 # =============================================================================
 # 01. CONSTANTS, DEFAULTS AND GRID GEOMETRY
 # =============================================================================
-APP_VERSION = "1.2.1-cloud"
+APP_VERSION = "1.3.2-cloud"
 ROOT = Path(__file__).resolve().parent
 MODEL_NAME = "river_demo"
 SEC_DAY = 86400.0
@@ -85,10 +88,10 @@ RUN_TIMEOUT_SECONDS = 30
 MAX_BUDGET_DISCREPANCY_PERCENT = 1.0
 INITIAL_Q_AXIS_LIMIT = 100.0                # symmetric m³/day; expands only
 BOUNDARY_LABELS = {"RIV": "River (RIV)", "DRN": "Drain (DRN)",
-                   "GHB": "General-head (GHB)", "EVT": "Evapotranspiration (EVT)"}
+                   "GHB": "General-head (GHB)", "EVT": "Evapotranspiration (EVT)", "EVT_RCH": "EVT + recharge (EVT + RCH)"}
 BUDGET_TERMS = {"RIV": "RIVER LEAKAGE", "DRN": "DRAINS", "GHB": "HEAD DEP BOUNDS",
-                "EVT": "ET"}
-BOUNDARY_MARKERS = {"RIV": "o", "GHB": "s", "DRN": "x", "EVT": "^"}
+                "EVT": "ET", "EVT_RCH": "ET"}
+BOUNDARY_MARKERS = {"RIV": "o", "GHB": "s", "DRN": "x", "EVT": "^", "EVT_RCH": "v"}
 PALETTE = ("#1f77b4", "#d17a22", "#29834c", "#aa4499", "#bd4545",
            "#238d9c", "#876444", "#5c62ab", "#858720", "#b85b80")
 
@@ -105,6 +108,7 @@ class ModelInputs:
     max_et_mm_year: float = 250.0
     et_surface_m: float = 20.0
     extinction_depth_m: float = 5.0
+    recharge_mm_year: float = 250.0
 
 
 @dataclass(frozen=True)
@@ -153,7 +157,9 @@ def boundary_mean_head(result: dict) -> float:
 
 
 def zero_exchange_expected(p: ModelInputs) -> bool:
-    if p.boundary_type == "EVT":
+    if p.boundary_type == "EVT_RCH" and p.recharge_mm_year > 0:
+        return False
+    if p.boundary_type in ("EVT", "EVT_RCH"):
         return p.max_et_mm_year == 0 or p.end_head_m <= p.et_surface_m-p.extinction_depth_m
     if p.boundary_type == "DRN":
         return p.end_head_m <= p.boundary_head_m
@@ -162,7 +168,7 @@ def zero_exchange_expected(p: ModelInputs) -> bool:
 
 def boundary_head_slope(p: ModelInputs) -> float:
     """Largest absolute dQ/dh for the entire 100 m strip, in m2/s."""
-    if p.boundary_type == "EVT":
+    if p.boundary_type in ("EVT", "EVT_RCH"):
         return (p.max_et_mm_year / 1000 / SEC_YEAR * BOUNDARY_WIDTH * ROW_WIDTH
                 / p.extinction_depth_m)
     return p.conductance_m2_s
@@ -173,7 +179,7 @@ def boundary_thresholds(p: ModelInputs) -> list[float]:
         return [p.river_bottom_m]
     if p.boundary_type == "DRN":
         return [p.boundary_head_m]
-    if p.boundary_type == "EVT":
+    if p.boundary_type in ("EVT", "EVT_RCH"):
         return [p.et_surface_m-p.extinction_depth_m, p.et_surface_m]
     return []
 
@@ -183,7 +189,9 @@ def boundary_thresholds(p: ModelInputs) -> list[float]:
 # =============================================================================
 def validate_inputs(p: ModelInputs, solver: SolverSettings) -> None:
     if p.boundary_type not in BOUNDARY_LABELS:
-        raise ValueError("Choose RIV, DRN, GHB or EVT as the boundary type.")
+        raise ValueError("Choose RIV, DRN, GHB, EVT or EVT + RCH as the boundary type.")
+    if not math.isfinite(p.recharge_mm_year) or not 0 <= p.recharge_mm_year <= 500:
+        raise ValueError("Recharge must be between 0 and 500 mm/a.")
     numeric = (p.k_m_s, p.end_head_m, p.boundary_head_m,
                p.river_bottom_m, p.conductance_m2_s, p.cell_size_m,
                p.max_et_mm_year, p.et_surface_m, p.extinction_depth_m)
@@ -191,7 +199,7 @@ def validate_inputs(p: ModelInputs, solver: SolverSettings) -> None:
         raise ValueError("All model inputs must be finite numbers.")
     if p.cell_size_m not in GRID_SIZES:
         raise ValueError("Choose a cell size of 100, 50, 20, 10 or 5 m.")
-    if p.boundary_type == "EVT":
+    if p.boundary_type in ("EVT", "EVT_RCH"):
         if not 0 <= p.max_et_mm_year <= 500:
             raise ValueError("Maximum ET must be between 0 and 500 mm/a.")
         if not BOTTOM <= p.et_surface_m <= TOP:
@@ -223,7 +231,7 @@ def boundary_flux_m3_s(head_m, p: ModelInputs):
     EVT's maximum rate is converted from mm/a to m/s and multiplied by area.
     """
     h = np.asarray(head_m)
-    if p.boundary_type == "EVT":
+    if p.boundary_type in ("EVT", "EVT_RCH"):
         qmax = p.max_et_mm_year / 1000 / SEC_YEAR * BOUNDARY_WIDTH * ROW_WIDTH
         fraction = np.clip((h-(p.et_surface_m-p.extinction_depth_m))/p.extinction_depth_m, 0., 1.)
         return -qmax * fraction
@@ -241,7 +249,7 @@ def starting_heads(p: ModelInputs) -> np.ndarray:
     """
     grid = model_grid(p)
     heads = np.full(grid.ncol, p.end_head_m, dtype=float)
-    if zero_exchange_expected(p) and (p.boundary_type in ("DRN", "EVT") or p.cell_size_m < 100):
+    if p.boundary_type == "EVT_RCH" or (zero_exchange_expected(p) and (p.boundary_type in ("DRN", "EVT") or p.cell_size_m < 100)):
         increment = 0.01 if p.end_head_m < TOP-0.01 else -0.01
         heads[1:-1] += increment * np.sin(np.pi * grid.x[1:-1] / MODEL_LENGTH)
     return heads
@@ -249,11 +257,13 @@ def starting_heads(p: ModelInputs) -> np.ndarray:
 
 def series_signature(p: ModelInputs) -> tuple:
     """End head samples a series; only active package data define a new series."""
-    if p.boundary_type == "EVT":
+    if p.boundary_type in ("EVT", "EVT_RCH"):
         data = (p.max_et_mm_year, p.et_surface_m, p.extinction_depth_m)
     else:
         data = (p.boundary_head_m, p.conductance_m2_s,
                 p.river_bottom_m if p.boundary_type == "RIV" else None)
+    if p.boundary_type == "EVT_RCH":
+        data += (p.recharge_mm_year,)
     return (p.boundary_type, p.k_m_s, p.cell_size_m, *data)
 
 
@@ -335,7 +345,6 @@ def find_mfnwt_executable() -> str | None:
     return None
 
 
-
 def build_model(p: ModelInputs, solver: SolverSettings, workspace: Path,
                 executable: str):
     """Construct one layer and one row at the selected node spacing with FloPy."""
@@ -355,7 +364,7 @@ def build_model(p: ModelInputs, solver: SolverSettings, workspace: Path,
     # CHD makes the first and last cells fixed-head cells during stress period 1.
     flopy.modflow.ModflowChd(model, stress_period_data={0: [
         [0, 0, j, p.end_head_m, p.end_head_m] for j in (0, grid.ncol - 1)]})
-    if p.boundary_type == "EVT":
+    if p.boundary_type in ("EVT", "EVT_RCH"):
         # EVTR is an areal rate; NWT multiplies it by the FULL cell area.
         # Edge-cell fractions restrict ET to the exact 100 m footprint.
         rates = p.max_et_mm_year / 1000 / SEC_YEAR * grid.overlap_m / grid.dx
@@ -371,6 +380,11 @@ def build_model(p: ModelInputs, solver: SolverSettings, workspace: Path,
             flopy.modflow.ModflowDrn(model, ipakcb=53, stress_period_data={0: records})
         else:
             flopy.modflow.ModflowGhb(model, ipakcb=53, stress_period_data={0: records})
+    if p.boundary_type == "EVT_RCH":
+        # Recharge shares the exact EVT footprint, including partial edge cells.
+        recharge = p.recharge_mm_year / 1000 / SEC_YEAR * grid.overlap_m / grid.dx
+        flopy.modflow.ModflowRch(model, nrchop=1, ipakcb=53,
+                                 rech=recharge.reshape(1, grid.ncol))
     flopy.modflow.ModflowNwt(
         model, headtol=solver.headtol_m, fluxtol=solver.fluxtol_m3_s,
         maxiterout=solver.maxiterout, linmeth=1, iprnwt=1, ibotav=0,
@@ -410,6 +424,8 @@ def read_listing_budget(path: Path, boundary_type: str = "RIV") -> dict:
 
     token = BUDGET_TERMS[boundary_type].replace(" ", "_")
     return {
+        "recharge_in": require("RECHARGE_IN") if boundary_type == "EVT_RCH" else 0.,
+        "recharge_out": require("RECHARGE_OUT") if boundary_type == "EVT_RCH" else 0.,
         "chd_in": require("CONSTANT_HEAD_IN"),
         "chd_out": require("CONSTANT_HEAD_OUT"),
         "boundary_in": require(token + "_IN"),
@@ -425,9 +441,9 @@ def read_cbc_term(reader, label: str, ncol: int = NCOL) -> np.ndarray:
     if len(records) != 1:
         raise ValueError(f"Expected one cell-budget record for {label}.")
     array = np.asarray(np.ma.filled(records[0], 0.0), dtype=float)
-    # EVT with NEVTOP=1 writes an IMETH=4 horizontal array. FloPy leaves this
+    # EVT/RECHARGE applied to layer 1 write IMETH=4 horizontal arrays. FloPy leaves this
     # record two-dimensional even with full3D=True. This model has one layer.
-    if label == "ET" and array.shape == (1, ncol):
+    if label in ("ET", "RECHARGE") and array.shape == (1, ncol):
         array = array.reshape(1, 1, ncol)
     if array.shape != (1, 1, ncol) or not np.all(np.isfinite(array)):
         raise ValueError(f"Invalid cell-budget array for {label}.")
@@ -436,7 +452,7 @@ def read_cbc_term(reader, label: str, ncol: int = NCOL) -> np.ndarray:
 
 def check_outputs(heads: np.ndarray, boundary: np.ndarray, chd: np.ndarray,
                   budget: dict, p: ModelInputs,
-                  solver: SolverSettings = SolverSettings()) -> None:
+                  solver: SolverSettings = SolverSettings(), recharge=None) -> None:
     """Reject missing/dry output, poor balance and inconsistent boundary exchange."""
     grid = model_grid(p)
     if heads.shape != (grid.ncol,) or not np.all(np.isfinite(heads)):
@@ -452,7 +468,7 @@ def check_outputs(heads: np.ndarray, boundary: np.ndarray, chd: np.ndarray,
     # original 100 m grid retain their previous 1e-8 m3/s equilibrium limit.
     # Refined grids use their smaller CHD spacing. No raw rate is set to zero.
     zero_flow_limit = 1e-8
-    if p.boundary_type in ("DRN", "EVT") or p.cell_size_m < 100:
+    if p.boundary_type in ("DRN", "EVT", "EVT_RCH") or p.cell_size_m < 100:
         end_face_conductance = p.k_m_s * ROW_WIDTH * TOP / grid.dx
         zero_flow_limit = min(solver.fluxtol_m3_s, max(1e-8,
             (boundary_head_slope(p) + 2*end_face_conductance) * solver.headtol_m))
@@ -477,8 +493,15 @@ def check_outputs(heads: np.ndarray, boundary: np.ndarray, chd: np.ndarray,
         if not np.isclose(term.sum(), listed, rtol=5e-4, atol=1e-10):
             raise ValueError(f"Listing and binary {prefix.upper()} budgets disagree.")
     # Guard against a listing value rounded to 0.00% concealing a large error.
-    q_in = sum(np.maximum(a, 0).sum() for a in (boundary, chd))
-    q_out = sum(-np.minimum(a, 0).sum() for a in (boundary, chd))
+    recharge = np.zeros_like(boundary) if recharge is None else np.asarray(recharge)
+    if p.boundary_type == "EVT_RCH":
+        expected_rch = p.recharge_mm_year / 1000 / SEC_YEAR * grid.overlap_m * ROW_WIDTH
+        if not np.allclose(recharge, expected_rch, rtol=2e-5, atol=1e-12):
+            raise ValueError("Recharge output does not match the applied rate and footprint.")
+        if not np.isclose(recharge.sum(), budget["recharge_in"]-budget["recharge_out"], rtol=5e-4, atol=1e-12):
+            raise ValueError("Listing and binary recharge budgets disagree.")
+    q_in = sum(np.maximum(a, 0).sum() for a in (boundary, chd, recharge))
+    q_out = sum(-np.minimum(a, 0).sum() for a in (boundary, chd, recharge))
     scale = 0.5 * (q_in + q_out)
     if not near_zero and scale > 1e-10 and abs(q_in - q_out) / scale > 0.01:
         raise ValueError("Binary water-budget discrepancy exceeds 1%.")
@@ -526,10 +549,12 @@ def run_model(p: ModelInputs, solver: SolverSettings,
             try:
                 boundary = read_cbc_term(cbc, BUDGET_TERMS[p.boundary_type], grid.ncol)
                 chd = read_cbc_term(cbc, "CONSTANT HEAD", grid.ncol)
+                recharge = (read_cbc_term(cbc, "RECHARGE", grid.ncol)
+                            if p.boundary_type == "EVT_RCH" else np.zeros(grid.ncol))
             finally:
                 cbc.close()
             budget = read_listing_budget(listing_path, p.boundary_type)
-            check_outputs(heads, boundary, chd, budget, p, solver)
+            check_outputs(heads, boundary, chd, budget, p, solver, recharge)
             archive = io.BytesIO()
             with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
                 for path in sorted(workspace.iterdir()):
@@ -543,6 +568,8 @@ def run_model(p: ModelInputs, solver: SolverSettings,
                     "heads": heads.tolist(), "boundary_cbc": boundary.tolist(),
                     "chd_cbc": chd.tolist(), "budget": budget,
                     "q_boundary_m3_s": float(boundary.sum()),
+                    "q_recharge_m3_s": float(recharge.sum()),
+                    "q_effective_m3_s": float(recharge.sum()+boundary.sum()),
                     "listing": listing_text, "log": log,
                     "model_zip": archive.getvalue()}
         except subprocess.TimeoutExpired as exc:
@@ -618,7 +645,7 @@ def append_result(history: dict, result: dict) -> dict:
         sid = history["next_series_id"]
         counts = history.setdefault("type_counts", {})
         counts[p.boundary_type] = counts.get(p.boundary_type, 0) + 1
-        if history["next_run_id"] == 1 and p.boundary_type == "EVT":
+        if history["next_run_id"] == 1 and p.boundary_type in ("EVT", "EVT_RCH"):
             # 500 mm/a over 100 m2 is only 0.137 m3/day: give a fresh EVT
             # experiment a useful scale without shrinking any existing plot.
             history["q_axis_limit"] = 0.2
@@ -632,6 +659,9 @@ def append_result(history: dict, result: dict) -> dict:
     history["next_run_id"] += 1
     active["runs"].append(result)
     expand_flow_axis(history, result["q_boundary_m3_s"] * SEC_DAY)
+    if p.boundary_type == "EVT_RCH":
+        for key in ("q_recharge_m3_s", "q_effective_m3_s"):
+            expand_flow_axis(history, result[key] * SEC_DAY)
     return result
 
 
@@ -662,12 +692,14 @@ def distinct_variants(series: dict) -> int:
 
 def series_label(series: dict) -> str:
     p = series["inputs"]
-    if p["boundary_type"] == "EVT":
+    if p["boundary_type"] in ("EVT", "EVT_RCH"):
         data = (f"ETmax {p['max_et_mm_year']:g} mm/a; SURF {p['et_surface_m']:g} m; "
                 f"EXDP {p['extinction_depth_m']:g} m")
     else:
         bottom = f"bottom {p['river_bottom_m']:g} m; " if p["boundary_type"] == "RIV" else ""
         data = f"head {p['boundary_head_m']:g} m; {bottom}C {p['conductance_m2_s']:.1e} m²/s"
+    if p["boundary_type"] == "EVT_RCH":
+        data += f"; RCH {p['recharge_mm_year']:g} mm/a"
     return f"S{series['id']} · {p['boundary_type']}: {data}; K {p['k_m_s']:.1e} m/s; Δx {p['cell_size_m']:g} m"
 
 
@@ -677,7 +709,7 @@ def history_csv(history: dict) -> str:
               "river_bottom_m", "conductance_m2_s", "boundary_cell_head_m",
               "q_boundary_m3_s", "q_boundary_m3_day", "budget_discrepancy_percent",
               "cell_size_m", "max_et_mm_year", "et_surface_m", "extinction_depth_m",
-              "boundary_mean_head_m",
+              "boundary_mean_head_m", "recharge_mm_year", "q_recharge_m3_s", "q_effective_m3_s",
               "equilibrium_near_zero_flow", "absolute_budget_imbalance_m3_day"]
     writer = csv.DictWriter(output, fieldnames=fields)
     writer.writeheader()
@@ -685,13 +717,16 @@ def history_csv(history: dict) -> str:
         for result in series["runs"]:
             writer.writerow({**result["inputs"],
                 "river_bottom_m": result["inputs"]["river_bottom_m"] if result["inputs"]["boundary_type"] == "RIV" else "",
+                "recharge_mm_year": result["inputs"].get("recharge_mm_year", "") if result["inputs"]["boundary_type"] == "EVT_RCH" else "",
+                "q_recharge_m3_s": result.get("q_recharge_m3_s", 0.),
+                "q_effective_m3_s": result.get("q_effective_m3_s", ""),
                 "series_id": series["id"],
                 "run_id": result["run_id"],
                 "boundary_cell_head_m": result["heads"][len(result["heads"])//2],
                 "boundary_mean_head_m": boundary_mean_head(result),
-                "boundary_head_m": result["inputs"]["boundary_head_m"] if result["inputs"]["boundary_type"] != "EVT" else "",
-                "conductance_m2_s": result["inputs"]["conductance_m2_s"] if result["inputs"]["boundary_type"] != "EVT" else "",
-                **{name: result["inputs"][name] if result["inputs"]["boundary_type"] == "EVT" else ""
+                "boundary_head_m": result["inputs"]["boundary_head_m"] if result["inputs"]["boundary_type"] not in ("EVT", "EVT_RCH") else "",
+                "conductance_m2_s": result["inputs"]["conductance_m2_s"] if result["inputs"]["boundary_type"] not in ("EVT", "EVT_RCH") else "",
+                **{name: result["inputs"][name] if result["inputs"]["boundary_type"] in ("EVT", "EVT_RCH") else ""
                    for name in ("max_et_mm_year", "et_surface_m", "extinction_depth_m")},
                 "q_boundary_m3_s": result["q_boundary_m3_s"],
                 "q_boundary_m3_day": result["q_boundary_m3_s"] * SEC_DAY,
@@ -705,6 +740,72 @@ def history_csv(history: dict) -> str:
 # =============================================================================
 # 06. CROSS-SECTION, BUDGET AND Q-h FIGURES
 # =============================================================================
+# 06a. EVT arrows and dimensions, with optional RCH (drawing only).
+def annotate_evt_recharge(ax, p: ModelInputs, preview: bool) -> None:
+    """Show EVT dimensions and flux directions, adding RCH only in combined mode.
+
+    Arrows are schematic, not scaled flow vectors. ETmax explicitly identifies
+    the input maximum; actual head-dependent ET remains in the budget/Q-h plot.
+    Interleaved x positions keep opposing arrows distinct when SURF is near TOP.
+    """
+    rch_color = "black" if preview else "#277da5"
+    et_color = "black" if preview else "#47773d"
+    label_box = {"facecolor": "white", "edgecolor": "none", "alpha": .85, "pad": 1.5}
+    surface = p.et_surface_m
+    extinction = surface - p.extinction_depth_m
+
+    # Exactly three arrows per flux, inside the same footprint on every grid.
+    fluxes = (
+        ("rch", (.15, .45, .75), TOP-.6, TOP-3.4, rch_color),
+        ("et", (.25, .55, .85), surface, surface+3., et_color),
+    )
+    for name, fractions, start, end, color in fluxes:
+        if name == "rch" and p.boundary_type != "EVT_RCH":
+            continue
+        for fraction in fractions:
+            x = BOUNDARY_LEFT + fraction * BOUNDARY_WIDTH
+            arrow = ax.annotate("", xy=(x, end), xytext=(x, start),
+                arrowprops={"arrowstyle": "-|>", "color": color, "alpha": .5,
+                            "lw": 1.2, "mutation_scale": 10, "shrinkA": 0, "shrinkB": 0},
+                zorder=9)
+            arrow.arrow_patch.set_gid(f"{name}_flux_arrow")
+
+    # Keep labels clear of one another for high ET surface elevations.
+    et_label_y = surface + 1.5
+    rch_label_y = TOP - 2.
+    if abs(rch_label_y-et_label_y) < 3.:
+        rch_label_y = TOP - 6.5
+    for name, text, y, color in (
+        ("rch_rate_label", f"RCH = {p.recharge_mm_year:g} mm/a", rch_label_y, rch_color),
+        ("et_rate_label", f"ETmax = {p.max_et_mm_year:g} mm/a", et_label_y, et_color),
+    ):
+        if name == "rch_rate_label" and p.boundary_type != "EVT_RCH":
+            continue
+        label = ax.text(BOUNDARY_LEFT-12, y, text, ha="right", va="center",
+                        fontsize=9, color=color, bbox=label_box, zorder=10)
+        label.set_gid(name)
+
+    # Dimension lines end at SURF and SURF-EXDP, even below the model bottom.
+    dimension_x = BOUNDARY_RIGHT + 30
+    ax.hlines([surface, extinction], BOUNDARY_RIGHT, dimension_x+5,
+              color=et_color, lw=.65, alpha=.6, zorder=6)
+    dimension = ax.annotate("", xy=(dimension_x, extinction), xytext=(dimension_x, surface),
+        arrowprops={"arrowstyle": "<->", "color": et_color, "lw": .9,
+                    "mutation_scale": min(8, 6*p.extinction_depth_m),
+                    "shrinkA": 0, "shrinkB": 0}, zorder=9)
+    dimension.arrow_patch.set_gid("extinction_depth_arrow")
+    surface_label = ax.annotate(f"SURF = {surface:g} m", (BOUNDARY_RIGHT, surface),
+        xytext=(27, 6), textcoords="offset points", ha="left", va="bottom",
+        fontsize=9, color=et_color, bbox=label_box, zorder=10)
+    surface_label.set_gid("et_surface_label")
+    depth_label = ax.annotate(f"EXDP = {p.extinction_depth_m:g} m",
+        (dimension_x, (surface+extinction)/2),
+        xytext=(10, -12 if p.extinction_depth_m < 2 else 0), textcoords="offset points",
+        ha="left", va="center", fontsize=9, color=et_color, bbox=label_box, zorder=10)
+    depth_label.set_gid("extinction_depth_label")
+
+
+# 06b. Full model sketch and computed cell heads.
 def cross_section_figure(p: ModelInputs, heads=None):
     """Full cells and a fixed 100 m boundary footprint, on any offered grid."""
     preview = heads is None
@@ -743,8 +844,8 @@ def cross_section_figure(p: ModelInputs, heads=None):
 
     left, right = BOUNDARY_LEFT, BOUNDARY_RIGHT
     color = "black" if preview else {"RIV":"#11658f", "DRN":"#985e34",
-                                     "GHB":"#70528c", "EVT":"#47773d"}[p.boundary_type]
-    reference = p.et_surface_m if p.boundary_type == "EVT" else p.boundary_head_m
+                                     "GHB":"#70528c", "EVT":"#47773d", "EVT_RCH":"#47773d"}[p.boundary_type]
+    reference = p.et_surface_m if p.boundary_type in ("EVT", "EVT_RCH") else p.boundary_head_m
     if p.boundary_type == "RIV":
         rect = Rectangle((left, p.river_bottom_m), BOUNDARY_WIDTH, p.boundary_head_m-p.river_bottom_m,
             facecolor="none" if preview else "#70c4eb", edgecolor=color, lw=.8, zorder=4)
@@ -752,15 +853,14 @@ def cross_section_figure(p: ModelInputs, heads=None):
         ax.add_patch(rect)
         ax.hlines(p.river_bottom_m, left, right,
                   color="black" if preview else "#8a623a", lw=2, ls="--", zorder=6)
-    elif p.boundary_type == "EVT":
+    elif p.boundary_type in ("EVT", "EVT_RCH"):
         ax.hlines(p.et_surface_m-p.extinction_depth_m, left, right,
                   color=color, lw=1.8, ls="--", zorder=6)
     ax.hlines(reference, left, right, color=color, lw=2.5,
               ls="--" if p.boundary_type == "DRN" else "-", zorder=6)
-    if p.boundary_type == "EVT":
-        data_label = (f"EVT  SURF = {p.et_surface_m:g} m\n"
-                      f"ETmax = {p.max_et_mm_year:g} mm/a; EXDP = {p.extinction_depth_m:g} m")
-        caption = (f"EVT · ETmax {p.max_et_mm_year:g} mm/a · SURF {p.et_surface_m:g} m · "
+    if p.boundary_type in ("EVT", "EVT_RCH"):
+        annotate_evt_recharge(ax, p, preview)
+        caption = (f"{p.boundary_type.replace('_', ' + ')} · ETmax {p.max_et_mm_year:g} mm/a · SURF {p.et_surface_m:g} m · "
                    f"EXDP {p.extinction_depth_m:g} m")
     else:
         data_label = (f"{p.boundary_type}  h_{p.boundary_type} = {p.boundary_head_m:g} m\n"
@@ -771,9 +871,10 @@ def cross_section_figure(p: ModelInputs, heads=None):
         caption = (f"{p.boundary_type} · boundary head {p.boundary_head_m:g} m{bottom}"
                    f" · C {p.conductance_m2_s:.1e} m²/s")
     if preview:
-        ax.annotate(data_label, (right, reference), xytext=(9, -9 if reference > 24 else 9),
-            textcoords="offset points", ha="left", va="top" if reference > 24 else "bottom",
-            fontsize=8.5, bbox={"facecolor":"white", "edgecolor":"none", "alpha":.9}, zorder=10)
+        if p.boundary_type not in ("EVT", "EVT_RCH"):
+            ax.annotate(data_label, (right, reference), xytext=(9, -9 if reference > 24 else 9),
+                textcoords="offset points", ha="left", va="top" if reference > 24 else "bottom",
+                fontsize=8.5, bbox={"facecolor":"white", "edgecolor":"none", "alpha":.9}, zorder=10)
         ax.plot(grid.x, starting_heads(p), color="#666666", lw=.9, ls="--", zorder=3)
         handles = [Line2D([], [], color="#666666", lw=.9, ls="--", label="Initial head (starting guess)")]
         title = "Model preview · before computation"
@@ -787,14 +888,19 @@ def cross_section_figure(p: ModelInputs, heads=None):
                    Patch(facecolor="#b9def1", label="Saturated part of each cell")]
         title = "Computed groundwater heads"
     ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(0, -.19), ncol=2, fontsize=8)
-    ax.set(xlim=(grid.edges[0], grid.edges[-1]), ylim=(BOTTOM-1, TOP+1),
+    lower, upper = BOTTOM-1, TOP+1
+    if p.boundary_type in ("EVT", "EVT_RCH"):
+        # Keep the complete EXDP dimension and upward ET arrows visible.
+        lower = min(lower, p.et_surface_m-p.extinction_depth_m-1.5)
+        upper = max(upper, p.et_surface_m+4.5)
+    ax.set(xlim=(grid.edges[0], grid.edges[-1]), ylim=(lower, upper),
            xticks=np.arange(0, MODEL_LENGTH+1, 100),
            xlabel="Distance perpendicular to the boundary, x (m)", ylabel="Elevation, z (m)",
            title=title+"\n"+caption)
     ax.spines["bottom"].set_bounds(0, MODEL_LENGTH)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.set_yticks(np.arange(0, 31, 5))
+    ax.set_yticks(np.arange(5*math.ceil(lower/5), 31, 5))
     ax.grid(axis="y", alpha=.12)
     return fig
 
@@ -805,6 +911,11 @@ def budget_figure(result: dict):
     labels = ["Specified heads\n(CHD)", BOUNDARY_LABELS[result["inputs"]["boundary_type"]], "TOTAL"]
     incoming = np.array([b["chd_in"], b["boundary_in"], b["total_in"]]) * SEC_DAY
     outgoing = np.array([b["chd_out"], b["boundary_out"], b["total_out"]]) * SEC_DAY
+    if result["inputs"]["boundary_type"] == "EVT_RCH":
+        labels[1] = "Evapotranspiration (EVT)"
+        labels.insert(2, "Recharge (RCH)")
+        incoming = np.insert(incoming, 2, b["recharge_in"] * SEC_DAY)
+        outgoing = np.insert(outgoing, 2, b["recharge_out"] * SEC_DAY)
     fig, ax = plt.subplots(figsize=(5.5, 4.2), layout="constrained")
     y = np.arange(len(labels))
     bars_in = ax.barh(y-.19, incoming, height=.38, color="#2577a7", label="IN (+)")
@@ -895,7 +1006,19 @@ def qh_figure(history: dict, axis: str = "boundary_cell"):
         style = {"color": series["color"]} if marker == "x" else {"facecolors": "none", "edgecolors": series["color"]}
         ax.scatter(flow, head, s=series.get("marker_size",36), marker=marker, **style,
                    linewidths=1.4, zorder=3,
-                   label=f"S{series['id']} · {series['inputs']['boundary_type']} · {distinct_variants(series)} variants")
+                   label=f"S{series['id']} · {'EVT loss' if series['inputs']['boundary_type'] == 'EVT_RCH' else series['inputs']['boundary_type']} · {distinct_variants(series)} variants")
+        if series["inputs"]["boundary_type"] == "EVT_RCH":
+            rch = [r["q_recharge_m3_s"]*SEC_DAY for r in series["runs"]]
+            net = [r["q_effective_m3_s"]*SEC_DAY for r in series["runs"]]
+            for values, symbol, label in ((rch, "s", "RCH"), (net, "D", "RCH − ET")):
+                ax.scatter(values, head, marker=symbol, facecolors="none",
+                           edgecolors=series["color"], s=series.get("marker_size",36),
+                           label=f"S{series['id']} · {label}")
+            if distinct_variants(series) >= MIN_RUNS_FOR_LINE:
+                ax.plot([rch[0], rch[0]], [min(head), max(head)],
+                        color=series["color"], lw=.85, ls=":")
+                for q, h in qh_segments(series, axis):
+                    ax.plot(np.asarray(q)+rch[0], h, color=series["color"], lw=.85, ls="--")
     ax.axvline(0, color="#555555", lw=.8, zorder=0)
     extent = history.get("q_axis_limit", INITIAL_Q_AXIS_LIMIT)
     ax.set_xlim(-extent, extent)
@@ -919,12 +1042,13 @@ def qh_figure(history: dict, axis: str = "boundary_cell"):
 def inject_styles(st) -> None:
     # Soft panels from the Fieldcase app; stable keys, not positional selectors.
     panels = {"aquifer": ("248,226,107", "#c3a846"),
-              "boundaries": ("83,163,108", "#76ae79"),
+              "boundaries": ("93,169,206", "#6eafcb"),
+              "chd": ("80,156,142", "#69a89c"),
               "heads": ("93,169,206", "#6eafcb"),
               "budget": ("80,156,142", "#69a89c"),
               "details": ("151,160,167", "#a3abb0")}
-    css = [".block-container {max-width: 1150px;}",
-           '[class*="st-key-riv-panel-"] [data-testid="stExpander"] > details '
+    # Let Streamlit's centered layout control page width (including mobile).
+    css = ['[class*="st-key-riv-panel-"] [data-testid="stExpander"] > details '
            '{border-radius:.7rem; overflow:hidden;}',
            '[class*="st-key-riv-panel-"] [data-testid="stExpander"] summary p '
            '{font-weight:650;}']
@@ -1008,6 +1132,50 @@ def clear_all_callback() -> None:
     st.session_state.pop("run_error", None)
 
 
+def render_learning_panels(st) -> None:
+    """Independent teaching expanders; keep the established equations and advice."""
+    with st.container(key="riv-panel-equations"):
+        with panel(st, "7 · Boundary equations", "equations"):
+            st.latex(r"\mathrm{RIV}:\quad Q=C\,[h_b-\max(h,z_b)]")
+            st.latex(r"\mathrm{DRN}:\quad Q=-C\,\max(h-h_b,0)")
+            st.latex(r"\mathrm{GHB}:\quad Q=C\,(h_b-h)")
+            st.latex(r"Q_{effective}=Q_{RCH}+Q_{EVT}=Q_{RCH}-ET_{loss}")
+            st.caption("EVT + RCH applies both packages to the same 100 m² footprint. Recharge is positive; EVT flow is negative. All plotted flows come from the computed budget.")
+            st.latex(r"\mathrm{EVT}:\quad Q=-E_{max}A\,\mathrm{clip}\!\left(\frac{h-(SURF-EXDP)}{EXDP},0,1\right)")
+            st.markdown("The equations apply to each boundary cell using its share of conductance or area; "
+                        "the graph sums the cell flows. **h** in these equations is the cell head, "
+                        "**hᵦ** is the external boundary head, "
+                        "and **zᵦ** is the river bottom. RIV reaches a constant inflow below "
+                        "its bottom; DRN cannot supply groundwater; GHB permits both directions. "
+                        "EVT removes water between zero and its specified maximum, according to head.")
+            st.markdown("[USGS boundary-condition explanation](https://water.usgs.gov/"
+                        "nrp/gwsoftware/modflow2000/MFDOC/head-dependent_flux_boundary_p.html)")
+    with st.container(key="riv-panel-experiments"):
+        with panel(st, "8 · Suggested experiments", "experiments"):
+            st.markdown("Keep the boundary settings fixed and try end heads of "
+                        "**25, 20, 17, 15, 10 and 5 m**. Then change boundary type, "
+                        "head or conductance and repeat to start a new series. For EVT, use end heads "
+                        "below SURF − EXDP, between the thresholds, and above SURF.")
+
+
+def stale_figure(fig, stale: bool):
+    """Gray every plot element and overlay a readable stale-result banner."""
+    if not stale:
+        return fig
+    fig.canvas.draw()
+    rgba = np.asarray(fig.canvas.buffer_rgba()).copy()
+    gray = np.dot(rgba[..., :3], [0.2126, 0.7152, 0.0722]) / 255
+    plt.close(fig)
+    faded, ax = plt.subplots(figsize=fig.get_size_inches())
+    ax.imshow(gray, cmap="gray", vmin=0, vmax=1)
+    ax.axis("off")
+    ax.text(.5, .5, "OUTDATED RESULTS\nModel parameters changed\nRun the model again to update",
+            transform=ax.transAxes, ha="center", va="center", fontsize=12,
+            color="#333333", bbox=dict(facecolor="white", edgecolor="gray", alpha=.88))
+    faded.subplots_adjust(0, 0, 1, 1)
+    return faded
+
+
 def render_results(st, current: ModelInputs, solver: SolverSettings) -> None:
     history = st.session_state["history"]
     result = latest_result(history)
@@ -1016,15 +1184,17 @@ def render_results(st, current: ModelInputs, solver: SolverSettings) -> None:
         return
     p = ModelInputs(**result["inputs"])
     st.subheader("Post-processing")
-    if series_signature(p) != series_signature(current) or p.end_head_m != current.end_head_m or result["solver"] != asdict(solver):
+    stale = (series_signature(p) != series_signature(current) or p.end_head_m != current.end_head_m
+             or result["solver"] != asdict(solver))
+    if stale:
         st.info(f"Inputs have changed. The cross section and budget below still show "
                 f"run {result['run_id']} (S{result['series_id']}); run again to update them.")
     else:
         st.success(f"MODFLOW-NWT completed successfully · run {result['run_id']} · "
                    f"series S{result['series_id']}")
     with st.container(key="riv-panel-heads"):
-        with panel(st, "4 · Computed heads", "heads", expanded=True):
-            show_figure(st, cross_section_figure(p, result["heads"]),
+        with panel(st, "5 · Computed heads", "heads", expanded=True):
+            show_figure(st, stale_figure(cross_section_figure(p, result["heads"]), stale),
                         "Computed cell heads with a light blue saturated fill in each cell.")
             h = boundary_mean_head(result)
             boundary_heads = np.asarray(result["heads"])[model_grid(p).boundary_cells]
@@ -1045,14 +1215,14 @@ def render_results(st, current: ModelInputs, solver: SolverSettings) -> None:
                           else "General-head boundary: inflow to groundwater." if q > 1e-6
                           else "General-head boundary: groundwater outflow." if q < -1e-6
                           else "Negligible general-head exchange.")
-            elif p.boundary_type == "EVT":
+            elif p.boundary_type in ("EVT", "EVT_RCH"):
                 regime = ("ET inactive: negligible groundwater loss." if result["budget"]["near_zero_flow"]
                           else "Maximum ET across the full strip." if np.all(boundary_heads >= p.et_surface_m)
                           else "Groundwater loss varies with head between the EVT thresholds.")
             st.caption(f"Mean head in boundary area: {h:.4f} m · Total Q = {q:+.5g} m³/day. {regime}")
 
     with st.container(key="riv-panel-budget"):
-        with panel(st, "5 · Water budget and Q–h series", "budget", expanded=True):
+        with panel(st, "6 · Water budget and Q–h series", "budget", expanded=True):
             series_by_id = {s["id"]: s for s in history["series"]}
             st.multiselect("Retained series — remove × to delete a complete series",
                 options=list(series_by_id), key="retained_series",
@@ -1078,7 +1248,7 @@ def render_results(st, current: ModelInputs, solver: SolverSettings) -> None:
             axis = "boundary_cell" if axis_label.startswith("Groundwater") else "end_head"
             left, right = st.columns(2)
             with left:
-                show_figure(st, budget_figure(result), "Signed MODFLOW water budget.")
+                show_figure(st, stale_figure(budget_figure(result), stale), "Signed MODFLOW water budget.")
                 budget = result["budget"]
                 st.caption(f"Total IN: {budget['total_in']*SEC_DAY:.5g} m³/day · "
                            f"Total OUT: {budget['total_out']*SEC_DAY:.5g} m³/day")
@@ -1100,33 +1270,24 @@ def render_results(st, current: ModelInputs, solver: SolverSettings) -> None:
                 if axis == "end_head":
                     st.caption("For end head H, lines are interpolation guides; the bend's H-coordinate "
                                "is estimated between neighbouring runs. The exact boundary law uses local h.")
-            with st.expander("Boundary equations and suggested experiment"):
-                st.latex(r"\mathrm{RIV}:\quad Q=C\,[h_b-\max(h,z_b)]")
-                st.latex(r"\mathrm{DRN}:\quad Q=-C\,\max(h-h_b,0)")
-                st.latex(r"\mathrm{GHB}:\quad Q=C\,(h_b-h)")
-                st.latex(r"\mathrm{EVT}:\quad Q=-E_{max}A\,\mathrm{clip}\!\left(\frac{h-(SURF-EXDP)}{EXDP},0,1\right)")
-                st.markdown("The equations apply to each boundary cell using its share of conductance or area; "
-                            "the graph sums the cell flows. **h** in these equations is the cell head, "
-                            "**hᵦ** is the external boundary head, "
-                            "and **zᵦ** is the river bottom. RIV reaches a constant inflow below "
-                            "its bottom; DRN cannot supply groundwater; GHB permits both directions. "
-                            "EVT removes water between zero and its specified maximum, according to head.")
-                st.markdown("Keep the boundary settings fixed and try end heads of "
-                            "**25, 20, 17, 15, 10 and 5 m**. Then change boundary type, "
-                            "head or conductance and repeat to start a new series. For EVT, use end heads "
-                            "below SURF − EXDP, between the thresholds, and above SURF.")
-                st.markdown("[USGS boundary-condition explanation](https://water.usgs.gov/"
-                            "nrp/gwsoftware/modflow2000/MFDOC/head-dependent_flux_boundary_p.html)")
+
+    render_learning_panels(st)
 
     with st.container(key="riv-panel-details"):
-        with panel(st, "6 · Model details and downloads", "details"):
+        with panel(st, "9 · Model details and downloads", "details"):
             grid = model_grid(p)
             st.dataframe({"Cell": list(range(1, grid.ncol+1)), "x (m)": grid.x,
                           "Computed head (m)": result["heads"]}, hide_index=True)
             budget = result["budget"]
-            st.dataframe({"Component": ["Specified heads (CHD)", BOUNDARY_LABELS[p.boundary_type], "TOTAL"],
-                "IN (m³/day)": [budget[n]*SEC_DAY for n in ("chd_in", "boundary_in", "total_in")],
-                "OUT (m³/day)": [budget[n]*SEC_DAY for n in ("chd_out", "boundary_out", "total_out")]},
+            terms = [("Specified heads (CHD)", "chd"),
+                     ("Evapotranspiration (EVT)" if p.boundary_type == "EVT_RCH"
+                      else BOUNDARY_LABELS[p.boundary_type], "boundary")]
+            if p.boundary_type == "EVT_RCH":
+                terms.append(("Recharge (RCH)", "recharge"))
+            terms.append(("TOTAL", "total"))
+            st.dataframe({"Component": [label for label, _ in terms],
+                "IN (m³/day)": [budget[key+"_in"]*SEC_DAY for _, key in terms],
+                "OUT (m³/day)": [budget[key+"_out"]*SEC_DAY for _, key in terms]},
                 hide_index=True)
             st.download_button("Download all retained Q–h points (CSV)", history_csv(history),
                                "boundary_qh_runs.csv", "text/csv")
@@ -1143,7 +1304,7 @@ def render_results(st, current: ModelInputs, solver: SolverSettings) -> None:
 # =============================================================================
 def main() -> None:
     import streamlit as st
-    st.set_page_config(page_title="Groundwater · Boundary conditions", page_icon="💧", layout="wide")
+    st.set_page_config(page_title="Groundwater · Boundary conditions", page_icon="💧", layout="centered")
     inject_styles(st)
     st.session_state.setdefault("history", empty_history())
     upgrade_history(st.session_state["history"])
@@ -1166,14 +1327,9 @@ def main() -> None:
                        "(x = 450–550 m); partial overlaps at its edges preserve the total area and conductance.")
     with st.container(key="riv-panel-boundaries"):
         with panel(st, "2 · Boundary conditions", "boundaries"):
-            left, right = st.columns(2)
+            left, right = st.columns([1, 3])
             with left:
-                with st.container(border=True):
-                    st.markdown("**Specified-head boundaries (CHD)**")
-                    end_head = numeric_control(st, "Specified head at both ends H (m)", "end_head",
-                        1., 30., default.end_head_m, .5, numbers)
-                    st.caption("Both end heads are equal. Change H between runs to add points "
-                               "to the current Q–h series.")
+                numbers = st.toggle("Use number inputs", value=True, key="bc_numbers")
             with right:
                 with st.container(border=True):
                     st.markdown("**Central boundary area**")
@@ -1186,29 +1342,43 @@ def main() -> None:
                     et_max = values.get("max_et", default.max_et_mm_year)
                     et_surface = values.get("et_surface", default.et_surface_m)
                     et_depth = values.get("extinction_depth", default.extinction_depth_m)
-                    if boundary_type == "EVT":
+                    recharge = values.get("recharge", default.recharge_mm_year)
+                    if boundary_type == "EVT_RCH":
+                        recharge = numeric_control(st, "Recharge (mm/a)", "recharge",
+                            0., 500., default.recharge_mm_year, 10., numbers)
+                        st.caption("RCH and EVT share the central 100 m strip. Effective recharge = RCH − ET loss.")
+                    if boundary_type in ("EVT", "EVT_RCH"):
                         et_max = numeric_control(st, "Maximum ET (mm/a)", "max_et",
                             0., 500., default.max_et_mm_year, 10., numbers)
                         et_surface = numeric_control(st, "ET surface SURF (m)", "et_surface",
-                            0., 30., default.et_surface_m, .1, numbers)
+                            0., 30., default.et_surface_m, .5, numbers)
                         et_depth = numeric_control(st, "Extinction depth EXDP (m)", "extinction_depth",
-                            .1, 30., default.extinction_depth_m, .1, numbers)
+                            .1, 30., default.extinction_depth_m, .5, numbers)
                         st.caption("ET acts over the 100 m × 1 m strip. EXDP is a depth below SURF. "
                                    "ET stops at SURF − EXDP and reaches its maximum at SURF. 1 a = 365.25 days.")
                     else:
                         head = numeric_control(st, "Boundary head (m)", "river_stage",
-                            .1, 30., default.boundary_head_m, .1, numbers)
+                            .1, 30., default.boundary_head_m, .5, numbers)
                         if boundary_type == "RIV":
                             bottom = numeric_control(st, "River-bottom elevation (m)", "river_bottom",
-                                0., 30., default.river_bottom_m, .1, numbers)
+                                0., 30., default.river_bottom_m, .5, numbers)
                         conductance = numeric_control(st, "Conductance C (m²/s)", "conductance",
                             1e-6, 1e-2, default.conductance_m2_s, 1e-5, numbers, logarithmic=True)
                         st.caption("C is the total conductance of the 100 m strip for the 1 m model width. "
                                    "Boundary head is river stage, drain elevation or external GHB head.")
             st.caption("Changing boundary data, K or grid size starts a new series on the next successful run. "
                        "Each boundary type keeps its symbol; new series get a new color and a slightly different size.")
+    with st.container(key="riv-panel-chd"):
+        with panel(st, "3 · Specified-head boundaries (CHD)", "chd"):
+            left, right = st.columns([1, 3])
+            with left:
+                chd_numbers = st.toggle("Use number inputs", value=True, key="chd_numbers")
+            with right:
+                end_head = numeric_control(st, "Specified head at both ends H (m)", "end_head",
+                    1., 30., default.end_head_m, .5, chd_numbers)
+            st.caption("Both end heads are equal. Change H between runs to add points to the current series.")
     p = ModelInputs(k, end_head, head, bottom, conductance, boundary_type,
-                    cell_size, et_max, et_surface, et_depth)
+                    cell_size, et_max, et_surface, et_depth, recharge)
     # Fixed user-requested solver criteria; no editable learner controls.
     solver = SolverSettings()
     invalid = None
@@ -1218,11 +1388,11 @@ def main() -> None:
         invalid = str(exc)
         st.error(invalid)
     with st.container(key="riv-panel-preview"):
-        with panel(st, "3 · Model preview: grid and boundaries", "preview", expanded=True):
+        with panel(st, "4 · Model preview: grid and boundaries", "preview", expanded=True):
             if invalid is None:
                 show_figure(st, cross_section_figure(p), "Black-and-white full-cell grid and boundary sketch.")
             st.caption("Full-cell view: x = 0 and 1,000 m mark the CHD node centres. "
-                       "The central boundary spans x = 450–550 m. No recharge; other faces are no-flow.")
+                       "The central boundary spans x = 450–550 m. Recharge is applied only in EVT + RCH; other faces are no-flow.")
     if st.button("▶ Run MODFLOW-NWT model", type="primary", width="stretch",
                  disabled=invalid is not None, key="run_model"):
         st.session_state.pop("run_error", None)

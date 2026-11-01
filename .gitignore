@@ -13,3 +13,4 @@ venv/
 *.lst
 NWT_Fieldcase_Streamlit.py
 NWT_Fieldcase_Streamlit_web.py_safe
+NWT_Boundary_Streamlit_web.py_safe
