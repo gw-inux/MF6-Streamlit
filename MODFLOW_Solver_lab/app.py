@@ -7,33 +7,56 @@ Native model construction, solver behavior and output reading remain in core.py.
 
 # BEGIN CODE CONTENTS
 # Manual edits: jump to these release line numbers (refresh with tools/update_code_map.py).
-#   initialize_session: line 39
-#   retain_comparable_runs: line 56
-#   1 — Introduction and numerical background. Edit prose in content.py.: line 78
-#   2 — Scenario, spatial discretization and numerical solver inputs.: line 89
-#   3 — Additional complexity and live preview use the current validated inputs.: line 109
-#   4 — Execution, plotted heads, run comparison and native diagnostics.: line 122
-#   5 — Grid refinement is an independent subsection with a reviewable plan.: line 127
-#   6 — Conclusion and primary documentation.: line 130
+#   initialize_session: line 62
+#   retain_comparable_runs: line 79
+#   1 — Introduction and numerical background. Edit prose in content.py.: line 101
+#   2 — Scenario, spatial discretization and numerical solver inputs.: line 112
+#   3 — Additional complexity and live preview use the current validated inputs.: line 132
+#   4 — Execution, plotted heads, run comparison and native diagnostics.: line 145
+#   5 — Grid refinement is an independent subsection with a reviewable plan.: line 150
+#   6 — Conclusion and primary documentation.: line 153
 # END CODE CONTENTS
 
 from copy import deepcopy
 from dataclasses import asdict
 from pathlib import Path
 import tempfile
+import sys
 
 import streamlit as st
 
-from content import INTRODUCTION, SOLVER_DETAILS, ASSUMPTIONS, REFERENCES, CONCLUSION, TEXT
-from controls import expert_controls
-from core import ENGINE_NAMES, Scenario, find_executable
-from inputs import (capture_input_values, scenario_controls, spatial_controls,
+# Support both direct local execution and the repository-root cloud launcher.
+if not __package__:
+    package_parent = str(Path(__file__).resolve().parent.parent)
+    if package_parent in sys.path:
+        sys.path.remove(package_parent)
+    sys.path.insert(0, package_parent)
+    __package__ = "MODFLOW_Solver_lab"
+
+# Report a partial content update visibly, rather than a redacted ImportError.
+try:
+    from . import content as teaching
+except ImportError:
+    st.error("Incomplete Solver Lab upload: content.py could not be loaded. "
+             "Replace the complete MODFLOW_Solver_lab folder from the latest ZIP, then reboot the app.")
+    st.stop()
+required_text = ("INTRODUCTION", "SOLVER_DETAILS", "ASSUMPTIONS", "REFERENCES", "CONCLUSION", "TEXT")
+missing_text = [name for name in required_text if not hasattr(teaching, name)]
+if missing_text:
+    st.error("The uploaded Solver Lab files are from different releases. content.py is missing: "
+             + ", ".join(missing_text) + ". Replace the complete MODFLOW_Solver_lab folder "
+             "from the latest ZIP, then reboot the app.")
+    st.stop()
+from .content import INTRODUCTION, SOLVER_DETAILS, ASSUMPTIONS, REFERENCES, CONCLUSION, TEXT
+from .controls import expert_controls
+from .core import ENGINE_NAMES, Scenario, find_executable
+from .inputs import (capture_input_values, scenario_controls, spatial_controls,
                     solver_controls, complexity_controls, render_model_preview)
-from results import render_execution, render_run_comparison, render_diagnostics
-from settings import (default_variants, GRID_DEFAULTS, capture_active_profile,
+from .results import render_execution, render_run_comparison, render_diagnostics
+from .settings import (default_variants, GRID_DEFAULTS, capture_active_profile,
                       remember_main_controls, solver_from_profile)
-from studies import render_grid_study
-from ui import apply_style
+from .studies import render_grid_study
+from .ui import apply_style
 
 
 def initialize_session():

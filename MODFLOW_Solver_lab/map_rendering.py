@@ -18,8 +18,8 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import numpy as np
 
-from core import fingerprint
-from plots import computed_head_map
+from .core import fingerprint
+from .plots import computed_head_map
 
 HEAD_MAP_DPI = 160
 

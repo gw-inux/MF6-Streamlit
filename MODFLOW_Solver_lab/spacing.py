@@ -15,7 +15,7 @@ Grid-refinement text entries still support fractional spacings as before.
 
 import math
 
-from settings import parse_grid_spacings
+from .settings import parse_grid_spacings
 
 SPACING_STEPS = (1, 2, 3, 5, 10, 20, 25, 50, 100, 200, 250, 500,
                  1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000)

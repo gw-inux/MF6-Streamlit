@@ -11,13 +11,13 @@ import time
 import pandas as pd
 import streamlit as st
 
-from content import TEXT
-from core import MAX_CELLS, Solver, comparison_row, fingerprint
-from plots import grid_study_plot
-from results import execute, TIMEOUT_SECONDS
-from settings import (VARIANTS, parse_grid_entries, parse_grid_spacings,
+from .content import TEXT
+from .core import MAX_CELLS, Solver, comparison_row, fingerprint
+from .plots import grid_study_plot
+from .results import execute, TIMEOUT_SECONDS
+from .settings import (VARIANTS, parse_grid_entries, parse_grid_spacings,
                       variant_plan, settings_table, formatted_csv)
-from ui import show_fig, show_table
+from .ui import show_fig, show_table
 
 
 def render_grid_study(s, cfg, profile, executables, workspace, repeats):

@@ -36,9 +36,9 @@ from matplotlib.lines import Line2D
 from matplotlib.collections import PolyCollection
 from matplotlib.ticker import MaxNLocator
 import numpy as np
-from settings import limits_summary, preset_label
-from surfaces import groundwater_surface
-from diagnostic_guides import convergence_guides
+from .settings import limits_summary, preset_label
+from .surfaces import groundwater_surface
+from .diagnostic_guides import convergence_guides
 
 BLUE = "#176DBB"
 ANALYTICAL_GREEN = "#278247"

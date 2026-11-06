@@ -10,7 +10,7 @@ Native iteration histories, values and the available iteration levels stay intac
 #   convergence_guides: line 16
 # END CODE CONTENTS
 
-from settings import effective_settings
+from .settings import effective_settings
 
 
 def convergence_guides(solver, kind):

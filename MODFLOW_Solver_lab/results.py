@@ -22,13 +22,13 @@ import time
 import pandas as pd
 import streamlit as st
 
-from content import TEXT
-from core import ENGINE_NAMES, Scenario, Solver, fingerprint, run_repeated
-from plots import (head_plot, profile_snapshot, display_stride,
+from .content import TEXT
+from .core import ENGINE_NAMES, Scenario, Solver, fingerprint, run_repeated
+from .plots import (head_plot, profile_snapshot, display_stride,
                    error_plot, model_preview, convergence_plot)
-from settings import MAX_RUNS, append_run, remove_runs, run_table, formatted_csv, settings_table, limits_summary, preset_label
-from ui import show_fig, show_table, style_computed_map
-from map_rendering import head_map_image
+from .settings import MAX_RUNS, append_run, remove_runs, run_table, formatted_csv, settings_table, limits_summary, preset_label
+from .ui import show_fig, show_table, style_computed_map
+from .map_rendering import head_map_image
 
 TIMEOUT_SECONDS = 120.
 

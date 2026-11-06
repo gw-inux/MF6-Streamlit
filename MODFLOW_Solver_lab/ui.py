@@ -15,7 +15,7 @@ Keep styling and table formatting here; model calculations live in core.py.
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
-from settings import INTEGER_COLUMNS, SPACING_COLUMNS
+from .settings import INTEGER_COLUMNS, SPACING_COLUMNS
 
 APP_STYLE = """
 <style>

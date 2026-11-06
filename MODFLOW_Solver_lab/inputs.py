@@ -22,13 +22,13 @@ from dataclasses import asdict
 
 import streamlit as st
 
-from content import TEXT
-from controls import basic_controls
-from core import ENGINE_NAMES, Scenario
-from plots import display_stride, model_preview
-from settings import METHODS, parse_grid_spacings, select_profile
-from ui import show_fig
-from spacing import adjacent_spacing, integer_spacing_for_grid
+from .content import TEXT
+from .controls import basic_controls
+from .core import ENGINE_NAMES, Scenario
+from .plots import display_stride, model_preview
+from .settings import METHODS, parse_grid_spacings, select_profile
+from .ui import show_fig
+from .spacing import adjacent_spacing, integer_spacing_for_grid
 
 
 def capture_input_values():

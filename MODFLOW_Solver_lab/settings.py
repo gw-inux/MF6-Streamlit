@@ -37,7 +37,7 @@ import math
 
 import pandas as pd
 
-from core import DEFAULT_HEAD_CLOSE, DEFAULT_FLOW_CLOSE, IMS_PRESETS, NWT_PRESETS, SECONDS_PER_DAY, Solver, comparison_row
+from .core import DEFAULT_HEAD_CLOSE, DEFAULT_FLOW_CLOSE, IMS_PRESETS, NWT_PRESETS, SECONDS_PER_DAY, Solver, comparison_row
 
 METHODS = {"mf2005": ("PCG", "SIP"), "mfnwt": ("GMRES", "XMD"), "mf6": ("CG", "BICGSTAB")}
 VARIANTS = [f"{engine}/{method}" for engine, methods in METHODS.items() for method in methods]
