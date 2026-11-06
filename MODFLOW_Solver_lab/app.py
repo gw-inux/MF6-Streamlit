@@ -99,7 +99,7 @@ workspace = initialize_session()
 executables = {engine: find_executable(engine) for engine in ENGINE_NAMES}
 
 # 1 — Introduction and numerical background. Edit prose in content.py.
-st.title("Finite-difference scheme: MODFLOW solvers")
+st.title("Finite-difference/Finite-volume scheme: MODFLOW solvers")
 st.subheader("Groundwater flow with uniform recharge", divider="blue")
 st.markdown("### Introduction and Motivation")
 st.markdown(INTRODUCTION)
