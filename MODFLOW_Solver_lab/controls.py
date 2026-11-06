@@ -4,7 +4,7 @@
 # Manual edits: jump to these release line numbers (refresh with tools/update_code_map.py).
 #   number: line 14
 #   basic_controls: line 38
-#   expert_controls: line 62
+#   expert_controls: line 75
 # END CODE CONTENTS
 
 import math
@@ -35,7 +35,7 @@ def number(label, value, key, minimum=0., maximum=None, help=None):
     return st.number_input(**kw)
 
 
-def basic_controls(profile, prefix):
+def basic_controls(profile, prefix, groups=None):
     engine, method = profile["engine"], profile["method"]
     b = profile["basic"]
     specs = {
@@ -49,10 +49,23 @@ def basic_controls(profile, prefix):
         "outer_dvclose": ("Head closure (m)", 1e-10, 10.), "rcloserecord": ("R closure (m³/s)", 1e-16, 10000.),
         "outer_maximum": ("Maximum outer iterations", 1, 2000), "inner_maximum": ("Maximum inner iterations", 1, 10000),
     }
-    for field, value in b.items():
-        label, lo, hi = specs[field]
-        b[field] = number(label, value, f"{prefix}_basic_{field}", lo, hi)
-    profile["expert_enabled"] = st.toggle("Use expert settings", value=profile["expert_enabled"], key=f"{prefix}_expert_on")
+    if groups is None:
+        groups = {name: st.container() for name in ("closure", "iterations", "strategy")}
+    fields = {
+        "closure": ("hclose", "rclose", "headtol", "fluxtol", "outer_dvclose", "rcloserecord"),
+        "iterations": ("mxiter", "iter1", "maxiterout", "maxitinner", "mxiterxmd", "outer_maximum", "inner_maximum"),
+        "strategy": ("relax", "accl"),
+    }
+    for group, names in fields.items():
+        with groups[group]:
+            if group != "strategy":
+                st.markdown("**Closure criteria**" if group == "closure" else "**Maximum iterations**")
+            for field in names:
+                if field in b:
+                    label, lo, hi = specs[field]
+                    b[field] = number(label, b[field], f"{prefix}_basic_{field}", lo, hi)
+    with groups["strategy"]:
+        profile["expert_enabled"] = st.toggle("Use expert settings", value=profile["expert_enabled"], key=f"{prefix}_expert_on")
     if engine == "mf2005" and method == "SIP":
         st.caption("SIP has a head-change test; it has no separate R-closure input.")
     if engine == "mf6":
@@ -60,7 +73,7 @@ def basic_controls(profile, prefix):
 
 
 def expert_controls(profile, prefix):
-    engine, method = profile["engine"], profile["method"]
+    engine = profile["engine"]
     p = profile["expert"]
     if engine == "mfnwt":
         st.caption("NWT writes SPECIFIED with the selected preset as its starting point. Basic closure and iteration limits remain above.")

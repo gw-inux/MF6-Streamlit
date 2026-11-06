@@ -2,167 +2,120 @@
 
 # BEGIN CODE CONTENTS
 # Manual edits: jump to these release line numbers (refresh with tools/update_code_map.py).
-#   INTRODUCTION: line 11
-#   SOLVER_DETAILS: line 24
-#   ASSUMPTIONS: line 65
-#   REFERENCES: line 168
+#   INTRODUCTION: line 14
+#   SOLVER_DETAILS: line 21
+#   ASSUMPTIONS: line 63
+#   REFERENCES: line 121
+#   Presentation text. Stable keys keep the English interface ready for translation.: line 134
+#   TEXT: line 135
+#   CONCLUSION: line 167
 # END CODE CONTENTS
 
 INTRODUCTION = """
-Groundwater models are useful tools for investigating groundwater systems.
-Start with steady 1D flow bounded by two specified heads, with uniform
-recharge and constant hydraulic conductivity. Add a square horizontal grid,
-layers or a random K field to explore more complex systems.
-
-Start with the same confined aquifer and boundary conditions as in the Jacobi,
-Gauss–Seidel and SOR exercise, or switch to unconfined flow in the scenario
-controls. Here, **MODFLOW solves the equations**.
-Compare solvers, refine the grid, and check the calculated heads against
-the analytical solution where applicable, and inspect native water balances.
+Explore how the grid, solver and stopping criteria affect steady groundwater-flow
+results. Start with uniform recharge between two specified heads; then add layers,
+a horizontal 2D grid or heterogeneous conductivity. Compare heads, convergence,
+runtime and water balance.
 """
 
 SOLVER_DETAILS = """
-| Model | Solver choices | Basic controls |
+#### Models and methods
+
+| Model | Solver choices | Main controls |
 |---|---|---|
-| MODFLOW-2005 | PCG or SIP | Head closure, iteration limits; PCG flow closure and relaxation; SIP acceleration |
-| MODFLOW-NWT | Newton with GMRES or XMD | SIMPLE / MODERATE / COMPLEX, head and flow closure, outer and inner limits |
-| MODFLOW 6 | IMS with CG or BICGSTAB | SIMPLE / MODERATE / COMPLEX, head and flow closure, outer and inner limits |
+| MODFLOW-2005 | PCG or SIP | Head closure, iteration limits; PCG residual closure and relaxation; SIP acceleration |
+| MODFLOW-NWT | Newton with GMRES or XMD | Head and flux closure, iteration limits, complexity preset |
+| MODFLOW 6 | IMS with CG or BICGSTAB | Head and residual closure, iteration limits, complexity preset |
 
-**PCG** uses preconditioned conjugate gradients. **SIP** uses the strongly
-implicit procedure and has a head-change stopping test. Neither has native
-complexity presets. **NWT** uses the Newton formulation with UPW; SIP is not
-its Newton solver. **IMS** is the iterative model solution in MODFLOW 6.
-MF6 uses NPF with ICELLTYPE=0 for confined flow and ICELLTYPE=1 for
-unconfined / convertible flow. It uses Picard iteration, so both CG and
-BICGSTAB remain available. The app uses diagonal IMS matrix scaling to keep
-the seconds-based equations well scaled; the expert controls can change it.
-NWT uses Newton with UPW in both modes.
+- **PCG**: preconditioned conjugate gradients. **SIP**: strongly implicit procedure.
+- **NWT** uses Newton's method with the UPW flow package.
+- **MODFLOW 6** uses NPF with Picard iteration in this app; both IMS methods
+  remain available. Diagonal scaling is enabled initially.
 
-Each model starts with a head closure of **1e-4 m**, including the inner head
-test. Changing the preset or linear solver retains the latest head closure,
-flow closure and iteration limits. Each MODFLOW model remembers its own main
-controls. Advanced settings are retained separately for each solver/preset.
-The selected linear solver is also retained when the preset changes.
+#### Iterations and stopping criteria
 
-SIMPLE is normally appropriate for the initial 1D case. Layers or heterogeneity
-can require a different preset or larger iteration limits. MODERATE and COMPLEX
-adjust the solution strategy; they do not guarantee more accurate results or
-increase the user's current iteration limits. Suggested flow closures are
-PCG 1e-4, NWT 5e-3 and IMS 1e-4 **m³/s**. NWT's initial flux tolerance is loose
-for this unit-width cross-section and can be tightened for accuracy experiments.
+- **Outer iterations** update the equations, including head-dependent
+  conductances. **Inner iterations** solve the current linear system.
+  SIP reports its own iteration count.
+- **Head closure** limits the change between iterates (m), not the error
+  relative to the exact solution. **Flow closure** tests a residual (m³/s);
+  the norm differs between solvers. SIP has no separate flow-closure input.
+- Inspect the water balance and, where available, the analytical head error
+  as well as the convergence flag. Solver iterations are not physical time.
 
-Head-change tolerances are not absolute head-error guarantees. Equal numeric
-flow tolerances are not equivalent tests: NWT uses its nonlinear flux norm,
-PCG/IMS their selected residual tests, and SIP has no independent flow-closure
-input. The analytical error and final cell residual provide additional checks.
+#### Settings in this app
 
-The expert toggle opens detailed controls below the input columns. NWT writes
-SPECIFIED when expert controls or a changed preset-governed inner limit require
-it. XMD uses SPECIFIED to apply the app head closure to its inner test. The remaining preset values are carried over explicitly. All edited values
-are therefore applied to the model input.
+- Head closures start at **1e-4 m**. Main closure values and iteration limits
+  are retained when switching methods or presets within each MODFLOW model.
+- **SIMPLE / MODERATE / COMPLEX** change NWT or IMS solution strategies;
+  they do not guarantee accuracy or increase your chosen iteration limits.
+- **Expert settings** expose advanced controls. NWT uses SPECIFIED when
+  required to apply those edits; the remaining preset values are retained.
+
+#### Solver documentation
+
+[PCG](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/pcg.htm) ·
+[SIP](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/sip.htm) ·
+[NWT](https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/nwt_newton_solver.html) ·
+[MODFLOW 6 IMS](https://modflow6.readthedocs.io/en/6.7.0/_mf6io/sln-ims.html)
 """
 
-ASSUMPTIONS = """
-Initially the model has one homogeneous layer, one row, a flat top and bottom, no storage
-and no-flow side faces. Recharge enters as a distributed source; no unsaturated
-zone is simulated. Confined mode is selected initially: the roof is 0 m and the
-bottom is −b. Positive boundary heads keep the layer fully saturated, and the
-plotted head is the piezometric head.
+ASSUMPTIONS = r"""
+#### Analytical benchmarks
 
-In **unconfined / convertible mode**, the bottom is 0 m and the input is the
-aquifer-top elevation z_t. Saturated thickness is min(h, z_t); head below the
-top represents the water table. Heads above the top are also supported, with
-transmissivity capped at K z_t. There is no surface drain or overflow boundary.
-Boundary and starting heads must remain above the bottom.
+For steady 1D flow with uniform recharge $R$, constant conductivity $K$ and
+specified heads $h_L$, $h_R$ at $x=0$, $L$:
 
-The unconfined reference is the 1D Dupuit solution. If the solution crosses
-the aquifer top, the app solves the same continuous equation using the
-discharge potential F(h)=h²/2 below the top and F(h)=z_t(h−z_t/2) above it.
-F varies as F_L+(F_R−F_L)x/L+R x(L−x)/(2K), and is inverted to obtain h.
-This gives continuous head and flux through the transition; the square-root
-formula alone would be incorrect above the top.
+**Confined aquifer** — constant thickness $b$, transmissivity $T=Kb$:
 
-The analytical boundaries are at the **centres of the two end cells**.
-Only the N−2 unknown-head cells receive recharge. Their total recharge is
-R W (N−2) Δx; their bounding faces lie at Δx/2 and L−Δx/2. The padded MODFLOW
-grid extends from −Δx/2 to L+Δx/2. These conventions match the manual exercise.
-All engines use metres and seconds. Recharge conversion uses 365.25 days/year
-and 86,400 seconds/day. Head closure is in m; volumetric flow residuals in m³/s.
+$$
+T\frac{d^2h}{dx^2}+R=0,\qquad
+h(x)=h_L+\frac{h_R-h_L}{L}x+\frac{R}{2T}x(L-x).
+$$
 
-**Add Complexity** enables a square horizontal grid (Nx = Ny, Δx = Δy),
-equal-thickness layers and an isotropic random K field. Both horizontal centre
-spans equal L; the padded square has side L + Δx. The west and east boundaries
-retain uniform heads in all wet boundary layers. Cells wholly above the
-specified boundary water level are inactive. Recharge is excluded from both
-boundary columns and applied to the highest wet active cell in each interior
-column. LPF and NPF use rewetting from below for layered convertible models;
-UPW uses its native Newton treatment.
+**Unconfined aquifer** — horizontal bottom at zero, Dupuit approximation,
+with the entire profile below the aquifer top:
 
-Random K values are log-uniform within user limits and constant in fixed
-physical zones, independently in each layer. A seed reproduces the realization.
-Refinement samples the same field at the new cell centres. Initial heads can
-be specified uniformly or sampled independently from a uniform distribution
-between user limits, with a separate seed. Specified heads always override
-the initial guess at reservoir cells.
+$$
+\frac{d}{dx}\left(Kh\frac{dh}{dx}\right)+R=0,\qquad
+h(x)=\sqrt{h_L^2+\frac{h_R^2-h_L^2}{L}x+\frac{R}{K}x(L-x)}.
+$$
 
-An analytical curve and head-error metrics are available only for homogeneous
-single-layer models, including their y-invariant horizontal 2D extension.
-Vertical gradients or heterogeneous K invalidate that exact comparison;
-those runs show native cell balances and convergence instead. Changing the
-horizontal dimension (1D/2D) or extent clears the run comparison. Confined/unconfined
-changes and adding/removing layers retain the comparison. Each saved run keeps
-its own geometry for inspection. Horizontal refinement can also be compared.
-Diagnostics follow each newly completed run, including the final grid-study run.
+If heads rise above the top, the app's convertible reference caps the saturated
+thickness there; the square-root formula alone no longer applies.
 
-Grid refinement keeps the boundary-to-boundary length L fixed. The confined quadratic
-analytical solution has an exact central second difference at the nodes in
-exact arithmetic. This experiment therefore examines solver effort, stopping
-error and precision, rather than decreasing nodal truncation error. The head plot shows full cells numbered from 1; optional dots mark the actual
-node heads. On dense grids, every n-th node symbol is shown (n is reported above
-the plot); horizontal cell-head segments and wetted filling retain all cells.
-The first node is at x = 0 and the two end cells extend half a
-spacing beyond the boundary centres. The horizontal cell-head segments are a
-visual representation of discrete node values. For unconfined
-flow, head-dependent conductances introduce grid effects: LPF and the
-non-Newton MF6 NPF formulation use harmonic averaging here; NWT UPW uses
-upstream weighting. Coarse-grid heads can therefore differ even after tight
-solver convergence. The refinement experiment can show these differences
-decreasing. Unconfined and complex-model diagnostics use native face flows and actual recharge placement.
+The same **1D reference applies to horizontal 2D** when properties and boundary
+conditions are uniform in y and the north/south boundaries have no flow.
+Analytical comparisons are disabled for layered or heterogeneous models.
 
-Starting heads are a numerical guess. Solver iterations are not groundwater
-changes through physical time. Hiding initial heads only changes the plot and
-its axis scaling; the computation still uses the selected starting heads.
-Initial-head visibility starts off in the cross section. Horizontal 2D models,
-including those with multiple layers, also offer a first-layer head map below
-the section. It displays the latest native result and identifies changed inputs.
-Dots and horizontal cell-head lines start on together. Switching off the last
-active style automatically turns the other style on. Wetted cells remain filled,
-and thin lines show the actual layer boundaries. Hollow blue-grey symbols can
-compare the previous displayed section at its original physical x coordinates.
+#### Numerical model
 
-**Suggested experiments**
+MODFLOW writes a water-balance equation for each unknown-head cell, couples it
+to neighbouring cells and solves the resulting system for the heads. For this
+app's homogeneous confined 1D case:
 
-1. Run the 11-cell case with each model and inspect the table and diagnostics.
-2. Set recharge to zero: confined heads are linear; in a fully unconfined
-   solution, squared heads are linear.
-3. Refine the grid while holding L fixed. Explain why preconditioned solvers can
-   keep very small iteration counts for this tridiagonal system.
-4. Change closure, preconditioning, acceleration or iteration limits and record
-   the effect under an individual run name.
-5. Compare native presets, then give the solvers tighter closure values in the
-   input section. Inspect both head error and the water balance.
-6. Switch off Confined aquifer, compare the three engines, then refine the
-   grid with tight closure criteria. Distinguish discretization error from
-   incomplete iterative convergence.
-7. Add layers or a random K field and compare solver effort and cell balances.
-   Grid studies preserve the layer count and accept uniform Δx = Δy values.
-   The complex setup initially selects one grid, one variant and one repeat.
+$$
+C(h_{i-1}-2h_i+h_{i+1})+RW\Delta x=0,
+\qquad C=\frac{KbW}{\Delta x}.
+$$
 
-The tested NWT build can fail for exact-zero residuals and for a
-three-cell grid with only one unknown. Such native failures are reported
-explicitly; no analytical heads replace the engine output. For the equal-head
-18 m, zero-recharge, 11-cell case, COMPLEX and a specified initial head of
-17.3 m were verified to work with both NWT linear solvers.
+- Heads belong to **cell centres**; the two end-cell heads are fixed by CHD.
+  $L$ is their centre-to-centre distance, so $\Delta x=L/(N-1)$.
+- Recharge enters the interior columns; other outer faces have no flow.
+  The model is steady: no storage or unsaturated-zone flow is simulated.
+- In convertible flow, conductance depends on saturated thickness, requiring
+  nonlinear iteration. Initial heads are the numerical starting guess.
+
+See the [MODFLOW-2005 formulation](https://pubs.usgs.gov/tm/2005/tm6A16/).
+
+#### Suggested experiments
+
+1. Compare solvers on the initial 11-cell model; inspect heads and water balance.
+2. Change closure criteria or iteration limits; compare errors and runtime.
+3. Refine the grid, then add unconfined flow, layers or random K. Distinguish
+   discretization effects from incomplete solver convergence. For the uniform
+   confined case, the quadratic reference has an exact central second difference
+   at the nodes, so refinement mainly tests solver effort and precision.
 """
 
 REFERENCES = """
@@ -175,4 +128,47 @@ REFERENCES = """
 - [MODFLOW 6 IMS options and preset table](https://modflow6.readthedocs.io/en/stable/_mf6io/sln-ims.html)
 - [MODFLOW 6 recharge placement](https://modflow6.readthedocs.io/en/6.7.0/_mf6io/gwf-rcha.html)
 - [FloPy documentation](https://flopy.readthedocs.io/en/stable/)
+"""
+
+
+# EDIT: Presentation text. Stable keys keep the English interface ready for translation.
+TEXT = {
+    "spacing_steps": "The − / + buttons follow the preferred spacing sequence, skipping values that do not divide the boundary distance exactly. You can also type an integer. Fractional spacing remains available in grid studies.",
+    "convergence_guides": "Dashed guides use the settings saved with this run. A separate annotation identifies criteria based on a different residual norm. Available iteration levels and native convergence flags are unchanged.",
+    "input_intro": "Define the scenario, grid and solver, then run the model below. Hidden scenario values stay unchanged when you switch between limited and full settings.",
+    "limited_hint": "These values are retained in limited mode. Enable **Show full settings** to edit them.",
+    "full_settings_help": "Show or hide the additional scenario inputs. Limited mode keeps their last values and shows a read-only summary.",
+    "complexity_title": "**Additional complexity settings and model preview**",
+    "repeat_help": "Run the same configuration 1–10 times with identical inputs and realization. One comparison row represents all repetitions. Runtime is the median; all repetitions must succeed. Each native run has a fixed 120-second timeout.",
+    "preview_caption": "**{aquifer}** · top {top:g} m · bottom {bottom:g} m. Grid: {grid}; {cells:,} cells. The preview follows the current input values. Section A–A′ passes through middle cell y {row}. Vertical dimensions are exaggerated.",
+    "random_k_help": "Log-uniform, isotropic K in fixed physical zones, independent in each layer. **New realization** changes the field. Other edits and grid refinement retain the current realization.",
+    "boundary_note": "Specified heads remain uniform on wet west/east faces. North, south and the aquifer bottom have no flow. Boundary cells wholly above the specified water level are inactive.",
+    "solver_sticky": "Closure criteria and iteration limits are retained when switching presets or linear solvers. Each MODFLOW model remembers its own values.",
+    "solver_units": "Head closure: m. Flow closure: m³/s; the tests differ between solvers.",
+    "initial_grid_hint": "Before running: the orange end cells have specified (CHD) heads. MODFLOW will compute the heads in the nine interior cells.",
+    "footer": "Developed by Thomas Reimann · TU Dresden, Institute for Groundwater Management / The Groundwater Project · 2026",
+    "execution_heading": "Model execution and postprocessing",
+    "model_summary": "- **Grid:** {grid}; **{cells:,} cells**; Δx = **{dx:g} m**, Δy = **{dy:g} m**.\n- **Aquifer:** {aquifer}; top = {top:g} m, bottom = {bottom:g} m. {conductivity} Recharge = {recharge:g} mm/year.\n- **Model / solver:** {solver}; {preset}. Head closure = {head:.2E} m{flow}; outer/SIP limit = {outer}{inner}.",
+    "surface_note": "Layered display: the head in the **uppermost wet, active cell** of each column defines the groundwater surface (potentiometric head for confined flow). Dry overlying cells use that head only for display. Columns dry throughout remain blank; native layer heads and budgets are unchanged.",
+    "head_map_title": "**Computed heads · groundwater surface (x–y)**",
+    "map_empty": "Run the model to view the computed head surface.",
+    "map_stale": "**Inputs have changed — rerun the model.** This grey map retains the previous computed result and its original geometry.",
+    "map_note": "Heads come from the uppermost wet, active cell in each column. Dry-overlying cells use the head below; fully dry columns are blank. The dashed line marks section A–A′. Both horizontal axes use the same scale.",
+    "comparison_heading": "Further run analysis and comparison",
+    "study_heading": "Grid refinement experiment",
+    "study_intro": "Use the same model-building code to compare grids and solver effort. The boundary-to-boundary length and layer count stay fixed. The confined quadratic reference has no nodal truncation error in exact arithmetic; unconfined results also depend on the engine’s conductance approximation and cell spacing.",
+    "study_repeats": "Each selected variant runs on every chosen grid, using the **Number of runs** selected beside the main run name. Timings include startup and native output; they are not an isolated solver-speed ranking.",
+    "study_variants": "Unedited variants use their initial settings. To change a variant, select its model and solver in the input section. Its last preset and settings are retained. Excluded variants are not run.",
+    "study_geometry": "Each study keeps {layers} layer(s), aquifer geometry and boundary heads. Horizontal 2D uses Δx = Δy. The K-zone arrangement and current realization stay fixed.",
+    "conclusion_heading": "Conclusion and references",
+    "references_title": "**References**",
+}
+
+CONCLUSION = """
+This app demonstrates the effects of different solver options and settings
+across a range of groundwater models, from simple to complex. Compare
+convergence, runtime, head errors and water balance to judge the results.
+Grid refinement helps distinguish discretization effects from incomplete
+solver convergence. A successful convergence flag is one part of that
+assessment; the physical plausibility and diagnostics matter as well.
 """

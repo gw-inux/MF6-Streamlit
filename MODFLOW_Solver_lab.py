@@ -6,7 +6,7 @@ Start from the repository root: python -m streamlit run MODFLOW_Solver_lab.py
 Contents for manual edits:
   Imports: line 11
   Application folder: line 14
-  Launch the unchanged application: line 15
+  Launch the shared application: line 15
 """
 from pathlib import Path
 import runpy
