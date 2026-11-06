@@ -4,7 +4,7 @@ The `##` headings are stable text keys; only their contents are displayed.
 
 ## page_finite_difference_scheme_modflow_solvers
 
-Finite-difference scheme: MODFLOW solvers
+Finite-difference/Finite-volume scheme: MODFLOW solvers
 
 ## page_groundwater_flow_with_uniform_recharge
 
