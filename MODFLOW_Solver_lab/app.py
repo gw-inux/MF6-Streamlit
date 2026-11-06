@@ -1,20 +1,22 @@
 """MODFLOW Solver Lab — application composition.
 
 Run: python -m streamlit run app.py
-Presentation text: content.py. Input panels: inputs.py. Results: results.py.
+Presentation text: assets/md/en (loader: content.py).
+Input panels: inputs.py. Results: results.py.
 Native model construction, solver behavior and output reading remain in core.py.
 """
 
 # BEGIN CODE CONTENTS
 # Manual edits: jump to these release line numbers (refresh with tools/update_code_map.py).
-#   initialize_session: line 62
-#   retain_comparable_runs: line 79
-#   1 — Introduction and numerical background. Edit prose in content.py.: line 101
-#   2 — Scenario, spatial discretization and numerical solver inputs.: line 112
-#   3 — Additional complexity and live preview use the current validated inputs.: line 132
-#   4 — Execution, plotted heads, run comparison and native diagnostics.: line 145
-#   5 — Grid refinement is an independent subsection with a reviewable plan.: line 150
-#   6 — Conclusion and primary documentation.: line 153
+#   initialize_session: line 94
+#   retain_comparable_runs: line 130
+#   1 — Introduction and numerical background. Edit prose in assets/md/en.: line 152
+#   Optional repository figure. Keep this block commented until the image: line 157
+#   2 — Scenario, spatial discretization and numerical solver inputs.: line 171
+#   3 — Additional complexity and live preview use the current validated inputs.: line 200
+#   4 — Execution, plotted heads, run comparison and native diagnostics.: line 213
+#   5 — Grid refinement is an independent subsection with a reviewable plan.: line 218
+#   6 — Conclusion and primary documentation.: line 221
 # END CODE CONTENTS
 
 from copy import deepcopy
@@ -37,35 +39,84 @@ if not __package__:
 try:
     from . import content as teaching
 except ImportError:
-    st.error("Incomplete Solver Lab upload: content.py could not be loaded. "
-             "Replace the complete MODFLOW_Solver_lab folder from the latest ZIP, then reboot the app.")
+    st.error(
+        "Incomplete Solver Lab upload: content.py could not be loaded. "
+        "Replace the complete MODFLOW_Solver_lab folder from the latest ZIP, then reboot the app."
+    )
     st.stop()
-required_text = ("INTRODUCTION", "SOLVER_DETAILS", "ASSUMPTIONS", "REFERENCES", "CONCLUSION", "TEXT")
+except ValueError as error:
+    st.error(
+        "Incomplete Solver Lab text resources: "
+        + str(error)
+        + " Replace the complete MODFLOW_Solver_lab folder from the latest ZIP, then reboot the app."
+    )
+    st.stop()
+required_text = (
+    "INTRODUCTION",
+    "SOLVER_DETAILS",
+    "ASSUMPTIONS",
+    "REFERENCES",
+    "CONCLUSION",
+    "TEXT",
+)
 missing_text = [name for name in required_text if not hasattr(teaching, name)]
 if missing_text:
-    st.error("The uploaded Solver Lab files are from different releases. content.py is missing: "
-             + ", ".join(missing_text) + ". Replace the complete MODFLOW_Solver_lab folder "
-             "from the latest ZIP, then reboot the app.")
+    st.error(
+        "The uploaded Solver Lab files are from different releases. content.py is missing: "
+        + ", ".join(missing_text)
+        + ". Replace the complete MODFLOW_Solver_lab folder "
+        "from the latest ZIP, then reboot the app."
+    )
     st.stop()
 from .content import INTRODUCTION, SOLVER_DETAILS, ASSUMPTIONS, REFERENCES, CONCLUSION, TEXT
 from .controls import expert_controls
 from .core import ENGINE_NAMES, Scenario, find_executable
-from .inputs import (capture_input_values, scenario_controls, spatial_controls,
-                    solver_controls, complexity_controls, render_model_preview)
+from .inputs import (
+    capture_input_values,
+    scenario_controls,
+    spatial_controls,
+    solver_controls,
+    complexity_controls,
+    render_model_preview,
+)
 from .results import render_execution, render_run_comparison, render_diagnostics
-from .settings import (default_variants, GRID_DEFAULTS, capture_active_profile,
-                      remember_main_controls, solver_from_profile)
+from .settings import (
+    default_variants,
+    GRID_DEFAULTS,
+    capture_active_profile,
+    remember_main_controls,
+    solver_from_profile,
+)
 from .studies import render_grid_study
 from .ui import apply_style
 
 
 def initialize_session():
     """Keep durable input values separate from Streamlit's conditional widgets."""
-    defaults = dict(profiles={}, variants=default_variants(), choices={}, runs=[], next_run_id=1,
-        studies=[], next_study_id=1, grid_entries=[str(v) for v in GRID_DEFAULTS],
-        diagnostic_extra=None, last_profile=None, previous_profile=None, initial_grid_notes_dismissed=False,
-        complexity_options=dict(horizontal_2d=False, add_layers=False, layers=3, random_k=False,
-            k_min=1e-5, k_max=1e-3, k_seed=42, k_zones=11))
+    defaults = dict(
+        profiles={},
+        variants=default_variants(),
+        choices={},
+        runs=[],
+        next_run_id=1,
+        studies=[],
+        next_study_id=1,
+        grid_entries=[str(v) for v in GRID_DEFAULTS],
+        diagnostic_extra=None,
+        last_profile=None,
+        previous_profile=None,
+        initial_grid_notes_dismissed=False,
+        complexity_options=dict(
+            horizontal_2d=False,
+            add_layers=False,
+            layers=3,
+            random_k=False,
+            k_min=1e-5,
+            k_max=1e-3,
+            k_seed=42,
+            k_zones=11,
+        ),
+    )
     for name, value in defaults.items():
         if name not in st.session_state:
             st.session_state[name] = value
@@ -89,7 +140,7 @@ def retain_comparable_runs(scenario):
         for key in ("inspect_run", "delete_selection"):
             st.session_state.pop(key, None)
         if had_results:
-            st.info("The horizontal dimension or extent changed. The run comparison has been reset for this setup.")
+            st.info(TEXT["comparison_reset_note"])
     st.session_state.comparison_group = group
 
 
@@ -98,22 +149,34 @@ apply_style()
 workspace = initialize_session()
 executables = {engine: find_executable(engine) for engine in ENGINE_NAMES}
 
-# 1 — Introduction and numerical background. Edit prose in content.py.
-st.title("Finite-difference/Finite-volume scheme: MODFLOW solvers")
-st.subheader("Groundwater flow with uniform recharge", divider="blue")
-st.markdown("### Introduction and Motivation")
+# 1 — Introduction and numerical background. Edit prose in assets/md/en.
+st.title(TEXT["page_finite_difference_scheme_modflow_solvers"])
+st.subheader(TEXT["page_groundwater_flow_with_uniform_recharge"], divider="blue")
+st.markdown(TEXT["page_introduction_and_motivation"])
 st.markdown(INTRODUCTION)
-with st.expander(":blue[**Equations, assumptions and suggested experiments**]"):
+# EDIT: Optional repository figure. Keep this block commented until the image
+# exists. This resolves MF6-Streamlit/FIGS independently of the working directory.
+# Change the filename below; no figure is loaded or displayed while commented.
+# figure_path = Path(__file__).resolve().parent.parent / "FIGS" / "MODFLOW_Solver_lab_intro.png"
+# _, figure_column, _ = st.columns([1, 4, 1])
+# with figure_column:
+#     st.image(str(figure_path), width="stretch")
+
+with st.expander(TEXT["equations_expander"]):
     st.markdown(ASSUMPTIONS)
-with st.expander(":blue[**Details of the numerical solvers**]"):
+with st.expander(TEXT["solver_details_expander"]):
     st.markdown(SOLVER_DETAILS)
 
 
 # 2 — Scenario, spatial discretization and numerical solver inputs.
-st.subheader("Input values", divider="blue")
+st.subheader(TEXT["page_input_values"], divider="blue")
 st.markdown(TEXT["input_intro"])
-complexity = st.toggle("Enable additional model complexity", value=False, key="complexity",
-    help="Reveal horizontal 2D grids, layers, random conductivity and a model preview.")
+complexity = st.toggle(
+    TEXT["page_enable_additional_model_complexity"],
+    value=False,
+    key="complexity",
+    help=TEXT["complexity_help"],
+)
 scenario_column, grid_column, solver_column = st.columns(3)
 with scenario_column:
     scenario_values = scenario_controls()
@@ -122,7 +185,12 @@ with grid_column:
 with solver_column:
     profile_id, profile = solver_controls()
 if profile["expert_enabled"]:
-    with st.expander(f"**Expert settings · {ENGINE_NAMES[profile['engine']]} / {profile['method']}**", expanded=True):
+    with st.expander(
+        TEXT["page_expert_settings_engine_method"].format(
+            engine=ENGINE_NAMES[profile["engine"]], method=profile["method"]
+        ),
+        expanded=True,
+    ):
         expert_controls(profile, profile_id)
 st.session_state.profiles[profile_id] = deepcopy(profile)
 remember_main_controls(st.session_state, profile)

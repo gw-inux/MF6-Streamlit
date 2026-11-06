@@ -1,0 +1,10 @@
+
+- [MODFLOW-2005 technical report (Harbaugh, 2005)](https://pubs.usgs.gov/tm/2005/tm6A16/)
+- [LPF layer types and conductance averaging](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/lpf.htm)
+- [UPW layer types and upstream weighting](https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/upw_upstream_weighting_package.htm)
+- [MODFLOW 6 NPF layer types and conductance averaging](https://modflow6.readthedocs.io/en/6.7.0/_mf6io/gwf-npf.html)
+- [PCG controls](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/pcg.htm) and [SIP controls](https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/sip.htm)
+- [MODFLOW-NWT solver](https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/nwt_newton_solver.html) and [preset values](https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/suggested_input_values_for_the.htm)
+- [MODFLOW 6 IMS options and preset table](https://modflow6.readthedocs.io/en/stable/_mf6io/sln-ims.html)
+- [MODFLOW 6 recharge placement](https://modflow6.readthedocs.io/en/6.7.0/_mf6io/gwf-rcha.html)
+- [FloPy documentation](https://flopy.readthedocs.io/en/stable/)

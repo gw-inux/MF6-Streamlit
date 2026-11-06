@@ -2,12 +2,13 @@
 
 Keep this file and the MODFLOW_Solver_lab folder beside the shared bin folder.
 Start from the repository root: python -m streamlit run MODFLOW_Solver_lab.py
-
-Contents for manual edits:
-  Imports: line 11
-  Application folder: line 14
-  Launch the shared application: line 15
 """
+
+# BEGIN CODE CONTENTS
+# Manual edits: jump to these release line numbers (refresh with tools/update_code_map.py).
+#   APP_DIRECTORY: line 15
+# END CODE CONTENTS
+
 from pathlib import Path
 import runpy
 
