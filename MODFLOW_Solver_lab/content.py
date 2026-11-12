@@ -7,23 +7,25 @@ fallback and the deliberately inactive example for repository figures.
 
 # BEGIN CODE CONTENTS
 # Manual edits: jump to these release line numbers (refresh with tools/update_code_map.py).
-#   English stays the default. A future language selector can pass a language: line 32
-#   DEFAULT_LANGUAGE: line 34
-#   MD_DIRECTORY: line 35
-#   TEXT_FILES: line 36
-#   SECTION_HEADER: line 45
-#   ContentError: line 48
-#   _language_directory: line 52
-#   load_md: line 59
-#   _sections: line 81
-#   load_text: line 97
-#   These names keep the established presentation imports unchanged.: line 114
-#   INTRODUCTION: line 117
-#   ASSUMPTIONS: line 118
-#   SOLVER_DETAILS: line 119
-#   CONCLUSION: line 120
-#   REFERENCES: line 121
-#   TEXT: line 122
+#   English stays the default. A future language selector can pass a language: line 34
+#   DEFAULT_LANGUAGE: line 36
+#   MD_DIRECTORY: line 37
+#   TEXT_FILES: line 38
+#   LEARNING_TEXT_KEYS: line 47
+#   SECTION_HEADER: line 57
+#   ContentError: line 60
+#   _language_directory: line 64
+#   load_md: line 71
+#   _sections: line 93
+#   load_text: line 109
+#   load_learning_text: line 126
+#   These names keep the established presentation imports unchanged.: line 144
+#   INTRODUCTION: line 147
+#   ASSUMPTIONS: line 148
+#   SOLVER_DETAILS: line 149
+#   CONCLUSION: line 150
+#   REFERENCES: line 151
+#   TEXT: line 152
 # END CODE CONTENTS
 
 from pathlib import Path
@@ -41,6 +43,16 @@ TEXT_FILES = (
     "ui_results.md",
     "ui_study.md",
     "ui_experiments.md",
+)
+LEARNING_TEXT_KEYS = (
+    "experiments_heading", "experiments_hint",
+    "experiment_1_tab", "experiment_2_tab", "experiment_3_tab",
+    "experiment_open_tab", "experiment_open_help", "experiment_document_hint",
+    "experiment_unknown_document", "experiment_unavailable", "experiment_teacher_notes",
+    "checklist_progress", "checklist_item_help",
+    "assessment_preparation", "assessment_follow_up", "assessment_toggle_help",
+    "assessment_help", "assessment_question_heading", "assessment_check_answer",
+    "assessment_choose_answer", "assessment_unavailable",
 )
 SECTION_HEADER = re.compile(r"^## ([a-z][a-z0-9_]*)[ \t]*$", re.MULTILINE)
 
@@ -94,11 +106,11 @@ def _sections(markdown, filename):
     return result
 
 
-def load_text(language=DEFAULT_LANGUAGE):
-    """Load short texts, with English fallback for individual untranslated keys."""
+def load_text(language=DEFAULT_LANGUAGE, *, filenames=None):
+    """Load short texts, optionally from an explicit bundle, with English fallback."""
     _language_directory(language)
     result = {}
-    for filename in TEXT_FILES:
+    for filename in TEXT_FILES if filenames is None else filenames:
         entries = _sections(load_md(filename, DEFAULT_LANGUAGE), filename)
         if language != DEFAULT_LANGUAGE:
             translated = _language_directory(language) / filename
@@ -109,6 +121,24 @@ def load_text(language=DEFAULT_LANGUAGE):
             raise ContentError(f"Repeated text keys in {filename}: {', '.join(sorted(duplicate))}.")
         result.update(entries)
     return result
+
+
+def load_learning_text(language=DEFAULT_LANGUAGE):
+    """Load learning labels directly, independently of the shared text-file list.
+
+    Keep prose in Markdown. Validate the complete bundle before rendering so a
+    partial upload gives an actionable resource message, not a redacted KeyError.
+    """
+    filename = "ui_experiments.md"
+    entries = load_text(language, filenames=(filename,))
+    missing = sorted(set(LEARNING_TEXT_KEYS) - entries.keys())
+    if missing:
+        raise ContentError(
+            f"Missing text keys in {filename}: {', '.join(missing)}. "
+            "Replace the complete MODFLOW_Solver_lab folder from the same ZIP, "
+            "including assets/md/en, then reboot the app."
+        )
+    return entries
 
 
 # EDIT: These names keep the established presentation imports unchanged.

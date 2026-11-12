@@ -1,0 +1,18 @@
+........................................................................ [ 60%]
+................................................                         [100%]
+=============================== warnings summary ===============================
+../../../opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/anyio/pytest_plugin.py:14
+  /opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/anyio/pytest_plugin.py:14: PytestRemovedIn10Warning: _pytest.python.CallSpec2 has been renamed to CallSpec.
+  The CallSpec2 alias will be removed in pytest 10.
+  Update imports to use CallSpec instead.
+  See https://docs.pytest.org/en/stable/deprecations.html#callspec2-renamed
+    from _pytest.python import CallSpec2
+
+revision_v2_8/MODFLOW_Solver_lab/tests/test_guided_experiments.py::test_reading_view_does_not_change_an_existing_model_run
+revision_v2_8/MODFLOW_Solver_lab/tests/test_learning_revision.py::test_progress_and_assessments_do_not_change_a_saved_native_run
+  [test-workspace]/revision_v2_5/.venv/lib/python3.12/site-packages/flopy/utils/binaryfile/__init__.py:2571: Pandas4Warning: The inplace keyword in DataFrame.drop is deprecated and will be removed in a future version (PDEP-8).
+  See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#deprecation-inplace for more details.
+    self.headers.drop(columns=drop_cols, inplace=True)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+120 passed, 3 warnings in 33.28s

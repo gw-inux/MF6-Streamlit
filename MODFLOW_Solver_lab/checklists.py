@@ -20,7 +20,7 @@ import re
 
 import streamlit as st
 
-from .content import ContentError, DEFAULT_LANGUAGE, load_text
+from .content import ContentError, DEFAULT_LANGUAGE, load_learning_text
 
 
 TASK_LINE = re.compile(
@@ -84,7 +84,7 @@ def remember_check(namespace, identifier, widget_key):
 
 def render_checklist(markdown, namespace, language=DEFAULT_LANGUAGE):
     """Show a completion checkbox for each marked practical step."""
-    TEXT = load_text(language)
+    TEXT = load_learning_text(language)
     blocks = parse_checklist(markdown)
     tasks = [block for block in blocks if isinstance(block, ChecklistTask)]
     progress = st.session_state.get(PROGRESS_KEY, {}).get(namespace, {})

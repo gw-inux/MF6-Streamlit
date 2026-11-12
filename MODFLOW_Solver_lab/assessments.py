@@ -27,7 +27,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from .content import ContentError, DEFAULT_LANGUAGE, _language_directory, load_text
+from .content import ContentError, DEFAULT_LANGUAGE, _language_directory, load_learning_text
 
 
 QUESTIONS_DIRECTORY = Path(__file__).resolve().parent / "assets" / "questions"
@@ -112,7 +112,7 @@ def toggle_assessment(panel_key):
 
 def render_question(question, question_id, number, language=DEFAULT_LANGUAGE):
     """Render one question, answer checkboxes and its submitted feedback."""
-    TEXT = load_text(language)
+    TEXT = load_learning_text(language)
     records = st.session_state.setdefault(ANSWERS_KEY, {})
     signature = question_signature(question)
     if records.get(question_id, {}).get("signature") != signature:
@@ -140,7 +140,7 @@ def render_question(question, question_id, number, language=DEFAULT_LANGUAGE):
 
 def render_assessment(filename, title, language=DEFAULT_LANGUAGE):
     """Use the reference module's toggleable container and row-wise question pairs."""
-    TEXT = load_text(language)
+    TEXT = load_learning_text(language)
     namespace = Path(filename).stem
     panel_key = f"learning_panel_{namespace}"
     with st.container(border=True, key=f"assessment_{namespace}"):

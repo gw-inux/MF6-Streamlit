@@ -1,0 +1,52 @@
+2026-11-12 08:24:36.333 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+[test-workspace]/revision_v2_5/.venv/lib/python3.12/site-packages/flopy/utils/binaryfile/__init__.py:2571: Pandas4Warning: The inplace keyword in DataFrame.drop is deprecated and will be removed in a future version (PDEP-8).
+See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#deprecation-inplace for more details.
+  self.headers.drop(columns=drop_cols, inplace=True)
+[test-workspace]/revision_v2_5/.venv/lib/python3.12/site-packages/flopy/utils/binaryfile/__init__.py:2571: Pandas4Warning: The inplace keyword in DataFrame.drop is deprecated and will be removed in a future version (PDEP-8).
+See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#deprecation-inplace for more details.
+  self.headers.drop(columns=drop_cols, inplace=True)
+2026-11-12 08:24:44.900 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-11-12 08:24:45.079 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-11-12 08:24:45.250 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+{
+  "required_files": 48,
+  "root_entrypoint_started": true,
+  "working_directory_independent": true,
+  "engines": {
+    "mf2005": {
+      "success": true,
+      "outer_iterations": 2,
+      "inner_iterations": 3,
+      "budget_percent": 0.0
+    },
+    "mfnwt": {
+      "success": true,
+      "outer_iterations": 2,
+      "inner_iterations": 2,
+      "budget_percent": 0.0
+    },
+    "mf6": {
+      "success": true,
+      "outer_iterations": 2,
+      "inner_iterations": 3,
+      "budget_percent": 0.0
+    }
+  },
+  "readers": [
+    {
+      "experiment": 1,
+      "instructions_only": true,
+      "checkboxes": 8
+    },
+    {
+      "experiment": 2,
+      "instructions_only": true,
+      "checkboxes": 7
+    },
+    {
+      "experiment": 3,
+      "instructions_only": true,
+      "checkboxes": 9
+    }
+  ]
+}

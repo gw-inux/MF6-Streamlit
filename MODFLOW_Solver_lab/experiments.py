@@ -14,7 +14,7 @@ rerun as a fragment, leaving the model controls and plots in place.
 #   render_prose: line 63
 #   render_experiment_text: line 72
 #   render_document_view: line 84
-#   render_experiments: line 108
+#   render_experiments: line 112
 # END CODE CONTENTS
 
 from pathlib import Path
@@ -24,7 +24,7 @@ import streamlit as st
 
 from .assessments import render_assessment
 from .checklists import render_checklist
-from .content import ContentError, DEFAULT_LANGUAGE, load_md, load_text
+from .content import ContentError, DEFAULT_LANGUAGE, load_md, load_learning_text
 
 
 # EDIT: Keep this order aligned with the three tab labels below. These filenames
@@ -62,7 +62,7 @@ def document_url(filename):
 
 def render_prose(filename, language=DEFAULT_LANGUAGE):
     """Load overview/teacher prose without embedding it in Python."""
-    TEXT = load_text(language)
+    TEXT = load_learning_text(language)
     try:
         st.markdown(load_md(filename, language), unsafe_allow_html=True)
     except ContentError as error:
@@ -71,7 +71,7 @@ def render_prose(filename, language=DEFAULT_LANGUAGE):
 
 def render_experiment_text(filename, language=DEFAULT_LANGUAGE, show_title=True):
     """Render practical Markdown and its stable completion checkboxes only."""
-    TEXT = load_text(language)
+    TEXT = load_learning_text(language)
     try:
         document = load_md(filename, language)
         if not show_title and document.startswith("#"):
@@ -89,7 +89,11 @@ def render_document_view(language=DEFAULT_LANGUAGE):
     """
     if st.query_params.get("view") != "md":
         return False
-    TEXT = load_text(language)
+    try:
+        TEXT = load_learning_text(language)
+    except ContentError as error:
+        st.error(str(error))
+        return True
     st.markdown("""<style>
         [data-testid="stSidebar"], [data-testid="stSidebarNav"],
         [data-testid="stSidebarCollapsedControl"] {display: none !important;}
@@ -107,7 +111,11 @@ def render_document_view(language=DEFAULT_LANGUAGE):
 @st.fragment
 def render_experiments(language=DEFAULT_LANGUAGE):
     """Learning interactions redraw this section without rerunning the model UI."""
-    TEXT = load_text(language)
+    try:
+        TEXT = load_learning_text(language)
+    except ContentError as error:
+        st.error(str(error))
+        return
     st.html(EXPERIMENT_STYLE)  # Style-only HTML adds no extra vertical space.
     with st.container(key="experiments_panel"):
         with st.expander(TEXT["experiments_heading"], key="guided_experiments"):

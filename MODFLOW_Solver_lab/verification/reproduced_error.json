@@ -1,0 +1,7 @@
+{
+  "simulated_condition": "older shared text registry omits ui_experiments.md",
+  "exception": [
+    "'experiments_heading'"
+  ],
+  "screenshot_consistent": true
+}

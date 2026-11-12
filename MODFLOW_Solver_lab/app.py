@@ -8,16 +8,16 @@ Native model construction, solver behavior and output reading remain in core.py.
 
 # BEGIN CODE CONTENTS
 # Manual edits: jump to these release line numbers (refresh with tools/update_code_map.py).
-#   initialize_session: line 96
-#   retain_comparable_runs: line 132
-#   1 — Introduction and numerical background. Edit prose in assets/md/en.: line 156
-#   Optional repository figure. Keep this block commented until the image: line 161
-#   Guided workflows share Markdown with their independent reading tabs.: line 174
-#   2 — Scenario, spatial discretization and numerical solver inputs.: line 178
-#   3 — Additional complexity and live preview use the current validated inputs.: line 207
-#   4 — Execution, plotted heads, run comparison and native diagnostics.: line 220
-#   5 — Grid refinement is an independent subsection with a reviewable plan.: line 225
-#   6 — Conclusion and primary documentation.: line 228
+#   initialize_session: line 97
+#   retain_comparable_runs: line 133
+#   1 — Introduction and numerical background. Edit prose in assets/md/en.: line 157
+#   Optional repository figure. Keep this block commented until the image: line 162
+#   Guided workflows share Markdown with their independent reading tabs.: line 175
+#   2 — Scenario, spatial discretization and numerical solver inputs.: line 179
+#   3 — Additional complexity and live preview use the current validated inputs.: line 208
+#   4 — Execution, plotted heads, run comparison and native diagnostics.: line 221
+#   5 — Grid refinement is an independent subsection with a reviewable plan.: line 226
+#   6 — Conclusion and primary documentation.: line 229
 # END CODE CONTENTS
 
 from copy import deepcopy
@@ -59,6 +59,7 @@ required_text = (
     "REFERENCES",
     "CONCLUSION",
     "TEXT",
+    "load_learning_text",
 )
 missing_text = [name for name in required_text if not hasattr(teaching, name)]
 if missing_text:
