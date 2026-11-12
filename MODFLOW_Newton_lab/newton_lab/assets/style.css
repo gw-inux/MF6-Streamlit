@@ -1,0 +1,35 @@
+/* Keep the visual language of the MODFLOW Solver Lab. */
+.stApp {background-color:#fff; color:#24364B;}
+.block-container {max-width:800px; padding-top:2rem;}
+header[data-testid="stHeader"] {background:#fff;}
+div[data-testid="stCaptionContainer"] p {color:#536A81;}
+div[data-testid="stExpander"] {border:1px solid var(--panel-border,#BCD0E3); border-radius:8px; background:#fff;}
+div[data-testid="stExpander"] summary {background:var(--panel-header,#EEF6FC) !important; border-radius:7px; font-weight:600;}
+.st-key-scenario_panel, .st-key-boundary_panel {--panel-header:#EEF7F0; --panel-border:#9CC9AB;}
+.st-key-spatial_panel {--panel-header:#FFF4E8; --panel-border:#E8BD86;}
+.st-key-solver_panel, .st-key-expert_solver_panel, .st-key-results_head_map {--panel-header:#EDF6FD; --panel-border:#97C6E8;}
+.st-key-complexity_panel, .st-key-observation_panel {--panel-header:#F0F7F8; --panel-border:#9CC8CF;}
+.st-key-well_panel {--panel-header:#FCEEF2; --panel-border:#DBACBD;}
+.st-key-diagnostics_panel, .st-key-result_plot_settings {--panel-header:#F1EEF8; --panel-border:#BDB0D8;}
+.st-key-solver_identity [data-testid="stSelectbox"] [role="group"],
+.st-key-solver_identity [data-testid="stMultiSelect"] div[role="group"] {background:#EFF2F8;}
+.st-key-solver_closure [data-testid="stNumberInputContainer"] {background:#EEE9FA;}
+.st-key-solver_iterations [data-testid="stNumberInputContainer"] {background:#FCEAF2;}
+.st-key-expert_strategy [data-testid="stNumberInputContainer"],
+.st-key-expert_strategy [data-testid="stSelectbox"] [role="group"] {background:#F3F1DD;}
+.st-key-complexity_layers [data-testid="stNumberInputContainer"] {background:#FFF4E8;}
+.st-key-complexity_conductivity [data-testid="stNumberInputContainer"] {background:#EEF7F0;}
+.st-key-model_preview_frame {background:#FCFCFC; border:5px solid;
+ border-color:#F2F5F7 #A9B7C4 #A9B7C4 #F2F5F7; border-radius:8px;
+ padding:.6rem; box-shadow:4px 5px 9px rgba(35,55,75,.18);}
+.st-key-main_run button[kind="primary"] {background:#BD4045; border-color:#BD4045; color:white;}
+.st-key-main_run button[kind="primary"]:hover {background:#A83439; border-color:#A83439;}
+
+div[data-testid="stExpander"] details[open] > summary {border-radius:7px 7px 0 0;}
+div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {background:#fff;}
+/* The spacing buttons follow the Solver Lab's valid teaching increments. */
+.st-key-spacing_input [data-testid="stNumberInputStepDown"],
+.st-key-spacing_input [data-testid="stNumberInputStepUp"],
+.st-key-spacing_input [data-testid="stNumberInputClearButton"] {display:none;}
+.st-key-spacing_input input {text-align:center;}
+.st-key-spacing_input button {padding-left:.25rem; padding-right:.25rem;}
