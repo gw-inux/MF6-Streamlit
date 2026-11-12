@@ -204,27 +204,40 @@ def render_results(batch, previous_batch, t, language, history=()):
         key="budget_terms",
         format_func=lambda k: t["term_" + k.lower()],
     )
-    compare_budget_models = (
-        st.toggle(t["compare_budget_engines"], value=True, key="compare_budget_engines")
-        if comparisons
-        else False
-    )
-    if terms:
+    # Budget selection is independent of the spatial/head reference. A key per
+    # computation prevents selections from referring to failed or removed runs.
+    budget_runs = [result]
+    if len(keys) > 1:
+        budget_engines = st.multiselect(
+            t["budget_models"],
+            keys,
+            default=[engine],
+            format_func=lambda key: t["result_identity"].format(
+                run=results[key]["run_id"], engine=ENGINES[key]
+            ),
+            key="budget_models_"
+            + "_".join(str(results[key]["run_id"]) for key in keys),
+            help=t["budget_models_help"],
+        )
+        budget_runs = [results[key] for key in budget_engines]
+    if terms and budget_runs:
         show_figure(
             budget_plot(
-                result,
+                budget_runs[0],
                 t,
                 cumulative,
                 previous if compare_budget else None,
                 terms,
-                comparisons=comparisons if compare_budget_models else (),
+                comparisons=budget_runs[1:],
             )
         )
+    elif not budget_runs:
+        st.info(t["budget_models_empty"])
     if s.transient:
         st.caption(t["cumulative_help"])
     rate_tables = []
     reduced = False
-    for run in [result, *comparisons]:
+    for run in budget_runs:
         difference = np.abs(run["budget"].actual_well - run["budget"].requested_well)
         requested = np.abs(run["budget"].requested_well)
         reduced |= bool((difference > np.maximum(1e-8, requested * 1e-4)).any())
@@ -235,16 +248,17 @@ def render_results(batch, previous_batch, t, language, history=()):
         rate_tables.append(rates)
     if reduced:
         st.warning(t["reduced_well"])
-    with st.expander(t["well_rates"]):
-        st.dataframe(
-            pd.concat(rate_tables, ignore_index=True),
-            hide_index=True,
-            column_config={
-                t["time_days"]: st.column_config.NumberColumn(format="%.4f"),
-                t["requested_lps"]: st.column_config.NumberColumn(format="%.3f"),
-                t["actual_lps"]: st.column_config.NumberColumn(format="%.3f"),
-            },
-        )
+    if rate_tables:
+        with st.expander(t["well_rates"]):
+            st.dataframe(
+                pd.concat(rate_tables, ignore_index=True),
+                hide_index=True,
+                column_config={
+                    t["time_days"]: st.column_config.NumberColumn(format="%.4f"),
+                    t["requested_lps"]: st.column_config.NumberColumn(format="%.3f"),
+                    t["actual_lps"]: st.column_config.NumberColumn(format="%.3f"),
+                },
+            )
     _downloads(result, t)
 
 

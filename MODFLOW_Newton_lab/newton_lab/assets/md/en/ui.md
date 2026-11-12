@@ -302,6 +302,12 @@ Positive values enter the groundwater system; negative values leave it. Storage 
 Show cumulative volumes
 ## budget_terms
 Budget components
+## budget_models
+Model runs shown in water balance
+## budget_models_help
+Choose one or more successful runs from the current computation. This selection controls the budget plot and well-rate table independently of the head and cross-section selections. The previous-computation overlay is controlled separately.
+## budget_models_empty
+Select at least one model run to display its water balance and well rates.
 ## cumulative_help
 Rate curves show each solved end-step flow over its own time interval. Cumulative curves integrate those rates from t = 0 and exclude the initial steady-state bookkeeping step. CSV rate columns use m³/s; cumulative columns use m³.
 ## reduced_well
@@ -632,8 +638,6 @@ Different wet / dry state
 Deviation = other engine − reference (m). Differences are calculated only where both engines provide a wet, active head. Shaded cells have no paired value; hatching marks a different wet/dry state. For multilayer models each surface uses its own uppermost wet-cell head.
 ## compare_time_engines
 Compare selected engines in head histories
-## compare_budget_engines
-Compare selected engines in water balance
 ## reference_label
 Reference
 ## unavailable_snapshot
