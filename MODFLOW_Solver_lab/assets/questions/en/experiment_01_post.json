@@ -1,0 +1,73 @@
+[
+  {
+    "question": "A confined run terminates normally and reports convergence. Which interpretations of its head\nprofile and water budget are appropriate? (Select ALL correct answers.)",
+    "options": {
+      "A nonzero exchange flow at a CHD cell violates the constant-head boundary condition.": false,
+      "The confined head plot represents a potentiometric profile; it is not automatically a water table.": true,
+      "For this steady-state CHD-plus-recharge setup, recharge and any CHD inflow should be balanced by CHD outflow within numerical closure.": true,
+      "The convergence message alone demonstrates that the model represents the real aquifer correctly.": false,
+      "Agreement with the applicable analytical solution supports verification of the numerical solution for this idealized problem.": true
+    },
+    "success": "Correct. CHD maintains head through calculated exchange flows. The steady-state inflows and outflows\nshould balance within numerical closure. The confined profile is potentiometric. Agreement with an\napplicable analytical solution supports numerical verification; it does not validate the conceptual\nmodel or parameters against a real aquifer.",
+    "error": "Not quite. Check the prescribed boundary heads, the meaning of the confined profile, and the water\nbalance separately. An analytical reference can test the numerical solution only when its\nassumptions apply. Neither numerical convergence nor analytical agreement establishes that the model\nrepresents a real aquifer correctly."
+  },
+  {
+    "question": "Suppose you tighten PCG HCLOSE from 10⁻⁴ m to 10⁻⁵ m, keep RCLOSE and all other settings unchanged,\nand obtain the same iteration count. Which explanations or conclusions are valid? (Select ALL\ncorrect answers.)",
+    "options": {
+      "The original run may already have reached head changes smaller than the tighter threshold.": true,
+      "The unchanged iteration count proves that PCG ignored HCLOSE.": false,
+      "The residual criterion may already have required enough iterations to satisfy both head-change thresholds.": true,
+      "The tighter HCLOSE guarantees that every simulated head is within 10⁻⁵ m of the actual aquifer head.": false
+    },
+    "success": "Correct. An iteration can reduce the head change below both thresholds, or the residual criterion\ncan govern when PCG stops. Therefore, a tighter HCLOSE does not have to increase the iteration\ncount. HCLOSE concerns iterative head changes, not error relative to an exact continuous solution or\nto the real aquifer.",
+    "error": "Not quite. Consider which stopping condition actually limits convergence. The original run may\nalready satisfy the tighter head criterion by the time the residual criterion is met. Also\ndistinguish a head-change threshold from a bound on solution error."
+  },
+  {
+    "question": "You refine the grid from 51 to 501 cells while keeping the CHD-centre distance at 5,000 m, the width\nunchanged, and the recharge rate at 150 mm/year. In this app, recharge is excluded from both CHD\ncells. Which statements are correct? (Select ALL correct answers.)",
+    "options": {
+      "The distance between adjacent cell centres decreases from 100 m to 10 m.": true,
+      "The unchanged recharge rate guarantees an identical total recharge flow in both models.": false,
+      "The grid change alters the area receiving recharge, so the integrated recharge flow should be checked in the budget.": true,
+      "Interior heads should be compared by matching their cell numbers across the two grids.": false,
+      "Head values should be compared at common physical positions rather than by matching cell numbers.": true
+    },
+    "success": "Correct. Cell-centre spacing is L/(N−1). Because the two CHD cells receive no recharge, the total\nrecharged length is (N−2)Δx = L−Δx: 4,900 m for 51 cells and 4,990 m for 501 cells. A fixed recharge\nrate therefore does not imply identical integrated recharge. Compare heads at the same physical\ncoordinates.",
+    "error": "Not quite. Distinguish the recharge rate per unit area from the total recharge flow. Check which\ncell areas actually receive recharge. Also use physical coordinates when comparing grids; a cell\nindex has a different spatial meaning after refinement."
+  },
+  {
+    "question": "In this lab, the confined case uses top 0 m and bottom −20 m. Switching to the convertible case with\ntop 30 m changes the bottom to 0 m. With K unchanged, which conclusions are correct? (Select ALL\ncorrect answers.)",
+    "options": {
+      "Both models have identical transmissivity everywhere because their hydraulic conductivity is unchanged.": false,
+      "In a wet convertible cell with 0 < h < 30 m, saturated thickness and transmissivity depend on head.": true,
+      "Entering an aquifer top of 30 m prescribes a hydraulic head of 30 m in all interior cells.": false,
+      "Comparing the two head profiles includes the effects of changed geometry and saturated thickness as well as the change in formulation.": true,
+      "A convertible cell with head at or above 30 m has its full model-layer thickness saturated.": true
+    },
+    "success": "Correct. In the confined case, transmissivity is based on a fixed thickness of 20 m. In the\nconvertible case, wet cells below the top have a head-dependent saturated thickness; cells at or\nabove the top are fully saturated. The app also changes the layer bottom, so differences between the\ntwo head profiles cannot be attributed solely to the numerical solver.",
+    "error": "Not quite. Transmissivity depends on saturated thickness as well as K. Compare the aquifer geometry\nin the two setups and locate the calculated head relative to the top and bottom. The aquifer top is\na geometric input, not a prescribed interior head."
+  },
+  {
+    "question": "Suppose repeated runs display small differences in elapsed time even when their input settings are\nunchanged. Which procedures support a defensible comparison of the experiment's numerical\nperformance? (Select ALL correct answers.)",
+    "options": {
+      "Keep the solver method, closure criteria, and initialization strategy comparable while changing the intended experimental factor.": true,
+      "Use the fastest single run to rank configurations even when the differences are similar to the observed timing variability.": false,
+      "Repeat a configuration and report a representative elapsed time, such as the median.": true,
+      "Treat outer and inner iteration counts as interchangeable measures across all engines.": false,
+      "Distinguish the effect of more unknowns from the effect of head-dependent transmissivity when interpreting the results.": true
+    },
+    "success": "Correct. Controlled settings and repeated timings support a fair comparison. Distinguish inner\nlinear iterations from outer updates, and compare the same reported quantities. This app's elapsed\ntime includes native program startup, solution, and output, so very small timing differences need\nnot reflect differences in solver arithmetic.",
+    "error": "Not quite. Separate a repeatable performance difference from ordinary timing variability, and verify\nthat the compared runs use comparable numerical settings. Counts with different meanings, such as\ninner and outer iterations, cannot be substituted for one another."
+  },
+  {
+    "question": "After inspecting the solver choices in this Solver Lab, which statements correctly describe the\nimplemented combinations? (Select ALL correct answers.)",
+    "options": {
+      "In MODFLOW-NWT, choosing GMRES or XMD selects the linear-solution method used within the Newton procedure.": true,
+      "Selecting MODFLOW 6 in this lab automatically enables Newton linearization because it is the newer engine.": false,
+      "In MODFLOW-2005, PCG and SIP are alternative iterative solution packages.": true,
+      "The current MODFLOW 6 setup in this lab uses Picard iteration with IMS and a choice of CG or BICGSTAB.": true,
+      "Selecting XMD in MODFLOW-NWT replaces its outer Newton procedure with Picard iteration.": false
+    },
+    "success": "Correct. The outer treatment of nonlinear equations and the inner linear-solution method are\ndifferent choices. MODFLOW-NWT retains its Newton formulation when its linear method changes.\nAlthough MODFLOW 6 can support other formulations, this lab's current setup uses Picard with IMS.\nMODFLOW-2005 offers PCG and SIP in the lab.",
+    "error": "Not quite. Do not infer the nonlinear formulation from the engine's age or from the name of its\ninner linear solver. Identify the method implemented by this app: Newton in MODFLOW-NWT and Picard\nin its current MODFLOW 6 configuration."
+  }
+]

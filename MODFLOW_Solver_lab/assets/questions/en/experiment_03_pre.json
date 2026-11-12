@@ -1,0 +1,69 @@
+[
+  {
+    "question": "A homogeneous, isotropic single-layer x–y model has geometry, recharge, and west/east CHD heads that\nare uniform in y. Its north/south boundaries are no-flow. Which predictions are justified? (Select\nALL correct answers.)",
+    "options": {
+      "A steady head distribution that depends on x but not y can satisfy this two-dimensional problem.": true,
+      "Adding rows necessarily creates a physical north/south head gradient.": false,
+      "A matching one-dimensional analytical reference can remain applicable if its other assumptions are satisfied.": true,
+      "The north/south no-flow boundaries require a constant head throughout the entire model.": false
+    },
+    "success": "Correct. With geometry and forcing independent of y, a y-independent solution has no north/south\nflow and can satisfy the two-dimensional equations. Recharge and the west/east heads can still\nproduce head variation in x. Adding a coordinate direction does not by itself invalidate an\nanalytical solution for the corresponding symmetric problem.",
+    "error": "Not quite. A no-flow condition on the north/south sides constrains flow across those sides; it does\nnot require head to be constant in x. Check whether anything in the physical inputs breaks the\nsymmetry in y before predicting a north/south head gradient."
+  },
+  {
+    "question": "How does computational size change when square horizontal grids and additional layers are used?\n(Select ALL correct answers.)",
+    "options": {
+      "An 11 × 11 grid contains 121 cells, whereas a 21 × 21 grid contains 441 cells.": true,
+      "Doubling both the row count and column count doubles the number of horizontal cells.": false,
+      "The total cell count is the number of rows multiplied by the number of columns and the number of layers.": true,
+      "Increasing the number of cells must increase the number of solver iterations.": false,
+      "A larger grid can increase the work per iteration even when the iteration count is unchanged.": true
+    },
+    "success": "Correct. Horizontal cell count grows as N² for an N × N grid, and adding layers multiplies that\ncount again. Larger systems can require more work per iteration without requiring more iterations.\nTotal cells and unknown active heads are not identical counts because prescribed-head or inactive\ncells are treated separately.",
+    "error": "Not quite. Multiply the counts in all spatial directions. Then distinguish the number of equations\nand the work in each iteration from the number of iterations needed to meet the stopping criteria."
+  },
+  {
+    "question": "You compare MODFLOW-2005 PCG, MODFLOW-NWT GMRES, and MODFLOW 6 CG on the same two-dimensional case.\nWhich statements support a fair interpretation? (Select ALL correct answers.)",
+    "options": {
+      "Identical numerical residual thresholds necessarily represent equivalent stopping conditions in all three engines.": false,
+      "Use matching geometry, conductivity, boundary conditions, recharge, and intended initial-head arrays when changing engines.": true,
+      "Only the linear iteration count matters; nonlinear updates and other computational work can be ignored.": false,
+      "Record the nonlinear formulation as well as the linear method: NWT uses Newton, whereas this app's current MODFLOW 6 setup uses Picard.": true
+    },
+    "success": "Correct. A controlled comparison preserves the intended hydraulic problem and starting conditions\nwhile recording each engine's numerical formulation and settings. Equal threshold numbers are not\nsufficient when residual definitions, norms, or iteration levels differ. The tested combinations\ndiffer in more than their inner linear-solver names.",
+    "error": "Not quite. Check what each reported criterion and iteration count means. Also distinguish a change\nof inner linear solver from a change of engine and nonlinear formulation. Comparing different\nhydraulic inputs would introduce an additional source of differences."
+  },
+  {
+    "question": "Conductivity is now allowed to vary randomly in both x and y, while the west/east CHD heads remain\nuniform in y. Which statements are correct? (Select ALL correct answers.)",
+    "options": {
+      "Uniform boundary heads in y force the interior heads to remain independent of y, regardless of conductivity variation.": false,
+      "A general two-dimensional conductivity field can break the symmetry in y and produce north/south flow within the domain.": true,
+      "The same frozen conductivity array should be used when comparing engines for one realization.": true,
+      "Different spatial fields with the same mean conductivity define the same hydraulic problem.": false
+    },
+    "success": "Correct. Spatial variations in conductivity can redirect flow and break the y symmetry even when the\nboundary heads remain uniform along those boundaries. The spatial arrangement matters as well as the\nmean. Reusing the actual conductivity array isolates engine differences for a fixed realization.",
+    "error": "Not quite. Boundary symmetry does not remove conductivity variation inside the domain. Compare the\ncomplete spatial field, and distinguish an engine comparison from an experiment that changes the\nhydraulic conductivity realization."
+  },
+  {
+    "question": "The aquifer bottom is 0 m and the west/east CHD heads remain positive. What can be inferred when\nchanging the initial guesses in the variable-head cells? (Select ALL correct answers.)",
+    "options": {
+      "The prescribed positive CHD heads remain boundary conditions rather than being replaced by the interior starting guesses.": true,
+      "A near-zero interior starting guess makes transmissivity zero everywhere, including at every CHD cell.": false,
+      "A low initial guess can produce small saturated thickness and affect the numerical difficulty of the calculation.": true,
+      "Random initial heads are guaranteed to make convergence harder than uniform initial heads.": false
+    },
+    "success": "Correct. Initial guesses influence the numerical path while the CHD heads remain prescribed. In a\nconvertible aquifer, near-bottom guesses can imply very small saturated thickness in variable-head\ncells. Random guesses can be more or less favourable than a uniform guess; their effect must be\nmeasured rather than assumed.",
+    "error": "Not quite. Distinguish the prescribed boundary heads from the numerical estimates in the interior.\nRelate each estimate to saturated thickness, and avoid assuming that a random initial field is\nalways farther from the eventual solution."
+  },
+  {
+    "question": "Before extending the model from a single layer to three dimensions, which checks are appropriate?\n(Select ALL correct answers.)",
+    "options": {
+      "Inspect the actual row, column, and layer counts and the resulting total number of cells.": true,
+      "Homogeneous conductivity guarantees that the one-dimensional analytical expression remains exact for any layered flow field.": false,
+      "Plan to examine heads and saturation through depth as well as in horizontal views.": true,
+      "Convergence of the corresponding single-layer model guarantees convergence after adding layers.": false
+    },
+    "success": "Correct. A three-dimensional extension changes the system size and can resolve vertical gradients or\ndifferent saturation states with depth. Those changes require inspection beyond a horizontal head\nprofile. Homogeneity alone does not establish the assumptions of a reduced one-dimensional solution,\nand a successful simpler calculation does not guarantee that the larger problem will converge.",
+    "error": "Not quite. Check both computational size and the additional hydraulic behaviour that vertical\ndiscretization permits. Treat the analytical reference and convergence of the simpler model as\nuseful evidence, not as guarantees for the layered calculation."
+  }
+]

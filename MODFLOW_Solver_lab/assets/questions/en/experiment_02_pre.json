@@ -1,0 +1,72 @@
+[
+  {
+    "question": "A model with fixed overall aquifer geometry is divided into more vertical layers. Which statements\nare correct? (Select ALL correct answers.)",
+    "options": {
+      "With an equal-thickness subdivision, individual layers become thinner.": true,
+      "Vertical discretization introduces additional physical time steps.": false,
+      "Additional layers can resolve vertical variation in hydraulic head.": true,
+      "A water-table cell that retains some saturated thickness is fully dry.": false
+    },
+    "success": "Correct. Increasing vertical resolution subdivides the same aquifer geometry and can represent\nvertical head variation. It does not introduce physical time steps into a steady-state calculation.\nA partly saturated cell still contains a saturated portion and must be distinguished from a cell\nwith no saturated thickness.",
+    "error": "Not quite. Separate spatial resolution from physical time. Also compare partial saturation with a\nfully dry condition: a water table inside a convertible cell leaves part of that cell saturated."
+  },
+  {
+    "question": "Which statements correctly describe the numerical approaches being compared in this Solver Lab?\n(Select ALL correct answers.)",
+    "options": {
+      "MODFLOW-NWT with GMRES uses a Newton formulation with an inner linear-solution method.": true,
+      "Choosing MODFLOW-NWT guarantees convergence whenever cells become dry.": false,
+      "The current MODFLOW 6 setup uses Picard iteration with CG as one IMS linear-solution option.": true,
+      "MODFLOW-2005 PCG solves the linear systems arising during the model's iterative solution.": true,
+      "The engine with the fewest outer iterations must have the shortest total runtime.": false
+    },
+    "success": "Correct. The nonlinear formulation and the inner linear solver play different roles. This lab\ncompares MODFLOW-2005 PCG, MODFLOW-NWT with its Newton formulation and GMRES option, and a MODFLOW 6\nPicard setup with CG. No method guarantees convergence for every setup, and outer iteration counts\nalone do not measure total computational cost.",
+    "error": "Not quite. Distinguish the treatment of nonlinear equations from the solution of each linear system.\nAlso consider the work within an outer iteration and the possibility of failure under difficult\nhydraulic or numerical conditions."
+  },
+  {
+    "question": "When can comparison with an analytical solution provide a useful numerical verification check?\n(Select ALL correct answers.)",
+    "options": {
+      "Homogeneous hydraulic conductivity alone makes any one-dimensional recharge formula applicable, regardless of vertical gradients.": false,
+      "The analytical and numerical problems must have compatible geometry, boundary conditions, parameters, and flow assumptions.": true,
+      "Agreement with an analytical solution establishes that the model represents the real aquifer correctly.": false,
+      "An analytical solution can test numerical results for a suitably matched idealized problem.": true,
+      "Resolving vertical flow can introduce behaviour that a reduced one-dimensional analytical expression does not represent.": true
+    },
+    "success": "Correct. Analytical verification requires matching the problem and its assumptions. Homogeneity does\nnot eliminate vertical gradients or ensure that a reduced one-dimensional expression applies.\nAgreement supports numerical verification of that idealized problem; it does not independently\nvalidate a field model.",
+    "error": "Not quite. Check more than hydraulic conductivity: compare flow dimensionality, boundary conditions,\ngeometry, and the assumptions behind the formula. Distinguish verifying a numerical calculation from\nvalidating its representation of a real aquifer."
+  },
+  {
+    "question": "How should a randomly generated conductivity field be handled when comparing different solver\nengines? (Select ALL correct answers.)",
+    "options": {
+      "Generate a fresh independent field for each engine so that each receives a different test.": false,
+      "Use the same cell-by-cell conductivity realization for all engines in a controlled comparison.": true,
+      "Record the grid and conductivity-distribution settings, and preserve the actual conductivity array.": true,
+      "An unchanged mean conductivity guarantees that different random fields produce the same head distribution.": false,
+      "Check that the stored conductivity arrays actually match before interpreting differences as solver effects.": true
+    },
+    "success": "Correct. A controlled engine comparison uses the same spatial conductivity field and other model\ninputs. Recorded generation settings and exported conductivity arrays support reproducibility.\nComparing the actual arrays confirms that the hydraulic problem is unchanged. Different arrangements\nof the same conductivity values can produce different flows and heads.",
+    "error": "Not quite. A conductivity field is defined by its spatial arrangement as well as its distribution.\nReuse a frozen realization and verify the actual arrays; matching only the mean or independently\ndrawing new fields does not isolate an engine effect."
+  },
+  {
+    "question": "Which statements correctly describe initial heads in a steady-state calculation? (Select ALL correct\nanswers.)",
+    "options": {
+      "Initial heads replace the prescribed values at the CHD boundaries.": false,
+      "Initial heads provide starting estimates for the numerical solution.": true,
+      "Positive initial heads guarantee that every model layer starts saturated.": false,
+      "Different initial estimates can affect convergence behaviour and the wet or dry states encountered by the solver.": true
+    },
+    "success": "Correct. Initial heads are numerical starting estimates in this steady-state experiment. They can\naffect convergence and drying or wetting transitions, while the CHD boundary heads remain\nprescribed. Whether a cell is initially saturated depends on head relative to that cell's\nelevations, not simply on whether head is positive.",
+    "error": "Not quite. Compare an initial head with the top and bottom of each cell and distinguish it from a\nspecified boundary head. The numerical starting estimate can influence the path toward a solution\nwithout changing the imposed steady-state stresses."
+  },
+  {
+    "question": "Which checks are useful when assessing a calculation in which cells may dry? (Select ALL correct\nanswers.)",
+    "options": {
+      "Inspect the solver's convergence report and the relevant stopping criteria.": true,
+      "Normal program termination alone establishes that the requested solution converged.": false,
+      "Inspect the water budget and the spatial pattern of wet and dry cells.": true,
+      "Treat dry-cell sentinel values as ordinary hydraulic heads when computing head statistics.": false,
+      "Check whether the displayed heads are physically interpretable in the cells where they are reported.": true
+    },
+    "success": "Correct. Solver diagnostics, water budgets, saturation states, and physically interpretable heads\nprovide complementary evidence. A normal program exit does not replace checking convergence. Special\nvalues used to indicate dry or inactive cells must be identified and excluded from ordinary head\ncalculations.",
+    "error": "Not quite. Separate successful program execution from successful numerical solution. Then check the\nhydraulic results and cell states. A dry or inactive marker is a status indicator, not a head that\ncan be averaged or contoured as if it were a physical value."
+  }
+]

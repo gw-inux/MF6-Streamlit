@@ -4,7 +4,7 @@
 # Manual edits: jump to these release line numbers (refresh with tools/update_code_map.py).
 #   BLUE: line 43
 #   ANALYTICAL_GREEN: line 44
-#   ORANGE: line 45
+#   CHD_BLUE: line 45
 #   CHD_FILL: line 46
 #   TEXT: line 47
 #   PREVIOUS_BLUE: line 48
@@ -18,12 +18,12 @@
 #   display_indices: line 73
 #   profile_snapshot: line 78
 #   head_plot: line 96
-#   error_plot: line 260
-#   convergence_plot: line 284
-#   model_preview: line 324
-#   computed_head_map: line 431
-#   first_layer_head_map: line 484
-#   grid_study_plot: line 490
+#   error_plot: line 258
+#   convergence_plot: line 282
+#   model_preview: line 322
+#   computed_head_map: line 429
+#   first_layer_head_map: line 482
+#   grid_study_plot: line 488
 # END CODE CONTENTS
 
 from functools import wraps
@@ -42,8 +42,8 @@ from .diagnostic_guides import convergence_guides
 
 BLUE = "#176DBB"
 ANALYTICAL_GREEN = "#278247"
-ORANGE = "#DE8428"
-CHD_FILL = "#F8D5AE"
+CHD_BLUE = "#2C78A5"
+CHD_FILL = "#8AB9D6"
 TEXT = "#24364B"
 PREVIOUS_BLUE = "#7A91A6"
 FAILED_RED = "#9A353B"
@@ -102,7 +102,7 @@ def head_plot(s, results=(), analytical=False, initial=True, settings=None, laye
     centres = np.arange(1, s.n+1)
     faces = np.arange(s.n+1)+.5
     domain = Rectangle((.5, s.bottom), s.n, s.top-s.bottom,
-                       facecolor="#F5F1E4", edgecolor="none", zorder=0)
+                       facecolor="#F0EEE7", edgecolor="none", zorder=0)
     domain.set_gid("model_domain")
     ax.add_patch(domain)
     visible_faces = faces[::display_stride(s.n)]
@@ -180,11 +180,11 @@ def head_plot(s, results=(), analytical=False, initial=True, settings=None, laye
     for cell, head, active in zip((1, s.n), (s.left, s.right), boundaries):
         if active:
             patch = Rectangle((cell-.5, s.bottom), 1., np.clip(head, s.bottom, s.top)-s.bottom,
-                              facecolor="#F8D5AE", edgecolor=ORANGE, lw=1., alpha=.85, zorder=3)
+                              facecolor=CHD_FILL, edgecolor=CHD_BLUE, lw=1., alpha=.85, zorder=3)
             patch.set_gid("chd_cell")
             ax.add_patch(patch)
-            ax.hlines(head, cell-.5, cell+.5, color=ORANGE, lw=2., zorder=6)
-    ax.scatter(np.array([1, s.n])[boundaries], np.array([s.left, s.right])[boundaries], color=ORANGE,
+            ax.hlines(head, cell-.5, cell+.5, color=CHD_BLUE, lw=2., zorder=6)
+    ax.scatter(np.array([1, s.n])[boundaries], np.array([s.left, s.right])[boundaries], color=CHD_BLUE,
                marker="s", s=60, label="Specified heads (CHD)", zorder=8)
     ax.set(xlabel="Cell number along x (first cell = 1)", ylabel="Elevation / hydraulic head (m)", xlim=(.5, s.n+.5))
     if s.n <= 21:
@@ -216,15 +216,13 @@ def head_plot(s, results=(), analytical=False, initial=True, settings=None, laye
     extensions.set_gid("grid_extensions")
     if intro_notes and not results and s.n == 11 and not s.complexity and s.confined:
         # First-view teaching labels only; no change to the head or grid arrays.
-        for cell, text_x in ((1, 2.4), (s.n, s.n-1.4)):
-            label = ax.annotate("CHD\nspecified head", xy=(cell, (s.bottom+s.top)/2),
-                xytext=(text_x, s.top+.10*span), ha="center", va="bottom", fontsize=8.5,
-                color="#975614", arrowprops=dict(arrowstyle="->", color=ORANGE, lw=.9),
-                bbox=dict(boxstyle="round,pad=.3", facecolor="white", edgecolor=ORANGE, alpha=.95))
+        note_style = dict(ha="center", va="center", fontsize=9, color=BLUE,
+                          bbox=dict(boxstyle="round,pad=.35", facecolor="white", edgecolor="#ADC7DF", alpha=.95))
+        note_y = s.bottom+.4*(s.top-s.bottom)
+        for cell in (1, s.n):
+            label = ax.text(cell, note_y, "CHD", **note_style)
             label.set_gid("initial_chd_note")
-        label = ax.text((s.n+1)/2, s.bottom+.4*(s.top-s.bottom),
-            "Model cells\nheads computed here", ha="center", va="center", fontsize=9,
-            color=BLUE, bbox=dict(boxstyle="round,pad=.35", facecolor="white", edgecolor="#ADC7DF", alpha=.95))
+        label = ax.text((s.n+1)/2, note_y, "Model cells\nheads computed here", **note_style)
         label.set_gid("initial_interior_note")
     if settings:
         h, flow, outer, inner = limits_summary(settings)
@@ -392,13 +390,13 @@ def model_preview(s, quantity="Empty cells", heads=None, layer=0, row=None):
         # A uniform west/east boundary uses one rectangle per view, not one per row.
         if plan_boundary[:, col].any():
             patch = Rectangle((xedges[col], yedges[0]), s.dx, yedges[-1]-yedges[0],
-                              facecolor=CHD_FILL, edgecolor=ORANGE, zorder=3)
+                              facecolor=CHD_FILL, edgecolor=CHD_BLUE, zorder=3)
             patch.set_gid("preview_chd")
             axes[0].add_patch(patch)
         for li in range(s.nlay):
             if boundary[li, row, col]:
                 patch = Rectangle((xedges[col], zedges[li+1]), s.dx, zedges[li]-zedges[li+1],
-                                  facecolor=CHD_FILL, edgecolor=ORANGE, zorder=3)
+                                  facecolor=CHD_FILL, edgecolor=CHD_BLUE, zorder=3)
                 patch.set_gid("preview_chd")
                 axes[1].add_patch(patch)
     section = axes[0].axhline(row*s.dy, color="#B63355", ls="--", lw=1.2, zorder=6)
@@ -407,7 +405,7 @@ def model_preview(s, quantity="Empty cells", heads=None, layer=0, row=None):
         for x in np.linspace(.15*s.length, .85*s.length, 5):
             axes[1].annotate("", xy=(x, s.top-.13*(s.top-s.bottom)), xytext=(x, s.top),
                              arrowprops=dict(arrowstyle="->", color=BLUE), annotation_clip=False, zorder=6)
-    axes[0].legend(handles=[Patch(facecolor=CHD_FILL, edgecolor=ORANGE, label="Specified heads · west / east"),
+    axes[0].legend(handles=[Patch(facecolor=CHD_FILL, edgecolor=CHD_BLUE, label="Specified heads · west / east"),
                            Line2D([], [], color="#B63355", ls="--", label="Section A–A′")],
                    loc="upper left", fontsize=8)
     for ax in axes:
@@ -437,7 +435,7 @@ def computed_head_map(s, heads, *, surface=True, stale=False):
     field = groundwater_surface(s, heads)[0] if surface else s.head_array(heads)[0]
     boundary = s.chd_mask().any(axis=0) if surface else s.chd_mask()[0]
     map_color = "#747B84" if stale else BLUE
-    boundary_color = "#8B8F95" if stale else ORANGE
+    boundary_color = "#8B8F95" if stale else CHD_BLUE
     trace_color = "#6F747C" if stale else "#B63355"
     xedges = np.arange(s.n+1)*s.dx-s.dx/2
     yedges = np.arange(s.nrow+1)*s.dy-s.dy/2

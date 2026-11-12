@@ -1,0 +1,72 @@
+[
+  {
+    "question": "In the homogeneous, isotropic single-layer case with y-uniform physical inputs, you observe\npronounced head differences between rows. Which responses are appropriate? (Select ALL correct\nanswers.)",
+    "options": {
+      "Accept the differences as an unavoidable consequence of having two horizontal coordinate directions.": false,
+      "Check for unintended y variation in conductivity, geometry, recharge, or boundary conditions.": true,
+      "Inspect convergence and test whether the row differences persist with tighter solver criteria.": true,
+      "Agreement with the analytical reference in one selected row proves that the complete two-dimensional result is correct.": false,
+      "Compare several rows with the same one-dimensional reference when its assumptions apply.": true
+    },
+    "success": "Correct. The intended symmetric problem admits a y-independent solution, so pronounced differences\nbetween rows need investigation. Check the actual physical inputs and numerical convergence, and\nexamine more than one row. Agreement at one location does not establish that the entire spatial\nfield satisfies the expected symmetry.",
+    "error": "Not quite. Adding rows does not itself create a physical cause for north/south flow. Test the\nintended symmetry across the domain and check the actual inputs and convergence before interpreting\nrow-to-row differences as hydraulic behaviour."
+  },
+  {
+    "question": "With the same algorithm, converged 51 × 51 and 501 × 501 single-layer runs report the same number of\nlinear iterations. Which conclusions are valid? (Select ALL correct answers.)",
+    "options": {
+      "The grids contain 2,601 and 251,001 total cells, respectively.": true,
+      "The identical iteration count demonstrates identical total computational work.": false,
+      "The larger grid can require substantially more work per iteration despite the unchanged iteration count.": true,
+      "The cell-count ratio forces the elapsed runtime to increase by exactly that same ratio.": false
+    },
+    "success": "Correct. The total cell count increases by about 96.5 times, but an iteration on the larger system\ngenerally involves more data and arithmetic. Timing also reflects implementation, memory access,\nprogram overhead, and other work, so neither equal iteration counts nor the cell-count ratio alone\ndetermines the measured runtime.",
+    "error": "Not quite. An iteration is not a fixed amount of work independent of grid size. Count the cells in\nboth horizontal directions, then distinguish iteration count, work per iteration, and the measured\nelapsed time."
+  },
+  {
+    "question": "You want to rank the three engine configurations using results from one two-dimensional case. Which\nrequirements support a defensible comparison? (Select ALL correct answers.)",
+    "options": {
+      "A failed run counts as the fastest successful method if its program exits before the others.": false,
+      "Verify comparable physical inputs and initial conditions and interpret each engine's closure criteria.": true,
+      "Check convergence, budgets, and hydraulic results before treating elapsed times as comparable performance measurements.": true,
+      "Use equal numerical residual thresholds as sufficient proof that the achieved accuracies are identical.": false,
+      "Repeat timings and distinguish reported inner and outer iterations when describing the results.": true
+    },
+    "success": "Correct. Performance comparisons require successful, sufficiently comparable solutions of the\nintended problem. Record numerical settings and interpret residual norms rather than relying on\nmatching threshold numbers. Repeated timings help distinguish a reproducible difference from\nvariability, and iteration counts must retain their actual meanings.",
+    "error": "Not quite. A short failed run is not a successful solution, and equal threshold numbers do not\nestablish equal accuracy across different numerical criteria. Check the physical inputs, solution\nquality, timing variability, and definitions of the reported counts."
+  },
+  {
+    "question": "What distinguishes using random initial heads from introducing a random two-dimensional conductivity\nfield? (Select ALL correct answers.)",
+    "options": {
+      "Random initial heads change the starting estimates, whereas random conductivity changes the hydraulic problem being solved.": true,
+      "Random initial heads are guaranteed to require more iterations than a uniform initial guess.": false,
+      "A general conductivity field that varies in y can remove the symmetry underlying the one-dimensional reference.": true,
+      "Generating a fresh conductivity field for each engine isolates the effect of the numerical method.": false,
+      "Freeze the conductivity realization while comparing uniform and random initial-head strategies.": true
+    },
+    "success": "Correct. Conductivity belongs to the physical model, whereas initial heads determine the numerical\nstarting point in this steady-state experiment. A two-dimensional conductivity realization can break\ny symmetry. Keep that realization fixed when testing initial guesses, and measure whether a random\nstart helps or hinders convergence. Wetting restrictions may also affect which solution states are\naccessible.",
+    "error": "Not quite. Ask whether the changed input belongs to the steady-state hydraulic problem or to its\nnumerical initialization. Change one factor at a time, preserve the actual conductivity array, and\navoid assuming that randomness necessarily makes a starting estimate worse."
+  },
+  {
+    "question": "The current uniform-head control allows 0.1 m but not exactly 0.0 m. With bottom 0 m and positive\nCHD heads, which conclusions about a low-start experiment are justified? (Select ALL correct\nanswers.)",
+    "options": {
+      "A run starting at 0.1 m tests a near-bottom initial guess; it is not an experiment with exactly zero interior initial heads.": true,
+      "Changing the interior guess to 0.1 m also resets the prescribed west/east CHD heads to 0.1 m.": false,
+      "Reasoning about an exact-zero start must consider positive boundary heads, sources, and the engine's drying or wetting treatment.": true,
+      "Every engine must fail for exactly zero interior initial heads, regardless of its numerical treatment or boundary conditions.": false
+    },
+    "success": "Correct. The available near-bottom trial does not establish the outcome of an unsupported exact-zero\ntrial. Positive CHD heads remain imposed, so an argument that transmissivity must be zero everywhere\nis not valid. The response to an exact-zero interior guess depends on the numerical formulation,\naccessible wetting transitions, and the hydraulic connections and sources.",
+    "error": "Not quite. Separate the permitted 0.1 m experiment from a hypothetical exact-zero start, and keep\nthe CHD heads distinct from interior guesses. Do not infer universal failure from interior saturated\nthickness alone without considering the boundaries and the engine's wetting treatment."
+  },
+  {
+    "question": "You plan staged three-dimensional tests under the app's 255,000-cell cap. Which statements and\npractices are appropriate? (Select ALL correct answers.)",
+    "options": {
+      "A 51 × 51 × 10 model contains 26,010 cells.": true,
+      "A 501 × 501 × 10 model remains below the 255,000-cell cap.": false,
+      "A 159 × 159 × 10 model contains 252,810 cells and satisfies the stated cell-count cap as an optional larger case.": true,
+      "A shorter runtime by itself demonstrates a more accurate hydraulic solution.": false,
+      "Examine the three-layer case before increasing to ten layers, and assess convergence, budgets, heads, and saturation before judging performance.": true
+    },
+    "success": "Correct. The 51 × 51 cases contain 7,803 cells with three layers and 26,010 with ten. The optional\n159 × 159 × 10 case contains 252,810 cells; 501 × 501 × 10 would contain 2,510,010. A case fitting\nthe cap is not automatically practical to run. Increase complexity in stages and judge numerical and\nhydraulic results alongside runtime.",
+    "error": "Not quite. Multiply all three dimensions before comparing a grid with the cap. Distinguish an\nadmissible cell count from a practical or accurate computation. Use the smaller staged calculations\nto inspect convergence and hydraulic behaviour before considering the optional larger case."
+  }
+]

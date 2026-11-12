@@ -8,15 +8,16 @@ Native model construction, solver behavior and output reading remain in core.py.
 
 # BEGIN CODE CONTENTS
 # Manual edits: jump to these release line numbers (refresh with tools/update_code_map.py).
-#   initialize_session: line 94
-#   retain_comparable_runs: line 130
-#   1 — Introduction and numerical background. Edit prose in assets/md/en.: line 152
-#   Optional repository figure. Keep this block commented until the image: line 157
-#   2 — Scenario, spatial discretization and numerical solver inputs.: line 171
-#   3 — Additional complexity and live preview use the current validated inputs.: line 200
-#   4 — Execution, plotted heads, run comparison and native diagnostics.: line 213
-#   5 — Grid refinement is an independent subsection with a reviewable plan.: line 218
-#   6 — Conclusion and primary documentation.: line 221
+#   initialize_session: line 96
+#   retain_comparable_runs: line 132
+#   1 — Introduction and numerical background. Edit prose in assets/md/en.: line 156
+#   Optional repository figure. Keep this block commented until the image: line 161
+#   Guided workflows share Markdown with their independent reading tabs.: line 174
+#   2 — Scenario, spatial discretization and numerical solver inputs.: line 178
+#   3 — Additional complexity and live preview use the current validated inputs.: line 207
+#   4 — Execution, plotted heads, run comparison and native diagnostics.: line 220
+#   5 — Grid refinement is an independent subsection with a reviewable plan.: line 225
+#   6 — Conclusion and primary documentation.: line 228
 # END CODE CONTENTS
 
 from copy import deepcopy
@@ -70,6 +71,7 @@ if missing_text:
     st.stop()
 from .content import INTRODUCTION, SOLVER_DETAILS, ASSUMPTIONS, REFERENCES, CONCLUSION, TEXT
 from .controls import expert_controls
+from .experiments import render_document_view, render_experiments
 from .core import ENGINE_NAMES, Scenario, find_executable
 from .inputs import (
     capture_input_values,
@@ -146,6 +148,8 @@ def retain_comparable_runs(scenario):
 
 st.set_page_config(page_title="MODFLOW Solver Lab", page_icon="💧", layout="centered")
 apply_style()
+if render_document_view():
+    st.stop()
 workspace = initialize_session()
 executables = {engine: find_executable(engine) for engine in ENGINE_NAMES}
 
@@ -166,6 +170,9 @@ with st.expander(TEXT["equations_expander"]):
     st.markdown(ASSUMPTIONS)
 with st.expander(TEXT["solver_details_expander"]):
     st.markdown(SOLVER_DETAILS)
+
+# EDIT: Guided workflows share Markdown with their independent reading tabs.
+render_experiments()
 
 
 # 2 — Scenario, spatial discretization and numerical solver inputs.

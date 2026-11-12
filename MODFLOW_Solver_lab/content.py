@@ -11,19 +11,19 @@ fallback and the deliberately inactive example for repository figures.
 #   DEFAULT_LANGUAGE: line 34
 #   MD_DIRECTORY: line 35
 #   TEXT_FILES: line 36
-#   SECTION_HEADER: line 44
-#   ContentError: line 47
-#   _language_directory: line 51
-#   load_md: line 58
-#   _sections: line 80
-#   load_text: line 96
-#   These names keep the established presentation imports unchanged.: line 113
-#   INTRODUCTION: line 116
-#   ASSUMPTIONS: line 117
-#   SOLVER_DETAILS: line 118
-#   CONCLUSION: line 119
-#   REFERENCES: line 120
-#   TEXT: line 121
+#   SECTION_HEADER: line 45
+#   ContentError: line 48
+#   _language_directory: line 52
+#   load_md: line 59
+#   _sections: line 81
+#   load_text: line 97
+#   These names keep the established presentation imports unchanged.: line 114
+#   INTRODUCTION: line 117
+#   ASSUMPTIONS: line 118
+#   SOLVER_DETAILS: line 119
+#   CONCLUSION: line 120
+#   REFERENCES: line 121
+#   TEXT: line 122
 # END CODE CONTENTS
 
 from pathlib import Path
@@ -40,6 +40,7 @@ TEXT_FILES = (
     "ui_solver.md",
     "ui_results.md",
     "ui_study.md",
+    "ui_experiments.md",
 )
 SECTION_HEADER = re.compile(r"^## ([a-z][a-z0-9_]*)[ \t]*$", re.MULTILINE)
 

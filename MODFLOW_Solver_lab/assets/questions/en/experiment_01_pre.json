@@ -1,0 +1,71 @@
+[
+  {
+    "question": "In the steady-state model with CHD cells at both ends, which statements correctly describe those\nboundaries? (Select ALL correct answers.)",
+    "options": {
+      "The prescribed hydraulic head is maintained at each CHD cell.": true,
+      "The exchange flow at each CHD boundary is fixed independently of the solution.": false,
+      "The model calculates the exchange needed to maintain the prescribed heads.": true,
+      "Equal heads at both ends rule out flow throughout a model receiving recharge.": false
+    },
+    "success": "Correct. CHD prescribes hydraulic head, while the associated exchange flow is calculated and\ncontributes to the water budget. Recharge can create an internal head mound and flow toward both\nends even when the two boundary heads are equal.",
+    "error": "Not quite. In a constant-head boundary, 'constant' refers to head, not to a prescribed exchange\nrate. Also consider whether recharge can create head gradients inside the model even if the two end\nheads are equal."
+  },
+  {
+    "question": "For MODFLOW-2005 with PCG, which statements correctly describe the convergence criteria HCLOSE and\nRCLOSE? (Select ALL correct answers.)",
+    "options": {
+      "RCLOSE limits the percentage discrepancy of the complete model water budget.": false,
+      "HCLOSE limits the change between successive calculated head estimates, in length units.": true,
+      "HCLOSE also specifies the maximum difference between simulated heads and actual aquifer heads.": false,
+      "RCLOSE tests the residual of the discretized flow equations using flow-rate units.": true,
+      "PCG uses both head-change and residual conditions to decide convergence.": true
+    },
+    "success": "Correct. HCLOSE concerns iterative head changes, while RCLOSE concerns the remaining flow-equation\nresidual. PCG checks both. Neither a small head change nor a small residual alone establishes\nagreement with the real aquifer, and RCLOSE is not the model-wide percentage budget discrepancy.",
+    "error": "Not quite. Separate three quantities: change in head between iterations, residual of a cell's flow\nequation, and the overall percentage water-budget discrepancy. A convergence threshold controls a\nnumerical stopping condition; it does not specify error relative to the real aquifer."
+  },
+  {
+    "question": "The distance between the two CHD cell centres remains 5,000 m. The model is refined from 11 to 51\nequally spaced cells, with only the first and last heads prescribed. Which statements are correct?\n(Select ALL correct answers.)",
+    "options": {
+      "Increasing the number of cells requires increasing the distance between the two CHD centres.": false,
+      "The distance between adjacent cell centres decreases from 500 m to 100 m.": true,
+      "The number of unknown interior heads increases from 9 to 49.": true,
+      "Grid refinement introduces additional physical time steps into this steady-state calculation.": false
+    },
+    "success": "Correct. There are N−1 intervals between N equally spaced cell centres, so the spacing is\n5,000/(N−1) m. With two prescribed end heads, N−2 interior heads remain unknown. Spatial refinement\nchanges the algebraic system without introducing physical time steps.",
+    "error": "Not quite. Count the intervals between cell centres rather than dividing the boundary-centre\ndistance by the number of cells. Then exclude the two prescribed end heads when counting unknowns.\nThis experiment remains steady state."
+  },
+  {
+    "question": "For this steady-state horizontal-flow problem with fixed hydraulic conductivity, prescribed end\nheads, and head-independent recharge, which statements about transmissivity and nonlinearity are\ncorrect? (Select ALL correct answers.)",
+    "options": {
+      "When saturated thickness b is fixed, transmissivity T = Kb is independent of the calculated head.": true,
+      "A curved hydraulic-head profile by itself demonstrates that the flow equations are nonlinear.": false,
+      "Where the aquifer is partly saturated, changing head can change saturated thickness and transmissivity.": true,
+      "Keeping hydraulic conductivity constant is sufficient to make the unconfined equations linear.": false,
+      "Head-dependent transmissivity can require repeated updates of the flow-equation coefficients.": true
+    },
+    "success": "Correct. A confined model with fixed saturated thickness has head-independent transmissivity under\nthese assumptions. In a partly saturated aquifer, transmissivity depends on the unknown head,\ncreating a nonlinear problem. A confined solution can still have a curved head profile when recharge\nis present.",
+    "error": "Not quite. Linearity concerns how the unknown heads enter the equations, not whether their plotted\nprofile is straight. Examine whether saturated thickness, and therefore transmissivity, changes when\nthe calculated head changes."
+  },
+  {
+    "question": "Before comparing runtimes, which statements correctly distinguish the numerical challenges in this\nexperiment? (Select ALL correct answers.)",
+    "options": {
+      "The elapsed computation time is the aquifer's physical time to reach equilibrium.": false,
+      "A finer grid generally requires more work in each linear-solver iteration because it contains more unknowns.": true,
+      "The iteration count alone is a complete measure of computational cost across different grids.": false,
+      "Increasing the number of unknowns and introducing head-dependent transmissivity create different numerical challenges.": true
+    },
+    "success": "Correct. Grid refinement enlarges the algebraic system, whereas head-dependent transmissivity\nintroduces nonlinearity. More unknowns can increase the work per iteration even if the iteration\ncount changes little. The runtime of a steady-state solve is a computing measurement, not an aquifer\nresponse time.",
+    "error": "Not quite. Distinguish the size of the algebraic system from the dependence of its coefficients on\nhead. Also distinguish elapsed computing time from physical model time: this experiment computes a\nsteady-state solution."
+  },
+  {
+    "question": "Which statements correctly distinguish the MODFLOW engines and their numerical solution methods?\n(Select ALL correct answers.)",
+    "options": {
+      "PCG and SIP are alternative iterative solution packages used with MODFLOW-2005.": true,
+      "Using the same linear-method name in two engines guarantees an identical overall solution procedure.": false,
+      "GMRES and XMD are alternative linear-solution methods available within MODFLOW-NWT.": true,
+      "CG and BICGSTAB are linear acceleration options in the MODFLOW 6 IMS solution package.": true,
+      "Selecting CG rather than BICGSTAB determines whether the physical aquifer is confined rather than unconfined.": false
+    },
+    "success": "Correct. A model engine, its treatment of nonlinear equations, and its linear-solution method are\nrelated but distinct choices. MODFLOW-2005 offers PCG and SIP; MODFLOW-NWT uses Newton iteration\nwith a choice of linear method; MODFLOW 6 provides linear acceleration choices within IMS. The\naquifer formulation is specified separately.",
+    "error": "Not quite. Identify which names refer to a model engine and which refer to solving its linear\nsystems. The hydraulic formulation is a separate choice, although it can restrict which solver\ncombinations are appropriate."
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "question": "Which statements help interpret saturation in the layered model? (Select ALL correct answers.)",
+    "options": {
+      "Every partly saturated cell has been removed from the groundwater-flow equations.": false,
+      "In a wet convertible cell with head between its bottom and top, saturated thickness can change as head changes.": true,
+      "Upper layers can have no saturated thickness while deeper layers remain saturated.": true,
+      "All engines represent a dry cell with the same numerical status and the same sentinel head value.": false
+    },
+    "success": "Correct. A partly saturated convertible cell still has a saturated portion whose thickness depends\non head. A layered model can contain unsaturated upper cells and saturated deeper cells. The\nphysical saturation condition must be distinguished from an engine's numerical treatment of drying\nand its output conventions.",
+    "error": "Not quite. Locate the head relative to each cell's top and bottom, then inspect the engine's\ncell-status and output conventions. Partial saturation does not mean automatic removal of the cell,\nand a physical dry condition need not be represented identically by every engine."
+  },
+  {
+    "question": "Suppose one engine converges for a layered setup and another fails. Which follow-up steps or\nconclusions are justified? (Select ALL correct answers.)",
+    "options": {
+      "Check that the geometry, conductivity field, stresses, boundaries, and intended initial conditions are comparable.": true,
+      "The converged engine is therefore the best choice for every groundwater model.": false,
+      "Check the meaning and scaling of the closure criteria, as well as their numerical values.": true,
+      "A smooth final head plot makes the failed run suitable for quantitative interpretation.": false,
+      "Inspect the converged run's budget and wet or dry pattern and examine the failed run's diagnostic messages.": true
+    },
+    "success": "Correct. A useful comparison first establishes comparable physical inputs and appropriately\ninterpreted convergence criteria. The converged result still needs hydraulic and budget checks,\nwhile the failure diagnostics may identify limits, drying, or another numerical difficulty. One\noutcome supports a conclusion about that tested setup, not a universal ranking.",
+    "error": "Not quite. Neither a smooth plot nor an engine name establishes a valid solution. Confirm the tested\ninputs, interpret each engine's criteria, and inspect the available diagnostics before deciding what\nthe comparison demonstrates."
+  },
+  {
+    "question": "With several model layers, this app does not provide its built-in analytical-error metrics. Which\nresponses are appropriate? (Select ALL correct answers.)",
+    "options": {
+      "Changing the layered model back to homogeneous conductivity automatically restores the built-in analytical-error metrics.": false,
+      "Use the homogeneous single-layer reference for the supported analytical benchmark, after checking its assumptions.": true,
+      "The absence of this analytical comparison means the layered calculation cannot be checked.": false,
+      "Use budgets, head and saturation patterns, and controlled numerical comparisons to assess the layered results.": true,
+      "For a homogeneous layered model, the saved 1D Dupuit profile can be an approximate reference, but differences from it are not pure solver error.": true
+    },
+    "success": "Correct. The app provides analytical-error metrics for its applicable homogeneous single-layer\nbenchmark. Layered models may resolve vertical flow that the 1D Dupuit approximation omits, so the\nsaved profile is only a reference approximation there. Budgets, head and saturation patterns, and\ncontrolled numerical comparisons provide additional checks.",
+    "error": "Not quite. Homogeneity alone does not restore the built-in metrics for multiple layers. Distinguish\nthe supported single-layer analytical benchmark from an approximate reference for a vertically\nresolved homogeneous model. Differences from that reference are not automatically numerical solver\nerrors; use the other diagnostics as well."
+  },
+  {
+    "question": "You accidentally regenerate the random conductivity field between two engine runs and obtain\ndifferent head profiles. Which statements are correct? (Select ALL correct answers.)",
+    "options": {
+      "Matching the mean conductivity makes the two spatial fields hydraulically equivalent.": false,
+      "The conductivity changes confound the comparison, so the difference cannot be attributed solely to the engines.": true,
+      "Repeat the comparison using a frozen conductivity field and matching model settings.": true,
+      "Resetting the random seed guarantees an identical cell-by-cell field even after changing the grid or layer count.": false
+    },
+    "success": "Correct. Different spatial conductivity arrangements can change hydraulic heads even if their mean\nis the same. Repeat the engine comparison with the same stored array and other inputs. A seed is\nreproducible only together with the generation method, dimensions, and distribution settings;\nchanging the grid or layer count changes that context.",
+    "error": "Not quite. Compare the complete spatial fields, not just their mean or seed. To isolate an engine\neffect, reuse the same conductivity array on the same grid and keep the other intended model inputs\ncomparable."
+  },
+  {
+    "question": "Consider an initial guess of 0.1 m for variable-head cells in a layered model whose overall bottom\nis 0 m. Which interpretations are correct? (Select ALL correct answers.)",
+    "options": {
+      "All layers must initially be wet because the initial head is positive.": false,
+      "Some upper-layer bottoms may lie above 0.1 m, so their initialization and possible wetting need inspection.": true,
+      "Where a unique solution is accessible from both initial states, different initial guesses should converge to the same heads within numerical accuracy.": true,
+      "Different final head profiles by themselves prove a physical, history-dependent groundwater response.": false,
+      "Changing the initial guess can alter iterations or convergence failure without changing the prescribed steady-state stresses.": true
+    },
+    "success": "Correct. Compare the initial head with every layer's elevations, not only the overall model bottom.\nInitial guesses can change the numerical path and the wet states that a solver can reach. If a\nwetting configuration prevents cells from re-entering the flow system, runs may retain different\neffective domains; inspect those states before comparing final heads as solutions of the same\nproblem.",
+    "error": "Not quite. A positive head can still lie below an upper cell's bottom. Check the cell states and\nwetting treatment before attributing final differences to physical history. For the same uniquely\nsolvable problem with the relevant solution accessible, an initial numerical guess should not define\na different steady-state answer."
+  },
+  {
+    "question": "Suppose two engines report convergence and small overall budget discrepancies. Their heads agree\nwhere both models are wet, but their wet-cell masks differ. Which conclusions or checks are\nappropriate? (Select ALL correct answers.)",
+    "options": {
+      "Agreement on the shared wet domain provides a useful but incomplete comparison.": true,
+      "The differing wet-cell masks can be ignored because the overlapping head values agree.": false,
+      "Inspect where the wet-cell masks differ and whether those differences affect flow paths or hydraulic connections.": true,
+      "A small overall budget discrepancy proves that every local flow balance and the conceptual model are correct.": false,
+      "Exclude dry or inactive sentinel values from head statistics while separately evaluating the differing cell states.": true
+    },
+    "success": "Correct. Shared-wet-domain head statistics prevent invalid comparisons with dry or inactive markers,\nbut they can hide differences in the extent of the flowing aquifer. Inspect those masks separately.\nOverall water balance, head agreement, and solver convergence are complementary checks; none alone\nestablishes correctness of every local result or of the conceptual model.",
+    "error": "Not quite. Restricting head comparisons to valid shared wet cells is useful, but the excluded\nregions still require investigation. A small overall water-budget discrepancy can coexist with local\nor conceptual problems, and matching heads over an overlapping region does not establish matching\nflow domains."
+  }
+]
