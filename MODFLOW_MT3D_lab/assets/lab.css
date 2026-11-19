@@ -1,0 +1,16 @@
+.stApp, header[data-testid="stHeader"] {background: white; color: #24364b;}
+.block-container {max-width: 850px; padding-top: 1.8rem; padding-bottom: 3rem;}
+[data-testid="stExpander"] {border-color: #bed0df; background: white; border-radius: 8px;}
+[data-testid="stExpander"] summary {background: #f4f8fb; border-radius: 7px; font-weight: 600;}
+.st-key-physics_panel summary {background: #eaf5ed;}
+.st-key-grid_panel summary {background: #fcf1e2;}
+.st-key-solver_panel summary {background: #e7f2fb;}
+.st-key-experiments summary {background: #284966; color: white;}
+.st-key-experiments summary p, .st-key-experiments summary svg {color: white;}
+.st-key-model_frame {background: #fff; border: 4px solid;
+  border-color: #edf2f5 #a8b5c0 #a8b5c0 #edf2f5; border-radius: 8px;
+  box-shadow: 3px 4px 8px #23374b28; padding: .5rem .75rem;}
+.st-key-run_model button {background: #b44047; border-color: #b44047; color: white;}
+.st-key-run_model button:hover {background: #953239; border-color: #953239; color: white;}
+.st-key-run_model button:disabled {opacity: .5;}
+[data-testid="stCaptionContainer"] {color: #485e71;}
