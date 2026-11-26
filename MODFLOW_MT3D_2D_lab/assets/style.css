@@ -1,9 +1,9 @@
 .stApp {background:#fff;color:#24364B;}
-.stMainBlockContainer,.block-container {max-width:1100px;padding-top:4.5rem;}
+.stMainBlockContainer,.block-container {width:100%;max-width:var(--lab-max-width,1100px);margin-inline:auto;padding-top:4.5rem;padding-inline:1rem;}
 header[data-testid="stHeader"] {background:#fff;}
 h1,h2,h3 {color:#24364B;}
 div[data-testid="stCaptionContainer"] p {color:#536A81;}
-.st-key-language_header {margin:.2rem auto .5rem;}
+.st-key-language_header {width:100%;max-width:760px;margin:.2rem auto .5rem;}
 .st-key-language_header [data-testid="stWidgetLabel"] {justify-content:center;}
 .st-key-language_header [data-testid="stWidgetLabel"] p {text-align:center;font-weight:600;}
 div[data-testid="stExpander"] {border:1px solid var(--panel-border,#BCD0E3);border-radius:8px;background:#fff;}
@@ -33,3 +33,6 @@ div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {background:#fff
 .st-key-analytic_panel [data-testid="stVerticalBlock"],.st-key-analytic_btc_panel [data-testid="stVerticalBlock"] {gap:.15rem;}
 .st-key-analytic_panel p,.st-key-analytic_btc_panel p {font-size:.92rem;line-height:1.25;margin:0;}
 .st-key-teaching_notice {background:#EEF6FC;border:1px solid #BCD0E3;border-radius:8px;padding:.8rem;}
+.st-key-run_label_panel {background:var(--label-background,#FFF7DB);border:2px solid var(--label-border,#D1A12C);border-radius:8px;padding:.45rem .65rem;}
+.st-key-run_label_panel [data-baseweb="input"],.st-key-run_label_panel [data-baseweb="base-input"] {background:var(--label-background,#FFF7DB)!important;border-color:var(--label-border,#D1A12C)!important;}
+.st-key-run_label_panel input {background:var(--label-background,#FFF7DB)!important;color:#24364B;}

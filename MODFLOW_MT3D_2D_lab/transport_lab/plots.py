@@ -8,8 +8,10 @@ from __future__ import annotations
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
+from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle, Patch
+from matplotlib.ticker import MaxNLocator, FuncFormatter
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 
 BLUE = '#2563a6'
@@ -317,15 +319,89 @@ def plume_focus_limits(cfg, fields, paths=(), layer=0, threshold_percent=.1, pad
     return limits(xs,cfg.length,cfg.dx),limits(ys,cfg.width,cfg.dy)
 
 
+def plume_origin(run,time_index,layer=0):
+    """Return (x, y, source_fallback) in absolute coordinates.
+
+    The centroid uses positive dissolved mass in the displayed layer, including
+    local porosity. Uniform cell volume cancels from this weighted mean. Signed
+    concentrations are never modified. Before arrival, use the actual source
+    cells (in this layer when available), weighted by their pore volumes.
+    """
+    cfg=run.config
+    layer=int(np.clip(layer,0,cfg.nlay-1))
+    time_index=int(np.clip(time_index,0,len(run.times)-1))
+    values=np.asarray(run.concentration[time_index,layer],dtype=float)
+    porosity=cfg.arrays()[2]
+    positive=np.where(np.isfinite(values)&(values>0),values,0.)
+    peak=float(positive.max())
+    xc,yc=map(_centers,[cfg.x_edges,cfg.y_edges])
+    if peak>0:
+        weights=(positive/peak)*porosity[layer]
+        total=float(weights.sum())
+        if total>0:
+            return float(np.dot(weights.sum(axis=0),xc)/total),float(np.dot(weights.sum(axis=1),yc)/total),False
+    cells=cfg.source_cells()
+    selected=[cell for cell in cells if cell[0]==layer] or cells
+    weights=np.array([porosity[cell] for cell in selected],dtype=float)
+    return (float(np.average([xc[j] for _,i,j in selected],weights=weights)),
+            float(np.average([yc[i] for _,i,j in selected],weights=weights)),True)
+
+
+class _RelativeLocator(MaxNLocator):
+    """Place round relative ticks while preserving absolute plot geometry."""
+    def __init__(self,origin):
+        super().__init__(nbins='auto')
+        self.origin=float(origin)
+
+    def tick_values(self,vmin,vmax):
+        return super().tick_values(vmin-self.origin,vmax-self.origin)+self.origin
+
+
+def _relative_axis(axis,origin):
+    axis.set_major_locator(_RelativeLocator(origin))
+    def label(value,position):
+        relative=value-origin
+        if abs(relative)<1e-10*max(1.,abs(origin)):return '0.0'
+        return f'{relative:g}'
+    axis.set_major_formatter(FuncFormatter(label))
+
+
+def _relative_position(value,origin,cell_size):
+    """Suppress sub-millionth-cell roundoff in section-title coordinates only."""
+    offset=float(value-origin)
+    return 0. if abs(offset)<1e-6*cell_size else offset
+
+
+def _model_grid(ax,xedges,yedges=None):
+    """Subtle actual-cell edges, with no effect on limits or concentration data.
+
+    Without yedges, draw vertical cell-edge guides in a concentration profile.
+    Axis-fraction y coordinates work for both linear and logarithmic profiles.
+    """
+    if yedges is None:
+        segments=[[(x,0.),(x,1.)] for x in xedges]
+        transform=ax.get_xaxis_transform()
+    else:
+        segments=([[(x,min(yedges)),(x,max(yedges))] for x in xedges]+
+                  [[(min(xedges),y),(max(xedges),y)] for y in yedges])
+        transform=ax.transData
+    grid=LineCollection(segments,colors='#7A838C',linewidths=.35,alpha=.35,
+                        zorder=2.5,transform=transform)
+    grid.set_gid(f'model-grid-{ax.figure.axes.index(ax)}')
+    ax.add_collection(grid,autolim=False)
+
+
 def plume_figure(run,time_index,layer=0,y_section=None,x_section=None,fill=True,
                  contours=True,opacity=.65,log=False,reference=None,
                  show_particles=True,comparison=None,observations=None,compare_top=False,show_heads=True,
-                 focus=False,focus_threshold=.1):
+                 focus=False,focus_threshold=.1,show_grid=False,relative=False):
     """Plan plume and two user-positioned sections/profiles.
 
     `reference` is a concentration cube on the active run's grid. `comparison`
     accepts Run objects (nearest saved time) or (Run, time_index) pairs; their
     top-view isolines share the active figure's absolute concentration levels.
+    Relative x/y axes share the displayed run's positive-mass centroid. All
+    plot geometry and model/observation inputs retain absolute coordinates.
     """
     cfg=run.config
     layer=int(np.clip(layer,0,cfg.nlay-1));time_index=int(np.clip(time_index,0,len(run.times)-1))
@@ -418,6 +494,24 @@ def plume_figure(run,time_index,layer=0,y_section=None,x_section=None,fill=True,
                 _particles(ax,paths,plane,lower,upper)
             ax.set(xlim=(0,cfg.length if plane=='xz' else cfg.width),ylim=(0,cfg.thickness))
             ax.set_title(f'{plane[0]}–z section at {"y" if plane=="xz" else "x"} = {section:.3g} m',fontsize=10)
+    if show_grid:
+        _model_grid(top,cfg.x_edges,cfg.y_edges)
+        _model_grid(xa,cfg.x_edges,None if cfg.nlay==1 else cfg.z_edges)
+        _model_grid(ya,cfg.y_edges,None if cfg.nlay==1 else cfg.z_edges)
+    if relative:
+        ox,oy,_=plume_origin(run,time_index,layer)
+        for axis,origin in ((top.xaxis,ox),(top.yaxis,oy),(xa.xaxis,ox),(ya.xaxis,oy)):
+            _relative_axis(axis,origin)
+        top.set_xlabel('x′ (m)',fontsize=9);top.set_ylabel('y′ (m)',fontsize=9)
+        xa.set_xlabel('x′ (m)',fontsize=9);ya.set_xlabel('y′ (m)',fontsize=9)
+        section_x=_relative_position(xc[col],ox,cfg.dx)
+        section_y=_relative_position(yc[row],oy,cfg.dy)
+        if cfg.nlay==1:
+            xa.set_title(f'x profile at y′ = {section_y:.3g} m',fontsize=10)
+            ya.set_title(f'y profile at x′ = {section_x:.3g} m',fontsize=10)
+        else:
+            xa.set_title(f'x–z section at y′ = {section_y:.3g} m',fontsize=10)
+            ya.set_title(f'y–z section at x′ = {section_x:.3g} m',fontsize=10)
     if cm is not None:
         cb=fig.colorbar(cm,ax=[top] if cfg.nlay==1 else [top,xa,ya],shrink=.8,pad=.015)
         cb.set_label('Concentration (g/m³)',fontsize=9);cb.ax.tick_params(labelsize=8)

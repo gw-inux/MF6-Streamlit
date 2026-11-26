@@ -65,7 +65,7 @@ O arquivo contém entradas, registos, concentrações, cargas, balanços e part�
 Execute a experiência inicial de pulso para ver a pluma, perfis, curvas de chegada e comparação de métodos.
 
 <!-- key: footer -->
-MT3D 2D/3D · v0.4.0 · Versão de trabalho para aulas ao vivo
+MT3D 2D/3D · v0.5.0 · Versão de trabalho para aulas ao vivo
 
 <!-- key: transient_hint -->
 O campo inicial equilibra-se; a carga direita muda em t = 0.
@@ -966,3 +966,51 @@ Canal de K elevada
 
 <!-- key: Low K barrier -->
 Barreira parcial de K baixa
+
+<!-- key: Page width -->
+Largura da página
+
+<!-- key: width_1 -->
+Estreita
+
+<!-- key: width_2 -->
+Compacta
+
+<!-- key: width_3 -->
+Padrão
+
+<!-- key: width_4 -->
+Ampla
+
+<!-- key: width_5 -->
+Largura total
+
+<!-- key: page_width_hint -->
+Cinco larguras, de estreita a total. Padrão mantém a largura anterior. A página adapta-se a ecrãs pequenos.
+
+<!-- key: Show model grid -->
+Mostrar malha
+
+<!-- key: grid_hint -->
+Limites discretos das células da execução apresentada. Perfis de uma camada mostram guias verticais nos bordos das células.
+
+<!-- key: Plume-centered x/y -->
+x/y centrados na pluma
+
+<!-- key: relative_hint -->
+O zero é o centroide da massa dissolvida positiva na camada apresentada. As sobreposições partilham esta origem. As coordenadas de entrada e cotas mantêm-se absolutas.
+
+<!-- key: relative_mass_origin -->
+Origem relativa: x = {x:.2f} m; y = {y:.2f} m (centro de massa da pluma).
+
+<!-- key: relative_source_origin -->
+Sem massa positiva nesta camada: origem no centro da fonte ajustada à malha, x = {x:.2f} m; y = {y:.2f} m.
+
+<!-- key: fig_relative_xprofile -->
+Perfil x em y′ = {y:.3g} m
+
+<!-- key: fig_relative_yprofile -->
+Perfil y em x′ = {x:.3g} m
+
+<!-- key: fig_relative_section -->
+Secção {axis}–z em {other}′ = {value:.3g} m

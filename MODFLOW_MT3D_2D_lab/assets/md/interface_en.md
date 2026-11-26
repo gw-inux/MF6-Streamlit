@@ -65,7 +65,7 @@ The run archive includes model inputs, logs, concentration/head arrays, mass dia
 Run the baseline pulse experiment to view the plume, profiles, observation curves and method comparison.
 
 <!-- key: footer -->
-MT3D 2D/3D Transport Lab · v0.4.0 · Working version for live teaching
+MT3D 2D/3D Transport Lab · v0.5.0 · Working version for live teaching
 
 <!-- key: transient_hint -->
 The original flow field first equilibrates; the right head changes at t = 0.
@@ -966,3 +966,51 @@ High K channel
 
 <!-- key: Low K barrier -->
 Partial low K barrier
+
+<!-- key: Page width -->
+Page width
+
+<!-- key: width_1 -->
+Narrow
+
+<!-- key: width_2 -->
+Compact
+
+<!-- key: width_3 -->
+Standard
+
+<!-- key: width_4 -->
+Large
+
+<!-- key: width_5 -->
+Wide
+
+<!-- key: page_width_hint -->
+Five page widths, from narrow to full width. Standard retains the previous width. Small screens always use the available space.
+
+<!-- key: Show model grid -->
+Show model grid
+
+<!-- key: grid_hint -->
+Subtle cell boundaries of the displayed run. Single-layer concentration profiles show vertical cell-edge guides.
+
+<!-- key: Plume-centered x/y -->
+Plume-centered x/y
+
+<!-- key: relative_hint -->
+Zero is the positive dissolved-mass centroid in the displayed layer. All overlays share this origin. Input coordinates and elevation remain absolute.
+
+<!-- key: relative_mass_origin -->
+Relative origin: x = {x:.2f} m; y = {y:.2f} m (plume mass center).
+
+<!-- key: relative_source_origin -->
+No positive plume mass in this layer: origin at the snapped source center, x = {x:.2f} m; y = {y:.2f} m.
+
+<!-- key: fig_relative_xprofile -->
+x profile at y′ = {y:.3g} m
+
+<!-- key: fig_relative_yprofile -->
+y profile at x′ = {x:.3g} m
+
+<!-- key: fig_relative_section -->
+{axis}–z section at {other}′ = {value:.3g} m

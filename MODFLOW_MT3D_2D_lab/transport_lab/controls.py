@@ -10,6 +10,31 @@ from .zonation import PRESETS, make_zones
 from .history import SHORT_METHOD
 
 
+PAGE_WIDTHS={1:'750px',2:'925px',3:'1100px',4:'1400px',5:'100%'}
+
+
+def _remember_page_width():
+    st.session_state['_page_width']=st.session_state['page_width']
+
+
+def page_width_control(t):
+    # Preserve the selection even when the translated slider labels change.
+    st.session_state['page_width']=st.session_state.get('_page_width',3)
+    return st.select_slider(t('Page width'),options=list(PAGE_WIDTHS),
+                            format_func=lambda value:t('width_'+str(value)),
+                            key='page_width',on_change=_remember_page_width,
+                            help=t('page_width_hint'))
+
+
+def page_width_css(choice):
+    return '.stApp {--lab-max-width:'+PAGE_WIDTHS.get(choice,PAGE_WIDTHS[3])+';}'
+
+
+def run_label_css(label):
+    background,border=('#EEF9F0','#79B88C') if label.strip() else ('#FFF7DB','#D1A12C')
+    return '.st-key-run_label_panel {--label-background:'+background+';--label-border:'+border+';}'
+
+
 def navigation(items,key,t):
     """items are (stable ID, translation key); all buttons have equal width."""
     valid=[k for k,_ in items]

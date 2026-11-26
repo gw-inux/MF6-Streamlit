@@ -65,7 +65,7 @@ L'archivio contiene input, log, concentrazioni, carichi, bilanci e particelle, i
 Eseguire l'esperimento iniziale a impulso per vedere pennacchio, profili, curve di arrivo e confronto dei metodi.
 
 <!-- key: footer -->
-MT3D 2D/3D · v0.4.0 · Versione di lavoro per lezioni dal vivo
+MT3D 2D/3D · v0.5.0 · Versione di lavoro per lezioni dal vivo
 
 <!-- key: transient_hint -->
 Il campo iniziale si equilibra; il carico a destra cambia a t = 0.
@@ -966,3 +966,51 @@ Canale a K elevata
 
 <!-- key: Low K barrier -->
 Barriera parziale a K bassa
+
+<!-- key: Page width -->
+Larghezza pagina
+
+<!-- key: width_1 -->
+Stretta
+
+<!-- key: width_2 -->
+Compatta
+
+<!-- key: width_3 -->
+Standard
+
+<!-- key: width_4 -->
+Ampia
+
+<!-- key: width_5 -->
+Intera larghezza
+
+<!-- key: page_width_hint -->
+Cinque larghezze, da stretta a piena. Standard mantiene la larghezza precedente. La pagina si adatta agli schermi piccoli.
+
+<!-- key: Show model grid -->
+Mostra griglia
+
+<!-- key: grid_hint -->
+Bordi discreti delle celle dell’esecuzione visualizzata. I profili a uno strato mostrano guide verticali ai bordi delle celle.
+
+<!-- key: Plume-centered x/y -->
+x/y centrati sul pennacchio
+
+<!-- key: relative_hint -->
+Lo zero è il baricentro della massa disciolta positiva nello strato mostrato. Tutte le sovrapposizioni usano questa origine. Coordinate di input e quote restano assolute.
+
+<!-- key: relative_mass_origin -->
+Origine relativa: x = {x:.2f} m; y = {y:.2f} m (baricentro del pennacchio).
+
+<!-- key: relative_source_origin -->
+Nessuna massa positiva in questo strato: origine al centro della sorgente sulla griglia, x = {x:.2f} m; y = {y:.2f} m.
+
+<!-- key: fig_relative_xprofile -->
+Profilo x a y′ = {y:.3g} m
+
+<!-- key: fig_relative_yprofile -->
+Profilo y a x′ = {x:.3g} m
+
+<!-- key: fig_relative_section -->
+Sezione {axis}–z a {other}′ = {value:.3g} m

@@ -84,3 +84,7 @@ As quatro aplicações analíticas fornecidas inspiraram os exemplos. As suas f�
 - [Pollock (2016) — MODPATH 7, USGS](https://pubs.usgs.gov/publication/ofr20161086)
 - [Wexler (1992) — USGS](https://pubs.usgs.gov/twri/twri3-b7/)
 - [MODFLOW-ORG](https://github.com/MODFLOW-ORG/executables)
+
+### Malha, coordenadas relativas e largura
+
+A malha acrescenta bordos cinzentos discretos em planta e nas secções da execução apresentada; os perfis de uma camada mostram guias verticais nos bordos das células. A origem x′/y′ é o centroide da massa dissolvida positiva da camada apresentada, incluindo a porosidade local. Sem massa positiva usa-se o centro da fonte ajustada à malha. Comparações, referência e partículas partilham a origem; cotas, entradas e exportações numéricas continuam absolutas. É independente do foco da pluma. Há cinco larguras no topo; Padrão mantém a anterior. O campo do nome vazio é amarelo e torna-se verde ao confirmar texto não vazio com Enter ou ao sair do campo.

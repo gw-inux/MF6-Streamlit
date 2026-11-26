@@ -65,7 +65,7 @@ x = {x0:.2f}–{x1:.2f} m; y = {y0:.2f}–{y1:.2f} m; z = {z0:.2f}–{z1:.2f} m.
 运行默认脉冲实验，以查看羽流、剖面、突破曲线及方法比较。
 
 <!-- key: footer -->
-MT3D 二维/三维 · v0.4.0 · 课堂教学工作版本
+MT3D 二维/三维 · v0.5.0 · 课堂教学工作版本
 
 <!-- key: transient_hint -->
 初始流场先达到平衡，右侧水头在 t = 0 时改变。
@@ -966,3 +966,51 @@ TVD 要求 PERCEL ≤ 1。
 
 <!-- key: Low K barrier -->
 局部低 K 屏障
+
+<!-- key: Page width -->
+页面宽度
+
+<!-- key: width_1 -->
+窄
+
+<!-- key: width_2 -->
+紧凑
+
+<!-- key: width_3 -->
+标准
+
+<!-- key: width_4 -->
+宽
+
+<!-- key: width_5 -->
+全宽
+
+<!-- key: page_width_hint -->
+从窄到全宽共五档。标准档保留之前的宽度，小屏幕会自动适应可用空间。
+
+<!-- key: Show model grid -->
+显示模型网格
+
+<!-- key: grid_hint -->
+以浅灰线显示当前运行的单元边界。单层浓度剖面用垂线标示单元边缘。
+
+<!-- key: Plume-centered x/y -->
+羽流中心相对 x/y
+
+<!-- key: relative_hint -->
+以显示层中正浓度对应的溶解质量质心为零点。所有叠加共用此原点，输入坐标和高程保持绝对值。
+
+<!-- key: relative_mass_origin -->
+相对原点：x = {x:.2f} m；y = {y:.2f} m（羽流质心）。
+
+<!-- key: relative_source_origin -->
+此层无正羽流质量：以贴合网格的源区中心为原点，x = {x:.2f} m；y = {y:.2f} m。
+
+<!-- key: fig_relative_xprofile -->
+y′ = {y:.3g} m 处的 x 向剖面
+
+<!-- key: fig_relative_yprofile -->
+x′ = {x:.3g} m 处的 y 向剖面
+
+<!-- key: fig_relative_section -->
+{other}′ = {value:.3g} m 处的 {axis}–z 剖面

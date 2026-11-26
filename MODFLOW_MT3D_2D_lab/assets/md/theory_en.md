@@ -105,3 +105,7 @@ Remove run tags to discard comparison runs. The displayed run can be selected se
 ### Plume focus and run names
 
 Heterogeneous runs carry the compact suffix **het.**; run names remain stable when switching languages. **Focus on plume** uses 0.1% of the current positive peak in each displayed top-view plume by default. The threshold is adjustable. Qualifying cell edges receive a 20% margin on each side; visible, time-limited MODPATH paths are included. An empty view retains the full domain. Only top-view axis limits change: concentrations, sections and colour normalization remain unchanged.
+
+### Grid, relative coordinates and page width
+
+The model-grid toggle adds light grey cell boundaries to the displayed run’s top view and vertical sections. In a single-layer model it adds vertical cell-edge guides to the concentration profiles. Plume-centered x′/y′ coordinates put the positive dissolved-mass centroid of the displayed layer at zero, including local porosity. Empty or nonpositive layers use the snapped source center. Comparisons, analytical contours and particles share the displayed run’s origin; elevation, model inputs and numerical exports retain absolute coordinates. This is a display change, independent of plume focus. The header offers five widths; Standard keeps the previous width. An empty run-label field is yellow and turns green when a nonblank label is committed with Enter or by leaving the field.

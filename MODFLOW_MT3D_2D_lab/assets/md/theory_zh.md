@@ -84,3 +84,7 @@ MODPATH 7 用 MODFLOW 流场和相同有效孔隙度追踪对流粒子，不模�
 - [Pollock (2016) — MODPATH 7, USGS](https://pubs.usgs.gov/publication/ofr20161086)
 - [Wexler (1992) — USGS](https://pubs.usgs.gov/twri/twri3-b7/)
 - [MODFLOW-ORG](https://github.com/MODFLOW-ORG/executables)
+
+### 网格、相对坐标和页面宽度
+
+网格开关在当前运行的俯视图和垂向剖面上绘制浅灰单元边界；单层浓度剖面用垂线标示单元边缘。x′/y′ 以显示层的正溶解质量质心为零点，计入局部孔隙度；无正质量时使用贴合网格的源区中心。比较、解析解和粒子共用当前运行原点；高程、模型输入和数值导出保持绝对坐标。该选项与羽流聚焦独立。顶部有五档宽度，标准档保留原宽度。空名称栏为黄色，按 Enter 或离开输入栏确认非空名称后变绿。

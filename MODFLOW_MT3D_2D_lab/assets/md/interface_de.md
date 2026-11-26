@@ -65,7 +65,7 @@ Das Laufarchiv enthält Modelleingaben, Protokolle, Konzentrations-/Potentialhö
 Starten Sie das voreingestellte Pulsexperiment, um Stofffahne, Profile, Beobachtungskurven und Methodenvergleich anzuzeigen.
 
 <!-- key: footer -->
-MT3D 2D/3D-Transportlabor · v0.4.0 · Arbeitsversion für die begleitete Lehre
+MT3D 2D/3D-Transportlabor · v0.5.0 · Arbeitsversion für die begleitete Lehre
 
 <!-- key: transient_hint -->
 Das ursprüngliche Strömungsfeld wird zuerst stationär berechnet; die rechte Potentialhöhe ändert sich bei t = 0.
@@ -966,3 +966,51 @@ Rinne mit hohem K
 
 <!-- key: Low K barrier -->
 Teilweise Barriere mit kleinem K
+
+<!-- key: Page width -->
+Seitenbreite
+
+<!-- key: width_1 -->
+Schmal
+
+<!-- key: width_2 -->
+Kompakt
+
+<!-- key: width_3 -->
+Standard
+
+<!-- key: width_4 -->
+Breit
+
+<!-- key: width_5 -->
+Volle Breite
+
+<!-- key: page_width_hint -->
+Fünf Seitenbreiten von schmal bis zur vollen Breite. Standard entspricht der bisherigen Breite. Auf kleinen Bildschirmen wird die Breite angepasst.
+
+<!-- key: Show model grid -->
+Modellraster anzeigen
+
+<!-- key: grid_hint -->
+Dezente Zellgrenzen des angezeigten Laufs. Einschichtige Konzentrationsprofile zeigen vertikale Hilfslinien an den Zellrändern.
+
+<!-- key: Plume-centered x/y -->
+Fahnenzentrierte x/y
+
+<!-- key: relative_hint -->
+Nullpunkt ist der Schwerpunkt der positiven gelösten Masse in der angezeigten Schicht. Alle Überlagerungen nutzen denselben Ursprung. Eingabekoordinaten und Höhen bleiben absolut.
+
+<!-- key: relative_mass_origin -->
+Relativer Ursprung: x = {x:.2f} m; y = {y:.2f} m (Massenschwerpunkt der Fahne).
+
+<!-- key: relative_source_origin -->
+Keine positive Fahnenmasse in dieser Schicht: Ursprung im Rastermittelpunkt der Quelle, x = {x:.2f} m; y = {y:.2f} m.
+
+<!-- key: fig_relative_xprofile -->
+x-Profil bei y′ = {y:.3g} m
+
+<!-- key: fig_relative_yprofile -->
+y-Profil bei x′ = {x:.3g} m
+
+<!-- key: fig_relative_section -->
+{axis}–z-Schnitt bei {other}′ = {value:.3g} m

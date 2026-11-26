@@ -84,3 +84,7 @@ Las cuatro aplicaciones analíticas facilitadas inspiraron los ejemplos. Sus fó
 - [Pollock (2016) — MODPATH 7, USGS](https://pubs.usgs.gov/publication/ofr20161086)
 - [Wexler (1992) — USGS](https://pubs.usgs.gov/twri/twri3-b7/)
 - [MODFLOW-ORG](https://github.com/MODFLOW-ORG/executables)
+
+### Malla, coordenadas relativas y ancho
+
+La malla añade bordes grises discretos en planta y secciones de la ejecución mostrada; los perfiles de una capa tienen guías verticales en bordes de celda. Las coordenadas x′/y′ usan el centroide de masa disuelta positiva de la capa mostrada, considerando la porosidad local. Sin masa positiva se usa el centro de la fuente ajustada a la malla. Comparaciones, referencia y partículas comparten el origen; cotas, entradas y exportaciones numéricas siguen siendo absolutas. Es independiente del enfoque. Arriba hay cinco anchos; Estándar conserva el anterior. El campo de nombre amarillo se vuelve verde al confirmar texto no vacío con Intro o al salir del campo.

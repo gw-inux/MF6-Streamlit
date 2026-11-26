@@ -84,3 +84,7 @@ Le quattro applicazioni analitiche fornite hanno ispirato gli esempi. Le loro fo
 - [Pollock (2016) — MODPATH 7, USGS](https://pubs.usgs.gov/publication/ofr20161086)
 - [Wexler (1992) — USGS](https://pubs.usgs.gov/twri/twri3-b7/)
 - [MODFLOW-ORG](https://github.com/MODFLOW-ORG/executables)
+
+### Griglia, coordinate relative e larghezza
+
+La griglia aggiunge bordi grigi discreti in pianta e nelle sezioni dell’esecuzione visualizzata; nei profili a uno strato mostra guide verticali ai bordi delle celle. Le coordinate x′/y′ usano il baricentro della massa disciolta positiva nello strato mostrato, considerando la porosità locale. Senza massa positiva si usa il centro della sorgente sulla griglia. Confronti, riferimento e particelle condividono l’origine; quote, input ed esportazioni numeriche restano assoluti. Il controllo è indipendente dallo zoom. Sono disponibili cinque larghezze; Standard mantiene quella precedente. Il campo del nome giallo diventa verde dopo aver confermato un testo non vuoto con Invio o uscendo dal campo.

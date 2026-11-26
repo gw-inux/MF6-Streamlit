@@ -90,3 +90,7 @@ Markierungen der Vergleichsläufe können mit × entfernt werden. Der angezeigte
 ### Fahnenzoom und Laufnamen
 
 Heterogene Läufe erhalten den Zusatz **het.**; die Namen bleiben beim Sprachwechsel unverändert. Der Fahnenzoom nutzt standardmäßig 0,1 % des aktuellen positiven Maximums jeder dargestellten Fahne in der Draufsicht. Die Schwelle ist einstellbar. Um die betreffenden Zellränder kommen auf jeder Seite 20 % Rand hinzu; sichtbare, auf den Anzeigezeitpunkt begrenzte MODPATH-Bahnen bleiben enthalten. Ohne Fahne und Bahnen bleibt die Gesamtansicht erhalten. Nur die Achsengrenzen der Draufsicht ändern sich, nicht Konzentrationen, Schnitte oder Farbnormierung.
+
+### Raster, relative Koordinaten und Seitenbreite
+
+Das Modellraster ergänzt dezente graue Zellränder in Draufsicht und Vertikalschnitten des angezeigten Laufs. Einschichtige Konzentrationsprofile erhalten vertikale Hilfslinien an den Zellrändern. Fahnenzentrierte x′/y′-Koordinaten setzen den Schwerpunkt der positiven gelösten Masse der angezeigten Schicht auf null; die lokale Porosität wird berücksichtigt. Ohne positive Masse dient der rasterbezogene Quellenmittelpunkt als Ursprung. Vergleichsläufe, analytische Linien und Partikel nutzen denselben Ursprung. Höhen, Modelleingaben und numerische Exporte bleiben absolut. Die Darstellung ist unabhängig vom Fahnenzoom. Oben stehen fünf Breiten zur Wahl; Standard behält die bisherige Breite. Das leere Namensfeld ist gelb und wird nach Bestätigung einer nichtleeren Eingabe mit Enter oder beim Verlassen des Felds grün.

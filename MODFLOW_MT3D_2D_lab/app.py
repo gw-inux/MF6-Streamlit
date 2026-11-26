@@ -1,4 +1,4 @@
-"""MT3D 2D/3D lab v0.4.0.
+"""MT3D 2D/3D lab v0.5.0.
 
 Contents: language/introduction; model inputs; preview/run; comparison results.
 Native solvers are retained; random material arrays use the existing package inputs.
@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 from .transport_lab.content import Catalog, available_languages
-from .transport_lab.controls import model_inputs, navigation, panel
+from .transport_lab.controls import model_inputs, navigation, panel, page_width_control, page_width_css, run_label_css
 from .transport_lab.engine import find_engines, run_case
 from .transport_lab.results import enrich,analytical_reference,summary_table,observation_table,breakthrough_table,export_run,reference_curve_table
 from .transport_lab.history import add_run,retain_runs,sync_series,SHORT_METHOD
@@ -20,15 +20,17 @@ from .transport_lab.figure_io import show_figure, svg_figure, SCRIPT_FONTS
 
 ROOT=Path(__file__).resolve().parent
 cached_reference_curves=st.cache_data(max_entries=12,show_spinner=False)(reference_curve_table)
-st.set_page_config(page_title='MT3D – 2D/3D Transport Lab',layout='centered')
+st.set_page_config(page_title='MT3D – 2D/3D Transport Lab',layout='wide')
 st.markdown('<style>'+(ROOT/'assets/style.css').read_text(encoding='utf-8')+'</style>',unsafe_allow_html=True)
 st.session_state.setdefault('history',[]);st.session_state.setdefault('next_run',1)
 languages=available_languages()
 with st.container(key='language_header'):
-    _,language_column,_=st.columns([1,1.35,1])
+    language_column,width_column=st.columns(2,vertical_alignment='center')
     with language_column:
         language=st.selectbox('Language / Sprache',list(languages),format_func=languages.get,key='language')
-t=Catalog(language)
+    t=Catalog(language)
+    with width_column:page_width=page_width_control(t)
+st.markdown('<style>'+page_width_css(page_width)+'</style>',unsafe_allow_html=True)
 if language=='ar':
     st.markdown('''<style>
     .stMain [data-testid="stMarkdownContainer"], .stMain [data-testid="stWidgetLabel"] {direction:rtl;text-align:right;}
@@ -114,7 +116,9 @@ else:
 engines=find_engines();required=['mf2005','mt3dms']+(['mp7'] if c.track_particles else [])
 missing=[n for n in required if not engines.get(n)]
 if missing:st.warning(t('missing_executables',names=', '.join(missing)))
-label=st.text_input(t('Optional run label'),max_chars=60,key='run_label',placeholder=t('label_placeholder'))
+with st.container(key='run_label_panel'):
+    label=st.text_input(t('Optional run label'),max_chars=60,key='run_label',placeholder=t('label_placeholder'))
+st.markdown('<style>'+run_label_css(label)+'</style>',unsafe_allow_html=True)
 full=len(st.session_state.history)>=10
 if full:st.info(t('history_full'))
 _,button,_=st.columns([1,1.4,1])
@@ -172,10 +176,17 @@ if entries:
             with cols[0]:log=view('checkbox','Log colours','log',False)
             with cols[1]:particles=view('checkbox','Particle paths','particle_paths',True)
             with cols[2]:opacity=view('slider','Opacity','opacity',.65,min_value=.1,max_value=1.,step=.05)
-            a,b=st.columns([1,2],vertical_alignment='center')
+            a,b,d=st.columns(3)
             with a:focus=view('toggle','Focus on plume','focus_plume',False)
-            with b:focus_threshold=view('number_input','Focus threshold (% of peak)','focus_threshold',.1,min_value=.001,max_value=50.,step=.1,format='%.3f',disabled=not focus)
-            if focus:st.caption(t('focus_hint'))
+            with b:relative=view('toggle','Plume-centered x/y','relative_xy',False,help=t('relative_hint'))
+            with d:show_grid=view('toggle','Show model grid','show_grid',False,help=t('grid_hint'))
+            a,b=st.columns([1,2],vertical_alignment='center')
+            with a:focus_threshold=view('number_input','Focus threshold (% of peak)','focus_threshold',.1,min_value=.001,max_value=50.,step=.1,format='%.3f',disabled=not focus)
+            if focus:
+                with b:st.caption(t('focus_hint'))
+            if relative:
+                ox,oy,fallback=plots.plume_origin(run,ti,layer)
+                st.caption(t('relative_source_origin' if fallback else 'relative_mass_origin',x=ox,y=oy))
         comparisons=[];compare_top=False
         with panel('comparison_panel','Compare runs in x / y sections',t,True):
             compare=view('toggle','Compare section profiles','compare_sections',False,disabled=len(entries)<2)
@@ -194,7 +205,7 @@ if entries:
             with st.spinner(t('evaluating_reference')):ref,info=analytical_reference(rc,run.times[ti])
             if not info['accuracy_eligible']:st.info(t.translate_literal(info['message']));ref=None
         obs=[p for p in c.observations if 0<=p[0]<=rc.length and 0<=p[1]<=rc.width and 0<=p[2]<=rc.thickness]
-        fig=plots.plume_figure(run,ti,layer=layer,y_section=ys,x_section=xs,fill=fill,contours=lines,opacity=opacity,log=log,reference=ref,show_particles=particles,comparison=comparisons,observations=obs,compare_top=compare_top,show_heads=show_heads,focus=focus,focus_threshold=focus_threshold)
+        fig=plots.plume_figure(run,ti,layer=layer,y_section=ys,x_section=xs,fill=fill,contours=lines,opacity=opacity,log=log,reference=ref,show_particles=particles,comparison=comparisons,observations=obs,compare_top=compare_top,show_heads=show_heads,focus=focus,focus_threshold=focus_threshold,show_grid=show_grid,relative=relative)
         t.figure(fig);show_figure(fig,language)
         if language in SCRIPT_FONTS:
             image=svg_figure(fig,language,bbox_inches='tight').encode('utf-8')

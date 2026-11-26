@@ -84,3 +84,7 @@ Les quatre applications analytiques fournies ont inspiré les exemples. Leurs fo
 - [Pollock (2016) — MODPATH 7, USGS](https://pubs.usgs.gov/publication/ofr20161086)
 - [Wexler (1992) — USGS](https://pubs.usgs.gov/twri/twri3-b7/)
 - [MODFLOW-ORG](https://github.com/MODFLOW-ORG/executables)
+
+### Maillage, coordonnées relatives et largeur
+
+Le maillage ajoute de fines limites grises aux cellules du calcul affiché, en plan et en coupe ; les profils monocouches ont des repères verticaux aux bords des cellules. Les coordonnées x′/y′ prennent pour origine le barycentre de masse dissoute positive de la couche affichée, avec sa porosité locale. Sans masse positive, le centre de la source maillée sert d’origine. Comparaisons, référence et particules partagent cette origine ; cotes, entrées et exports numériques restent absolus. Ce réglage est indépendant du zoom. Cinq largeurs sont disponibles en haut ; Standard conserve l’ancienne largeur. Le champ de nom jaune devient vert après validation d’un texte non vide par Entrée ou en quittant le champ.

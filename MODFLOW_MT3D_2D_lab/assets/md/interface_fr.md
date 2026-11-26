@@ -65,7 +65,7 @@ L'archive contient entrées, journaux, concentrations, charges, bilans et partic
 Lancez l'expérience de base avec un créneau pour voir panache, profils, courbes et comparaison des méthodes.
 
 <!-- key: footer -->
-MT3D 2D/3D · v0.4.0 · Version de travail pour l'enseignement en direct
+MT3D 2D/3D · v0.5.0 · Version de travail pour l'enseignement en direct
 
 <!-- key: transient_hint -->
 Le champ initial s'équilibre ; la charge à droite change à t = 0.
@@ -966,3 +966,51 @@ Chenal à K élevée
 
 <!-- key: Low K barrier -->
 Barrière partielle à faible K
+
+<!-- key: Page width -->
+Largeur de page
+
+<!-- key: width_1 -->
+Étroite
+
+<!-- key: width_2 -->
+Compacte
+
+<!-- key: width_3 -->
+Standard
+
+<!-- key: width_4 -->
+Large
+
+<!-- key: width_5 -->
+Pleine largeur
+
+<!-- key: page_width_hint -->
+Cinq largeurs, d’étroite à pleine largeur. Standard conserve la largeur précédente. La page s’adapte aux petits écrans.
+
+<!-- key: Show model grid -->
+Afficher le maillage
+
+<!-- key: grid_hint -->
+Limites discrètes des cellules du calcul affiché. Les profils monocouches montrent des repères verticaux aux bords des cellules.
+
+<!-- key: Plume-centered x/y -->
+x/y centrés sur le panache
+
+<!-- key: relative_hint -->
+Le zéro est le barycentre de la masse dissoute positive dans la couche affichée. Les superpositions partagent cette origine. Coordonnées saisies et cotes restent absolues.
+
+<!-- key: relative_mass_origin -->
+Origine relative : x = {x:.2f} m ; y = {y:.2f} m (barycentre du panache).
+
+<!-- key: relative_source_origin -->
+Aucune masse positive dans cette couche : origine au centre de la source maillée, x = {x:.2f} m ; y = {y:.2f} m.
+
+<!-- key: fig_relative_xprofile -->
+Profil x à y′ = {y:.3g} m
+
+<!-- key: fig_relative_yprofile -->
+Profil y à x′ = {x:.3g} m
+
+<!-- key: fig_relative_section -->
+Coupe {axis}–z à {other}′ = {value:.3g} m
