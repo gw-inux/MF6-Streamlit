@@ -1,0 +1,3 @@
+Diese optionale Tabelle enthält die native MT3D-Bilanzausgabe. **Kumulativer Eintritt/Austritt** und **Quellen/Senken** sind die kumulativen Massenterme des Programms; **Wasserspeicherung** ist der Massenterm des Austauschs durch Wasserspeicherung und nicht die im Modell verbliebene gelöste Masse.
+
+Die Abbildung der verbleibenden Masse integriert unabhängig Konzentration × Porenvolumen. Gepunktete Kurven zeigen die Masse laut nativer Bilanz. Bei Charakteristikenverfahren können diese Größen abweichen; deshalb bleiben beide erhalten. Der Bilanzprozentsatz verwendet die MT3D-Definition. Verbliebene Masse minus freigesetzte Masse ist kein Bilanzfehler, wenn Stoff das Gebiet verlassen hat. Die vollständigen unveränderten Spalten stehen im exportierten CSV.

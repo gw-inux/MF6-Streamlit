@@ -1,0 +1,3 @@
+Ce tableau facultatif contient le bilan natif MT3D. Entrées/sorties et sources/puits sont des termes massiques cumulés. Le stockage fluide représente l'échange lié au stockage d'eau, pas la masse dissoute restant dans le modèle.
+
+La figure intègre indépendamment concentration × volume poreux ; les pointillés montrent la masse native. Les méthodes caractéristiques peuvent donner des valeurs différentes : les deux sont conservées. L'écart utilise la définition MT3D. Masse résidente moins masse libérée n'est pas une erreur si du soluté est sorti. Le CSV exporté conserve toutes les colonnes natives.

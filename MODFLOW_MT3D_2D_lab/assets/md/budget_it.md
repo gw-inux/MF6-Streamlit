@@ -1,0 +1,3 @@
+La tabella opzionale contiene il bilancio nativo MT3D. Ingressi/uscite e sorgenti/pozzi sono termini cumulati. L'immagazzinamento fluido rappresenta lo scambio di massa dovuto all'immagazzinamento d'acqua, non la massa disciolta restante.
+
+La figura integra indipendentemente concentrazione × volume dei pori; i tratti puntinati mostrano la massa nativa. I metodi delle caratteristiche possono dare differenze: entrambi i valori sono conservati. La percentuale usa la definizione MT3D. Massa residente meno rilasciata non è un errore se il soluto è uscito. Il CSV mantiene tutte le colonne originali.

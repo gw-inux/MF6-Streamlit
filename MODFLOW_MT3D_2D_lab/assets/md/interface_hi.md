@@ -1,0 +1,968 @@
+<!-- key: title -->
+MT3D – 2D/3D परिवहन प्रयोगशाला
+
+<!-- key: intro_caption -->
+परिचयात्मक चित्र: प्लूम और ब्रेकथ्रू वक्र का उदाहरण। यह वर्तमान मॉडल इनपुट से स्वतंत्र है।
+
+<!-- key: Model & run -->
+1 · मॉडल और गणना
+
+<!-- key: Results & method comparison -->
+2 · परिणाम और विधियों की तुलना
+
+<!-- key: series_reset -->
+इनपुट संकेत या मॉडल/स्रोत की ज्यामिति बदलने से नई तुलना शृंखला शुरू हुई है। पिछली गणनाएँ हटा दी गई हैं।
+
+<!-- key: grid_summary -->
+ग्रिड: {nx} × {ny} × {nz} सेल। वास्तविक सेल चौड़ाई: Δx = {dx:.3f} m; Δy = {dy:.3f} m; Δz = {dz:.3f} m।
+
+<!-- key: velocity_summary -->
+समांगी संदर्भ रंध्र वेग: {velocity:.4f} m/दिन।
+
+<!-- key: source_bounds -->
+x = {x0:.2f}–{x1:.2f} m; y = {y0:.2f}–{y1:.2f} m; z = {z0:.2f}–{z1:.2f} m.
+
+<!-- key: source_snap_hint -->
+स्रोत चुने हुए सेल में है। विभेदन बदलने से उसका वास्तविक आकार बदल सकता है। सेल चौड़ाई के इनपुट में कुल मॉडल विस्तार बना रहता है और वास्तविक समान अंतराल दिखता है।
+
+<!-- key: input_error -->
+गणना से पहले चिह्नित मॉडल सेटिंग सुधारें।
+
+<!-- key: missing_executables -->
+आवश्यक प्रोग्राम नहीं मिले: {names}। संगत निष्पादन फ़ाइलें ऐप या रिपॉज़िटरी के `bin/` में रखें। स्थानीय स्थापना: `python setup_executables.py`।
+
+<!-- key: label_placeholder -->
+स्वतः: 01 TVD / Pulse (विषमांगी: / het.)
+
+<!-- key: history_full -->
+दस गणनाएँ संग्रहीत हैं। आगे बढ़ने के लिए कोई गणना हटाएँ या शृंखला खाली करें।
+
+<!-- key: running -->
+MODFLOW, MT3D और वैकल्पिक MODPATH चल रहे हैं…
+
+<!-- key: run_success -->
+गणना पूर्ण हुई। नवीनतम परिणाम दिख रहा है।
+
+<!-- key: run_failed -->
+यह गणना पूरी नहीं हुई और तुलना में नहीं जोड़ी गई।
+
+<!-- key: changed_source_footprint -->
+ग्रिड परिष्करण से स्रोत का वास्तविक विस्तार बदला है। विस्तृत तालिका में स्रोत का आकार जाँचें।
+
+<!-- key: nearest_time -->
+{name}: निकटतम सहेजा समय {time:.3f} दिन (प्रदर्शित गणना: {target:.3f} दिन)।
+
+<!-- key: no_comparison_time -->
+{name}: {time:.3f} दिन पर आउटपुट नहीं; छोड़ा गया।
+
+<!-- key: evaluating_reference -->
+विश्लेषणात्मक संदर्भ की गणना…
+
+<!-- key: export_hint -->
+संग्रह में मॉडल इनपुट, लॉग, सांद्रता/हेड एरे, द्रव्यमान निदान और कण डेटा हैं। कणों के आगमन का विवरण भी निर्यात में है।
+
+<!-- key: no_runs -->
+प्लूम, प्रोफ़ाइल, ब्रेकथ्रू वक्र और विधियों की तुलना देखने के लिए प्रारंभिक पल्स प्रयोग चलाएँ।
+
+<!-- key: footer -->
+MT3D 2D/3D · v0.4.0 · प्रत्यक्ष शिक्षण के लिए कार्यशील संस्करण
+
+<!-- key: transient_hint -->
+प्रारंभिक प्रवाह संतुलित होता है; दायाँ हेड t = 0 पर बदलता है।
+
+<!-- key: expert_flow_hint -->
+प्रवाह सॉल्वर की सहनशीलता और पुनरावृत्तियाँ बदलने के लिए विशेषज्ञ सेटिंग चालू करें।
+
+<!-- key: stochastic_hint -->
+नियत बीज से क्षेत्र पुनरुत्पाद्य हैं। K और Ss लघुगणकीय पैमाने पर समान वितरण से, सरंध्रता समान वितरण से ली जाती है। परिष्करण में यही प्रतिरूप रहता है।
+
+<!-- key: zones_hint -->
+आयत सेल केंद्र चुनते हैं; बाद की पंक्तियाँ पहले वाली को बदलती हैं। परत क्रम 1 से है।
+
+<!-- key: observation_hint -->
+प्रेक्षण वक्र उस सेल का मान लेते हैं जिसमें बिंदु है। संग्रहीत मॉडल दोबारा चलाए बिना स्थान बदल सकते हैं।
+
+<!-- key: output_hint -->
+t = 0 और अंतिम समय शामिल हैं। चित्रों और निर्यात के लिए सांद्रता आउटपुट नियंत्रित करता है।
+
+<!-- key: preset_homogeneous -->
+समांगी
+
+<!-- key: preset_lens -->
+कम K का लेंस
+
+<!-- key: preset_channel -->
+उच्च K की वाहिका
+
+<!-- key: preset_barrier -->
+कम K का आंशिक अवरोध
+
+<!-- key: preset_stochastic -->
+यादृच्छिक क्षेत्रीकरण
+
+<!-- key: preset_custom -->
+स्वनिर्धारित आयत
+
+<!-- key: preset_hint_lens -->
+केंद्रीय लेंस: K = 0.01 × पृष्ठभूमि K; पूरी गहराई।
+
+<!-- key: preset_hint_channel -->
+अनुदैर्ध्य वाहिका: K = 10 × पृष्ठभूमि K; पूरी गहराई।
+
+<!-- key: preset_hint_barrier -->
+आंशिक अनुप्रस्थ अवरोध: K = 0.01 × पृष्ठभूमि K; किनारे से मार्ग खुला है।
+
+<!-- key: signal_pulse -->
+पल्स / आयताकार इनपुट
+
+<!-- key: signal_continuous -->
+सतत इनपुट
+
+<!-- key: signal_dirac -->
+डिराक / तात्कालिक विमोचन
+
+<!-- key: signal_short_pulse -->
+पल्स
+
+<!-- key: signal_short_continuous -->
+सतत
+
+<!-- key: signal_short_dirac -->
+डिराक
+
+<!-- key: Concept, assumptions and equations -->
+संकल्पना, मान्यताएँ और समीकरण
+
+<!-- key: Guided experiments -->
+निर्देशित प्रयोग
+
+<!-- key: Expert settings -->
+विशेषज्ञ सेटिंग
+
+<!-- key: Use sliders for main parameters -->
+मुख्य मानों के लिए स्लाइडर
+
+<!-- key: Flow & domain -->
+प्रवाह और क्षेत्र
+
+<!-- key: Transport & source -->
+परिवहन और स्रोत
+
+<!-- key: Post-processing & observations -->
+पश्च-प्रसंस्करण और प्रेक्षण
+
+<!-- key: Hydraulic properties -->
+जलीय गुण
+
+<!-- key: Hydraulic conductivity K (m/s) -->
+जलीय चालकता K (m/s)
+
+<!-- key: Effective porosity (-) -->
+प्रभावी सरंध्रता (-)
+
+<!-- key: Specific storage Ss (1/m) -->
+विशिष्ट भंडारण Ss (1/m)
+
+<!-- key: Vertical / horizontal K -->
+ऊर्ध्वाधर / क्षैतिज K
+
+<!-- key: Boundary conditions -->
+सीमा शर्तें
+
+<!-- key: Specified head left (m) -->
+निर्दिष्ट बायाँ हेड (m)
+
+<!-- key: Specified head right (m) -->
+निर्दिष्ट दायाँ हेड (m)
+
+<!-- key: Transient flow experiment -->
+अस्थायी प्रवाह प्रयोग
+
+<!-- key: Right head after t = 0 (m) -->
+t = 0 के बाद दायाँ हेड (m)
+
+<!-- key: Model extent and spatial discretization -->
+मॉडल विस्तार और स्थानिक विविक्तीकरण
+
+<!-- key: Model length in x-direction (m) -->
+x दिशा में लंबाई (m)
+
+<!-- key: Model width in y-direction (m) -->
+y दिशा में चौड़ाई (m)
+
+<!-- key: Aquifer thickness / top elevation (m) -->
+जलभृत मोटाई / शीर्ष ऊँचाई (m)
+
+<!-- key: Define the grid by -->
+ग्रिड निर्धारण
+
+<!-- key: Number of cells -->
+सेल संख्या
+
+<!-- key: Cell width -->
+सेल चौड़ाई
+
+<!-- key: Cells x -->
+x सेल
+
+<!-- key: Cells y -->
+y सेल
+
+<!-- key: Cell width x (m) -->
+x सेल चौड़ाई (m)
+
+<!-- key: Cell width y (m) -->
+y सेल चौड़ाई (m)
+
+<!-- key: Number of layers -->
+परतों की संख्या
+
+<!-- key: Numerical solution for flow -->
+प्रवाह का संख्यात्मक समाधान
+
+<!-- key: Head tolerance (m) -->
+हेड सहनशीलता (m)
+
+<!-- key: Flow residual tolerance (m³/day) -->
+प्रवाह अवशेष सहनशीलता (m³/दिन)
+
+<!-- key: PCG outer iterations -->
+PCG बाहरी पुनरावृत्तियाँ
+
+<!-- key: PCG inner iterations -->
+PCG आंतरिक पुनरावृत्तियाँ
+
+<!-- key: Flow time steps (approximately total) -->
+प्रवाह समय चरण (लगभग कुल)
+
+<!-- key: Hydrogeology and zonation -->
+जलभूविज्ञान और विषमता
+
+<!-- key: Hydrogeology preset -->
+जलभूवैज्ञानिक पूर्वनिर्धारण
+
+<!-- key: Number of zones -->
+क्षेत्रों की संख्या
+
+<!-- key: Random seed -->
+यादृच्छिक बीज
+
+<!-- key: K range (m/s) -->
+K सीमा (m/s)
+
+<!-- key: Ss range (1/m) -->
+Ss सीमा (1/m)
+
+<!-- key: Porosity range (-) -->
+सरंध्रता सीमा (-)
+
+<!-- key: Minimum -->
+न्यूनतम
+
+<!-- key: Maximum -->
+अधिकतम
+
+<!-- key: Edit hydrogeological zones -->
+क्षेत्र संपादित करें
+
+<!-- key: Zone name -->
+क्षेत्र नाम
+
+<!-- key: First layer -->
+पहली परत
+
+<!-- key: Last layer -->
+अंतिम परत
+
+<!-- key: Porosity -->
+सरंध्रता
+
+<!-- key: Boundary conditions and source -->
+सीमा शर्तें और स्रोत
+
+<!-- key: Input signal -->
+इनपुट संकेत
+
+<!-- key: Released mass (g) -->
+विमोचित द्रव्यमान (g)
+
+<!-- key: Mass input rate (g/day) -->
+द्रव्यमान इनपुट दर (g/दिन)
+
+<!-- key: Pulse duration (days) -->
+पल्स अवधि (दिन)
+
+<!-- key: Source x (m) -->
+स्रोत x (m)
+
+<!-- key: Source y (m) -->
+स्रोत y (m)
+
+<!-- key: Source cells x -->
+स्रोत सेल x
+
+<!-- key: Source cells y -->
+स्रोत सेल y
+
+<!-- key: Source spans all layers -->
+स्रोत सभी परतों में
+
+<!-- key: Source layer (1 = top) -->
+स्रोत परत (1 = शीर्ष)
+
+<!-- key: Transport parameters -->
+परिवहन पैरामीटर
+
+<!-- key: Dispersion -->
+परिक्षेपण
+
+<!-- key: Longitudinal dispersivity (m) -->
+अनुदैर्ध्य परिक्षेपण लंबाई (m)
+
+<!-- key: Horizontal transverse / longitudinal -->
+क्षैतिज अनुप्रस्थ / अनुदैर्ध्य
+
+<!-- key: Vertical transverse / longitudinal -->
+ऊर्ध्वाधर अनुप्रस्थ / अनुदैर्ध्य
+
+<!-- key: Temporal discretization -->
+कालिक विविक्तीकरण
+
+<!-- key: Transport duration (days) -->
+परिवहन अवधि (दिन)
+
+<!-- key: DT0 · initial step (days; 0 = automatic) -->
+DT0 · प्रारंभिक चरण (दिन; 0 = स्वतः)
+
+<!-- key: TTSMAX · maximum step (days; 0 = automatic) -->
+TTSMAX · अधिकतम चरण (दिन; 0 = स्वतः)
+
+<!-- key: TTSMULT · step multiplier -->
+TTSMULT · चरण गुणक
+
+<!-- key: MXSTRN · maximum transport steps -->
+MXSTRN · अधिकतम परिवहन चरण
+
+<!-- key: Numerical solution for transport -->
+परिवहन का संख्यात्मक समाधान
+
+<!-- key: MT3D advection method -->
+MT3D अभिवहन विधि
+
+<!-- key: MODPATH particle comparison -->
+MODPATH कण तुलना
+
+<!-- key: PERCEL · Courant number -->
+PERCEL · कूरांत संख्या
+
+<!-- key: CCLOSE · concentration tolerance -->
+CCLOSE · सांद्रता सहनशीलता
+
+<!-- key: Timeout per executable (seconds) -->
+प्रति प्रोग्राम समय सीमा (सेकंड)
+
+<!-- key: Expert transport solver settings -->
+विशेषज्ञ परिवहन सॉल्वर सेटिंग
+
+<!-- key: MXPART · maximum particles -->
+MXPART · अधिकतम कण
+
+<!-- key: ITRACK · tracking algorithm -->
+ITRACK · ट्रैकिंग एल्गोरिदम
+
+<!-- key: WD · concentration weighting -->
+WD · सांद्रता भार
+
+<!-- key: DCEPS · gradient threshold -->
+DCEPS · प्रवणता सीमा
+
+<!-- key: NPLANE · particle planes -->
+NPLANE · कण तल
+
+<!-- key: NPL · low-gradient particles -->
+NPL · कम प्रवणता कण
+
+<!-- key: NPH · high-gradient particles -->
+NPH · उच्च प्रवणता कण
+
+<!-- key: NPMIN · minimum particles/cell -->
+NPMIN · न्यूनतम कण/सेल
+
+<!-- key: NPMAX · maximum particles/cell -->
+NPMAX · अधिकतम कण/सेल
+
+<!-- key: INTERP · interpolation -->
+INTERP · अंतर्वेशन
+
+<!-- key: NLSINK · sink planes -->
+NLSINK · निकास तल
+
+<!-- key: NPSINK · sink particles -->
+NPSINK · निकास कण
+
+<!-- key: DCHMOC · HMOC threshold -->
+DCHMOC · HMOC सीमा
+
+<!-- key: MXITER · GCG outer iterations -->
+MXITER · GCG बाहरी पुनरावृत्तियाँ
+
+<!-- key: ITER1 · GCG inner iterations -->
+ITER1 · GCG आंतरिक पुनरावृत्तियाँ
+
+<!-- key: ISOLVE · preconditioner -->
+ISOLVE · पूर्व-अनुकूलक
+
+<!-- key: NCRS · cross-dispersion -->
+NCRS · क्रॉस-परिक्षेपण
+
+<!-- key: ACCL · relaxation -->
+ACCL · शिथिलीकरण
+
+<!-- key: IPRGCG · print interval -->
+IPRGCG · मुद्रण अंतराल
+
+<!-- key: MODPATH release settings -->
+MODPATH कण विमोचन सेटिंग
+
+<!-- key: Particles per source cell -->
+प्रति स्रोत सेल कण
+
+<!-- key: Release batches (pulse / continuous) -->
+विमोचन समूह (पल्स / सतत)
+
+<!-- key: Observation points -->
+प्रेक्षण बिंदु
+
+<!-- key: Number of observation points -->
+प्रेक्षण बिंदुओं की संख्या
+
+<!-- key: Output settings -->
+आउटपुट सेटिंग
+
+<!-- key: Saved transport times -->
+सहेजे परिवहन समय
+
+<!-- key: Actual source footprint -->
+वास्तविक स्रोत विस्तार
+
+<!-- key: Optional run label -->
+वैकल्पिक गणना नाम
+
+<!-- key: Run model -->
+मॉडल चलाएँ
+
+<!-- key: Run diagnostic -->
+गणना निदान
+
+<!-- key: More comparison metrics -->
+अधिक तुलना मापदंड
+
+<!-- key: Displayed run -->
+प्रदर्शित गणना
+
+<!-- key: Run to remove -->
+हटाने की गणना
+
+<!-- key: Remove -->
+हटाएँ
+
+<!-- key: Clear comparison runs -->
+तुलना गणनाएँ साफ़ करें
+
+<!-- key: Plume & sections -->
+प्लूम और काट
+
+<!-- key: Observation curves -->
+प्रेक्षण वक्र
+
+<!-- key: Mass & diagnostics -->
+द्रव्यमान और निदान
+
+<!-- key: Export -->
+निर्यात
+
+<!-- key: Time (days) -->
+समय (दिन)
+
+<!-- key: Top-view layer -->
+ऊपरी दृश्य परत
+
+<!-- key: Layer {number} -->
+परत {number}
+
+<!-- key: Analytical reference -->
+विश्लेषणात्मक संदर्भ
+
+<!-- key: Plot settings and section positions -->
+चित्र सेटिंग और काट स्थान
+
+<!-- key: x-direction section · y (m) -->
+x दिशा काट · y (m)
+
+<!-- key: y-direction section · x (m) -->
+y दिशा काट · x (m)
+
+<!-- key: Colour fill -->
+रंग भराव
+
+<!-- key: Contour lines -->
+सममान रेखाएँ
+
+<!-- key: Log colours -->
+लघुगणकीय रंग
+
+<!-- key: Particle paths -->
+कण पथ
+
+<!-- key: Opacity -->
+अपारदर्शिता
+
+<!-- key: Compare runs in x / y sections -->
+x / y काट में गणनाओं की तुलना
+
+<!-- key: Compare section profiles -->
+काट प्रोफ़ाइल तुलना
+
+<!-- key: Runs for section comparison -->
+काट तुलना के लिए गणनाएँ
+
+<!-- key: Also overlay top-view contours -->
+ऊपरी सममान रेखाएँ भी दिखाएँ
+
+<!-- key: Download plume figure (PNG) -->
+प्लूम चित्र डाउनलोड (PNG)
+
+<!-- key: Runs in breakthrough comparison -->
+ब्रेकथ्रू तुलना में गणनाएँ
+
+<!-- key: Observation cells used by each run -->
+प्रत्येक गणना के प्रेक्षण सेल
+
+<!-- key: Download breakthrough curves (CSV) -->
+ब्रेकथ्रू वक्र डाउनलोड (CSV)
+
+<!-- key: Detailed mass-budget data -->
+विस्तृत द्रव्यमान संतुलन डेटा
+
+<!-- key: Stored run configuration -->
+संग्रहीत गणना विन्यास
+
+<!-- key: Download comparison table (CSV) -->
+तुलना तालिका डाउनलोड (CSV)
+
+<!-- key: Download run configuration (JSON) -->
+गणना विन्यास डाउनलोड (JSON)
+
+<!-- key: Prepare complete displayed-run archive -->
+प्रदर्शित गणना का पूरा संग्रह बनाएँ
+
+<!-- key: Preparing archive… -->
+संग्रह बन रहा है…
+
+<!-- key: Download run archive (ZIP) -->
+गणना संग्रह डाउनलोड (ZIP)
+
+<!-- key: Run -->
+गणना
+
+<!-- key: Method -->
+विधि
+
+<!-- key: Signal -->
+संकेत
+
+<!-- key: Grid -->
+ग्रिड
+
+<!-- key: K zones -->
+K क्षेत्र
+
+<!-- key: Flow -->
+प्रवाह
+
+<!-- key: MB disc. (%) -->
+द्रव्यमान त्रुटि (%)
+
+<!-- key: Flow disc. (%) -->
+प्रवाह त्रुटि (%)
+
+<!-- key: MT3D (s) -->
+MT3D (s)
+
+<!-- key: MP7 (s) -->
+MP7 (s)
+
+<!-- key: Flow (s) -->
+प्रवाह (s)
+
+<!-- key: Total (s) -->
+कुल (s)
+
+<!-- key: Ref. L1 (%) -->
+संदर्भ L1 (%)
+
+<!-- key: Mass (g) -->
+द्रव्यमान (g)
+
+<!-- key: Input (g) -->
+इनपुट (g)
+
+<!-- key: Min. C (g/m³) -->
+न्यूनतम C (g/m³)
+
+<!-- key: Neg. mass (g) -->
+ऋणात्मक द्रव्यमान (g)
+
+<!-- key: Centroid x (m) -->
+केंद्रक x (m)
+
+<!-- key: Steps -->
+चरण
+
+<!-- key: Source box (m) -->
+स्रोत विस्तार (m)
+
+<!-- key: End (d) -->
+अंत (दिन)
+
+<!-- key: Scenario -->
+परिदृश्य
+
+<!-- key: Point -->
+बिंदु
+
+<!-- key: Requested x -->
+निर्दिष्ट x
+
+<!-- key: Requested y -->
+निर्दिष्ट y
+
+<!-- key: Requested z -->
+निर्दिष्ट z
+
+<!-- key: Cell centre x -->
+सेल केंद्र x
+
+<!-- key: Cell centre y -->
+सेल केंद्र y
+
+<!-- key: Cell centre z -->
+सेल केंद्र z
+
+<!-- key: Layer -->
+परत
+
+<!-- key: Row -->
+पंक्ति
+
+<!-- key: Column -->
+स्तंभ
+
+<!-- key: Cumulative in (g) -->
+संचयी इनपुट (g)
+
+<!-- key: Cumulative out (g) -->
+संचयी निकास (g)
+
+<!-- key: Sources (g) -->
+स्रोत (g)
+
+<!-- key: Sinks (g) -->
+निकास (g)
+
+<!-- key: Fluid storage (g) -->
+द्रव भंडारण (g)
+
+<!-- key: Native resident mass (g) -->
+प्रोग्राम का अवशिष्ट द्रव्यमान (g)
+
+<!-- key: Alternative disc. (%) -->
+वैकल्पिक त्रुटि (%)
+
+<!-- key: Analytical reference requires homogeneous steady flow. -->
+विश्लेषणात्मक संदर्भ के लिए समांगी स्थिर प्रवाह आवश्यक है।
+
+<!-- key: Source cells -->
+स्रोत सेल
+
+<!-- key: Specified head -->
+निर्दिष्ट हेड
+
+<!-- key: Section locations -->
+काट स्थान
+
+<!-- key: Background flow -->
+पृष्ठभूमि प्रवाह
+
+<!-- key: Model preview: grid, boundaries and source -->
+पूर्वावलोकन: ग्रिड, सीमाएँ और स्रोत
+
+<!-- key: Computed head contours -->
+गणित हेड सममान रेखाएँ
+
+<!-- key: Homogeneous steady head contours -->
+समांगी स्थिर हेड सममान रेखाएँ
+
+<!-- key: Time (d) -->
+समय (दिन)
+
+<!-- key: Mass rate (g/d) -->
+द्रव्यमान दर (g/दिन)
+
+<!-- key: Instantaneous mass (g) -->
+तात्कालिक द्रव्यमान (g)
+
+<!-- key: Dirac input (initial cell mass) -->
+डिराक इनपुट (प्रारंभिक सेल द्रव्यमान)
+
+<!-- key: Finite pulse input -->
+सीमित पल्स इनपुट
+
+<!-- key: Continuous input -->
+सतत इनपुट
+
+<!-- key: Concentration (g/m³) -->
+सांद्रता (g/m³)
+
+<!-- key: Elevation z (m) -->
+ऊँचाई z (m)
+
+<!-- key: MODPATH advection (slice) -->
+MODPATH अभिवहन (काट)
+
+<!-- key: Analytical -->
+विश्लेषणात्मक
+
+<!-- key: Analytical (active run) -->
+विश्लेषणात्मक (सक्रिय गणना)
+
+<!-- key: Mass output unavailable -->
+द्रव्यमान आउटपुट उपलब्ध नहीं
+
+<!-- key: MT3D discrepancy (%) -->
+MT3D त्रुटि (%)
+
+<!-- key: Initial + injected mass (first run) -->
+प्रारंभिक + दिया द्रव्यमान (पहली गणना)
+
+<!-- key: Resident mass: grid sum and MT3D budget -->
+अवशिष्ट द्रव्यमान: ग्रिड योग और MT3D संतुलन
+
+<!-- key: Reported mass-balance closure -->
+रिपोर्ट किया द्रव्यमान संतुलन
+
+<!-- key: Example: pulse plume after 600 days -->
+उदाहरण: 600 दिन बाद पल्स प्लूम
+
+<!-- key: Example: observation P1 -->
+उदाहरण: प्रेक्षण P1
+
+<!-- key: P1 · x (m) -->
+P1 · x (m)
+
+<!-- key: P1 · y (m) -->
+P1 · y (m)
+
+<!-- key: P1 · elevation z (m) -->
+P1 · ऊँचाई z (m)
+
+<!-- key: P2 · x (m) -->
+P2 · x (m)
+
+<!-- key: P2 · y (m) -->
+P2 · y (m)
+
+<!-- key: P2 · elevation z (m) -->
+P2 · ऊँचाई z (m)
+
+<!-- key: P3 · x (m) -->
+P3 · x (m)
+
+<!-- key: P3 · y (m) -->
+P3 · y (m)
+
+<!-- key: P3 · elevation z (m) -->
+P3 · ऊँचाई z (m)
+
+<!-- key: P4 · x (m) -->
+P4 · x (m)
+
+<!-- key: P4 · y (m) -->
+P4 · y (m)
+
+<!-- key: P4 · elevation z (m) -->
+P4 · ऊँचाई z (m)
+
+<!-- key: P5 · x (m) -->
+P5 · x (m)
+
+<!-- key: P5 · y (m) -->
+P5 · y (m)
+
+<!-- key: P5 · elevation z (m) -->
+P5 · ऊँचाई z (m)
+
+<!-- key: fig_head -->
+निर्दिष्ट हेड: {head:g} m
+
+<!-- key: fig_layers -->
+{layers} परतें; ऊर्ध्वाधर पैमाना बढ़ाया गया
+
+<!-- key: fig_total -->
+कुल: {mass:g} g
+
+<!-- key: fig_initial -->
+t = 0 पर {mass:g} g
+
+<!-- key: fig_xprofile -->
+y = {y:.3g} m पर x प्रोफ़ाइल
+
+<!-- key: fig_yprofile -->
+x = {x:.3g} m पर y प्रोफ़ाइल
+
+<!-- key: fig_section -->
+{other} = {value:.3g} m पर {axis}–z काट
+
+<!-- key: fig_title -->
+{method} · t = {time:g} दिन · परत {layer} (z = {z:.3g} m)
+
+<!-- key: fig_gridmass -->
+{label}: ग्रिड योग
+
+<!-- key: fig_nativemass -->
+{label}: MT3D संतुलन
+
+<!-- key: fig_nodata -->
+{label}: क्षेत्र से बाहर — डेटा नहीं
+
+<!-- key: table_help_MB disc. (%) -->
+MT3D द्वारा रिपोर्ट किया अंतिम द्रव्यमान संतुलन अंतर।
+
+<!-- key: table_help_Flow disc. (%) -->
+MODFLOW का अंतिम जल संतुलन अंतर।
+
+<!-- key: table_help_MT3D (s) -->
+परिवहन प्रोग्राम का वास्तविक निष्पादन समय।
+
+<!-- key: table_help_MP7 (s) -->
+MODPATH समय; कण केवल अभिवहन दर्शाते हैं।
+
+<!-- key: table_help_Ref. L1 (%) -->
+रंध्र आयतन से भारित निरपेक्ष सांद्रता त्रुटि, संदर्भ द्रव्यमान से विभाजित।
+
+<!-- key: table_help_Mass (g) -->
+सांद्रता ग्रिड से समाकलित अंतिम घुलित द्रव्यमान।
+
+<!-- key: MT3DMS final mass discrepancy exceeds 1%; inspect method and transport time step settings. -->
+MT3DMS की अंतिम द्रव्यमान त्रुटि 1% से अधिक है; विधि और परिवहन समय चरण जाँचें।
+
+<!-- key: At least one MODFLOW water-budget discrepancy exceeds 0.1%. -->
+MODFLOW का कम से कम एक जल संतुलन अंतर 0.1% से अधिक है।
+
+<!-- key: Negative concentrations occurred. They are retained in diagnostics and exports; central FD and particle methods can oscillate. -->
+ऋणात्मक सांद्रताएँ मिलीं। ये निदान और निर्यात में बनी रहती हैं; केंद्रीय FD और कण विधियों में दोलन हो सकता है।
+
+<!-- key: Source coordinates must lie inside the domain. -->
+स्रोत निर्देशांक क्षेत्र के अंदर होने चाहिए।
+
+<!-- key: This confined lab requires heads at or above aquifer top. -->
+इस परिबद्ध जलभृत में हेड शीर्ष ऊँचाई से कम नहीं हो सकते।
+
+<!-- key: Pulse duration must be between zero and model duration. -->
+पल्स अवधि शून्य और मॉडल अवधि के बीच होनी चाहिए।
+
+<!-- key: Observation point is outside the model. -->
+प्रेक्षण बिंदु मॉडल से बाहर है।
+
+<!-- key: TVD requires PERCEL no greater than 1. -->
+TVD के लिए PERCEL ≤ 1 चाहिए।
+
+<!-- key: language_fallback -->
+अनुवाद न होने पर अंग्रेज़ी पाठ प्रयोग होता है।
+
+<!-- key: preset_random -->
+यादृच्छिक पैरामीटर
+
+<!-- key: Random unit x (m) -->
+यादृच्छिक इकाई x (m)
+
+<!-- key: Random unit y (m) -->
+यादृच्छिक इकाई y (m)
+
+<!-- key: random_hint -->
+छोटी इकाइयाँ महीन, बड़ी इकाइयाँ बड़े पैच बनाती हैं। ग्रिड परिष्करण में भौतिक प्रतिरूप बनाए रखने के लिए बीज और इकाई आकार स्थिर रखें।
+
+<!-- key: Active cells -->
+सक्रिय सेल
+
+<!-- key: table_help_Active cells -->
+सभी गैर-निष्क्रिय सेल, निर्दिष्ट हेड वाले सेल सहित।
+
+<!-- key: Random field -->
+यादृच्छिक क्षेत्र
+
+<!-- key: Comparison runs -->
+तुलना गणनाएँ
+
+<!-- key: discard_tags_hint -->
+× से टैग हटाकर गणना मिटाएँ। सभी टैग हटाने से नई तुलना शुरू होगी। रखने वाली गणनाएँ पहले निर्यात करें।
+
+<!-- key: Head contours -->
+हेड सममान रेखाएँ
+
+<!-- key: Computed head contours (m) -->
+गणित हेड सममान रेखाएँ (m)
+
+<!-- key: Head contours appear after running the model -->
+मॉडल चलने के बाद हेड रेखाएँ दिखेंगी
+
+<!-- key: fig_background_k -->
+पृष्ठभूमि K = {k:.2e} m/s
+
+<!-- key: fig_low_lens_k -->
+कम K लेंस: K = {k:.2e} m/s
+
+<!-- key: fig_high_channel_k -->
+उच्च K वाहिका: K = {k:.2e} m/s
+
+<!-- key: fig_low_barrier_k -->
+कम K अवरोध: K = {k:.2e} m/s
+
+<!-- key: Focus on plume -->
+प्लूम पर केंद्रित करें
+
+<!-- key: Focus threshold (% of peak) -->
+सीमा (शिखर का %)
+
+<!-- key: focus_hint -->
+हर प्रदर्शित प्लूम के वर्तमान धनात्मक शिखर से सीमा तय होती है; हर ओर 20% अंतर है। दिखते MODPATH पथ शामिल रहते हैं। प्लूम या पथ न होने पर पूरा क्षेत्र दिखता है। केवल ऊपरी दृश्य बदलता है।
+
+<!-- key: Download plume figure (SVG) -->
+प्लूम चित्र डाउनलोड (SVG)
+
+<!-- key: steady -->
+स्थिर
+
+<!-- key: transient -->
+अस्थायी
+
+<!-- key: fig_minimum -->
+संख्यात्मक न्यूनतम: {minimum:.3g} g/m³
+
+<!-- key: fig_minimum_log -->
+संख्यात्मक न्यूनतम: {minimum:.3g} g/m³ (लॉग पैमाने पर गैर-धनात्मक मान छिपे हैं)
+
+<!-- key: The plume reaches an x specified-head boundary; enlarge the domain before treating the infinite-x analytical solution as a benchmark. -->
+प्लूम x के निर्दिष्ट हेड सीमा तक पहुँच गया; अनंत-x संदर्भ प्रयोग करने से पहले क्षेत्र बढ़ाएँ।
+
+<!-- key: fig_reference_boundary -->
+विश्लेषणात्मक शुद्धता बंद: x-सीमा प्रभाव {tolerance_percent:.2g}% सीमा से अधिक है।
+
+<!-- key: Low K lens -->
+कम K का लेंस
+
+<!-- key: High K channel -->
+उच्च K की वाहिका
+
+<!-- key: Low K barrier -->
+कम K का आंशिक अवरोध

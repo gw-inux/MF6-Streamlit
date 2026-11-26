@@ -1,0 +1,3 @@
+This optional table contains the native MT3D budget output. **Cumulative in/out** and **Sources/sinks** are the engine's cumulative mass terms; **Fluid storage** is the mass term associated with fluid-storage exchange, not the dissolved mass remaining in the model.
+
+The resident-mass figure independently integrates concentration × pore volume. Its dotted curves show the native budget mass. These can differ for characteristic methods, so both are preserved. The mass-balance percentage uses MT3D's own definition; final resident mass minus released mass is not a budget error if solute has left the domain. Full unmodified columns remain in the exported CSV.

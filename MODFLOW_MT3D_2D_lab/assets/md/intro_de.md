@@ -1,0 +1,3 @@
+Verfolgen Sie einen konservativen Stoff durch einen idealisierten Aquifer und untersuchen Sie, wie Advektion, Dispersion und hydrogeologische Strukturen seine Stofffahne prägen. Vergleichen Sie MT3D-Lösungsverfahren für dasselbe Experiment, betrachten Sie Konzentrationsprofile und Durchbruchskurven und setzen Sie deren Genauigkeit mit Massenbilanz und Laufzeit in Beziehung.
+
+Beginnen Sie mit dem homogenen 2D-Pulsexperiment. MODPATH ergänzt einen advektiven Partikelvergleich; Experteneinstellungen erweitern das Modell um Heterogenität oder ein geschichtetes 3D-Gebiet. Die analytische Referenz steht zur Verfügung, wenn ihre Annahmen homogener, stationärer Strömung erfüllt sind.
