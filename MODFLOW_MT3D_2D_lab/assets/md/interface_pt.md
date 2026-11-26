@@ -65,7 +65,7 @@ O arquivo contém entradas, registos, concentrações, cargas, balanços e part�
 Execute a experiência inicial de pulso para ver a pluma, perfis, curvas de chegada e comparação de métodos.
 
 <!-- key: footer -->
-MT3D 2D/3D · v0.5.0 · Versão de trabalho para aulas ao vivo
+MT3D 2D/3D · v0.5.1 · Versão de trabalho para aulas ao vivo
 
 <!-- key: transient_hint -->
 O campo inicial equilibra-se; a carga direita muda em t = 0.

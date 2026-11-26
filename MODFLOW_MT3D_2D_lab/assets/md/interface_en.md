@@ -65,7 +65,7 @@ The run archive includes model inputs, logs, concentration/head arrays, mass dia
 Run the baseline pulse experiment to view the plume, profiles, observation curves and method comparison.
 
 <!-- key: footer -->
-MT3D 2D/3D Transport Lab · v0.5.0 · Working version for live teaching
+MT3D 2D/3D Transport Lab · v0.5.1 · Working version for live teaching
 
 <!-- key: transient_hint -->
 The original flow field first equilibrates; the right head changes at t = 0.

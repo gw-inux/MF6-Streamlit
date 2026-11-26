@@ -65,7 +65,7 @@ Das Laufarchiv enthält Modelleingaben, Protokolle, Konzentrations-/Potentialhö
 Starten Sie das voreingestellte Pulsexperiment, um Stofffahne, Profile, Beobachtungskurven und Methodenvergleich anzuzeigen.
 
 <!-- key: footer -->
-MT3D 2D/3D-Transportlabor · v0.5.0 · Arbeitsversion für die begleitete Lehre
+MT3D 2D/3D-Transportlabor · v0.5.1 · Arbeitsversion für die begleitete Lehre
 
 <!-- key: transient_hint -->
 Das ursprüngliche Strömungsfeld wird zuerst stationär berechnet; die rechte Potentialhöhe ändert sich bei t = 0.

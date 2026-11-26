@@ -1,4 +1,4 @@
-"""MT3D 2D/3D lab v0.5.0.
+"""MT3D 2D/3D lab v0.5.1.
 
 Contents: language/introduction; model inputs; preview/run; comparison results.
 Native solvers are retained; random material arrays use the existing package inputs.

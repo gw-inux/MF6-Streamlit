@@ -65,7 +65,7 @@ L'archivio contiene input, log, concentrazioni, carichi, bilanci e particelle, i
 Eseguire l'esperimento iniziale a impulso per vedere pennacchio, profili, curve di arrivo e confronto dei metodi.
 
 <!-- key: footer -->
-MT3D 2D/3D · v0.5.0 · Versione di lavoro per lezioni dal vivo
+MT3D 2D/3D · v0.5.1 · Versione di lavoro per lezioni dal vivo
 
 <!-- key: transient_hint -->
 Il campo iniziale si equilibra; il carico a destra cambia a t = 0.

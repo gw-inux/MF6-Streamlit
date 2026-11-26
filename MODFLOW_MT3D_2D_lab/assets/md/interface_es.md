@@ -65,7 +65,7 @@ El archivo incluye entradas, registros, concentraciones, cargas, balances y part
 Ejecute el pulso inicial para ver la pluma, perfiles, curvas de llegada y comparación de métodos.
 
 <!-- key: footer -->
-MT3D 2D/3D · v0.5.0 · Versión de trabajo para docencia en directo
+MT3D 2D/3D · v0.5.1 · Versión de trabajo para docencia en directo
 
 <!-- key: transient_hint -->
 El flujo inicial se equilibra; la carga derecha cambia en t = 0.

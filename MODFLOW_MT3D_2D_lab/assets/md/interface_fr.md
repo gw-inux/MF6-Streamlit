@@ -65,7 +65,7 @@ L'archive contient entrées, journaux, concentrations, charges, bilans et partic
 Lancez l'expérience de base avec un créneau pour voir panache, profils, courbes et comparaison des méthodes.
 
 <!-- key: footer -->
-MT3D 2D/3D · v0.5.0 · Version de travail pour l'enseignement en direct
+MT3D 2D/3D · v0.5.1 · Version de travail pour l'enseignement en direct
 
 <!-- key: transient_hint -->
 Le champ initial s'équilibre ; la charge à droite change à t = 0.
