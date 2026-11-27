@@ -94,6 +94,8 @@ class Config:
     solver: Solver = field(default_factory=Solver)
     track_particles: bool = True
     particles_per_cell: int = 16
+    # None retains the original per-cell release definition for old JSON files.
+    source_particle_count: int | None = None
     release_groups: int = 12
     observations: list = field(default_factory=lambda: [(400., 200., 10.)])
 
@@ -166,6 +168,8 @@ class Config:
             value=getattr(self,name)
             if not integer(value) or value<minimum:
                 errors.append(f'{name} must be an integer of at least {minimum}.')
+        if self.source_particle_count is not None and (not integer(self.source_particle_count) or self.source_particle_count<1):
+            errors.append('Source particle count must be a positive integer.')
         numeric=('length','width','thickness','k','kv_ratio','ss','porosity',
                  'head_left','head_right','head_right_final','duration','source_mass',
                  'mass_rate','pulse_duration','src_x','src_y','al','trpt','trpv','dmcoef')
@@ -227,12 +231,16 @@ class Config:
         if s.accl<=0 or s.dceps<0 or s.dchmoc<0:errors.append('Invalid relaxation or characteristic gradient threshold.')
         if np.prod(self.shape)*(self.outputs+1)>20_000_000:errors.append('Reduce cells or saved times (20 million concentration values maximum).')
         groups=1 if self.source_kind=='dirac' else self.release_groups
-        if self.track_particles and len(self.source_cells())*self.particles_per_cell*groups>100000:errors.append('Reduce source size, particles per cell or release batches (100,000 MODPATH particles maximum).')
+        if self.track_particles:
+            cells=len(self.source_cells())
+            count=self.source_particle_count if self.source_particle_count is not None else cells*self.particles_per_cell
+            if count<cells:errors.append('Use at least one MODPATH particle per source cell.')
+            if count*groups>100000:errors.append('Reduce source size, particle count or release batches (100,000 MODPATH particles maximum).')
         if errors:raise ValueError('\n'.join(dict.fromkeys(errors)))
 
     def fingerprint(self):
         d=asdict(self)
-        for key in ('method','solver','observations','track_particles','particles_per_cell','release_groups'):d.pop(key,None)
+        for key in ('method','solver','observations','track_particles','particles_per_cell','source_particle_count','release_groups'):d.pop(key,None)
         return hashlib.sha256(json.dumps(d,sort_keys=True).encode()).hexdigest()[:12]
 
     def to_dict(self):return asdict(self)

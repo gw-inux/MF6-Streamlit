@@ -14,16 +14,20 @@ PAGE_WIDTHS={1:'750px',2:'925px',3:'1100px',4:'1400px',5:'100%'}
 
 
 def _remember_page_width():
-    st.session_state['_page_width']=st.session_state['page_width']
+    try:width=st.session_state['page_width']
+    except KeyError:return
+    st.session_state['_page_width']=width
 
 
 def page_width_control(t):
     # Preserve the selection even when the translated slider labels change.
     st.session_state['page_width']=st.session_state.get('_page_width',3)
-    return st.select_slider(t('Page width'),options=list(PAGE_WIDTHS),
-                            format_func=lambda value:t('width_'+str(value)),
-                            key='page_width',on_change=_remember_page_width,
-                            help=t('page_width_hint'))
+    width=st.select_slider(t('Page width'),options=list(PAGE_WIDTHS),
+                           format_func=lambda value:t('width_'+str(value)),
+                           key='page_width',on_change=_remember_page_width,
+                           help=t('page_width_hint'))
+    st.session_state['_page_width']=width
+    return width
 
 
 def page_width_css(choice):
@@ -56,7 +60,10 @@ def panel(key,label,t,expanded=False):
 
 
 def _remember(key):
-    v=st.session_state['_model_values'];new=st.session_state[key]
+    # Ignore a queued event for a widget that no longer exists. Preserve the
+    # canonical model settings instead of inventing a replacement value.
+    try:v=st.session_state['_model_values'];new=st.session_state[key]
+    except KeyError:return
     if key=='grid_mode' and new!=v[key]:
         if new=='width':
             v['cell_x']=v['length']/v['ncol'];v['cell_y']=v['width']/v['nrow']
@@ -79,6 +86,9 @@ def values():
         for i in range(5):v.update({f'obs_x{i}':400.+100*i,f'obs_y{i}':200.,f'obs_z{i}':10.})
         st.session_state['_model_values']=v
     v=st.session_state['_model_values']
+    v.setdefault('particle_count_mode','cell')
+    v.setdefault('source_particle_count',None)
+    v.setdefault('total_source_particles',16)
     v.setdefault('random_unit_x',v['length']/v['ncol']);v.setdefault('random_unit_y',v['width']/v['nrow'])
     if v['zones_preset'] not in PRESETS:v['zones_preset']='random' if v['zones_preset']=='stochastic' else 'homogeneous'
     return v
@@ -92,6 +102,9 @@ def widget(kind,key,label,t,**kwargs):
     st.session_state[key]=default
     # Keep a canonical copy independent of Streamlit's hidden-widget cleanup.
     fn=getattr(st,kind)
+    help_key='help_'+key
+    if key.startswith('obs_'):help_key='help_observation'
+    if 'help' not in kwargs and help_key in t.entries:kwargs['help']=t(help_key)
     if kind in ('selectbox','radio'):
         options=kwargs['options']
         if st.session_state[key] not in options:st.session_state[key]=options[0]
@@ -113,6 +126,7 @@ def build_config(v):
     for key in vars(c):
         if key in v and key not in ('k','src_layer','solver','zones','observations'):setattr(c,key,v[key])
     c.k=v['k']*86400;c.src_layer=min(v['src_layer']-1,c.nlay-1)
+    c.source_particle_count=v.get('total_source_particles',16) if v.get('particle_count_mode','cell')=='total' else None
     c.solver=Solver(**{key:v['s_'+key] for key in vars(Solver())})
     c.observations=[(v[f'obs_x{i}'],v[f'obs_y{i}'],v[f'obs_z{i}']) for i in range(v['nobs'])]
     if v['grid_mode']=='width':
@@ -218,13 +232,14 @@ def _transport(t,v):
                     number('src_layer','Source layer (1 = top)',t,1,v['nlay'],1)
         with panel('transport_solver_panel','Numerical solution for transport',t,True):
             widget('selectbox','method','MT3D advection method',t,options=list(METHODS),format_func=lambda x:SHORT_METHOD[x])
-            widget('toggle','track_particles','MODPATH particle comparison',t)
-            if v['expert']:
-                number('s_percel','PERCEL · Courant number',t,.001,10.,.05)
-                number('s_cclose','CCLOSE · concentration tolerance',t,1e-12,1.,format='%.2e')
-                number('s_timeout','Timeout per executable (seconds)',t,1,3600,10)
+            if v['expert']:st.caption(t('expert_transport_location_hint'))
     if v['expert']:
-        with panel('expert_solver_panel','Expert transport solver settings',t):
+        with panel('expert_solver_panel','Expert transport solver settings',t,True):
+            st.caption(t('expert_transport_hint'))
+            a,b,d=st.columns(3)
+            with a:number('s_percel','PERCEL · Courant number',t,.001,10.,.05)
+            with b:number('s_cclose','CCLOSE · concentration tolerance',t,1e-12,1.,format='%.2e')
+            with d:number('s_timeout','Timeout per executable (seconds)',t,1,3600,10)
             labels={
                 'mxpart':'MXPART · maximum particles','itrack':'ITRACK · tracking algorithm','wd':'WD · concentration weighting',
                 'dceps':'DCEPS · gradient threshold','nplane':'NPLANE · particle planes','npl':'NPL · low-gradient particles',
@@ -241,10 +256,23 @@ def _transport(t,v):
                         val=v['s_'+key]
                         if isinstance(val,int):number('s_'+key,label,t,1 if key in positive else 0,10000000,1)
                         else:number('s_'+key,label,t,.5 if key=='wd' else 0.,1. if key=='wd' else 1e6,format='%.8g')
-        with panel('particle_settings_panel','MODPATH release settings',t):
-            a,b=st.columns(2)
-            with a:number('particles_per_cell','Particles per source cell',t,1,256,4)
-            with b:number('release_groups','Release batches (pulse / continuous)',t,1,100,1)
+    # Keep the full-width MT3D expander next in reading order after its method
+    # selector. MODPATH is an independent comparison and follows all MT3D controls.
+    with panel('particle_settings_panel','MODPATH settings',t,True):
+        widget('toggle','track_particles','MODPATH particle comparison',t)
+        if v['track_particles']:
+            a,b,d=st.columns(3)
+            with a:widget('selectbox','particle_count_mode','MODPATH particle count',t,
+                          options=['cell','total'],format_func=lambda x:t('particle_count_'+x))
+            with b:
+                if v['particle_count_mode']=='cell':number('particles_per_cell','Particles per source cell',t,1,100000,1)
+                else:number('total_source_particles','Particles in the whole source per release',t,1,100000,1)
+            with d:
+                if v['source_kind']!='dirac':number('release_groups','Release batches (pulse / continuous)',t,1,100,1)
+            cells=v['src_ncol']*v['src_nrow']*(v['nlay'] if v['source_all_layers'] else 1)
+            count=cells*v['particles_per_cell'] if v['particle_count_mode']=='cell' else v['total_source_particles']
+            groups=1 if v['source_kind']=='dirac' else v['release_groups']
+            st.caption(t('particle_count_summary',count=count,cells=cells,groups=groups,total=count*groups))
 
 
 def _postprocessing(t,v):

@@ -1,4 +1,4 @@
-"""MT3D 2D/3D lab v0.5.1.
+"""MT3D 2D/3D lab v0.6.3.
 
 Contents: language/introduction; model inputs; preview/run; comparison results.
 Native solvers are retained; random material arrays use the existing package inputs.
@@ -14,8 +14,9 @@ from .transport_lab.content import Catalog, available_languages
 from .transport_lab.controls import model_inputs, navigation, panel, page_width_control, page_width_css, run_label_css
 from .transport_lab.engine import find_engines, run_case
 from .transport_lab.results import enrich,analytical_reference,summary_table,observation_table,breakthrough_table,export_run,reference_curve_table
-from .transport_lab.history import add_run,retain_runs,sync_series,SHORT_METHOD
-from .transport_lab import plots
+from .transport_lab.history import add_run,retain_runs,sync_series,SHORT_METHOD,run_label
+from .transport_lab import plots, __version__
+from .transport_lab.animation_controls import animation_panel
 from .transport_lab.figure_io import show_figure, svg_figure, SCRIPT_FONTS
 
 ROOT=Path(__file__).resolve().parent
@@ -45,21 +46,37 @@ def show(fig):
     t.figure(fig);show_figure(fig,language);plt.close(fig)
 
 
-def _remember_view(key):st.session_state.setdefault('_view_values',{})[key]=st.session_state[key]
+def _remember_view(key):
+    # Several browser changes can be dispatched together. An earlier callback
+    # may have removed this run/widget; that obsolete event must not revive it.
+    try:value=st.session_state[key]
+    except KeyError:return
+    st.session_state.setdefault('_view_values',{})[key]=value
 
 
 def view(kind,label,key,default,**kwargs):
     stored=st.session_state.setdefault('_view_values',{})
-    if key not in st.session_state:st.session_state[key]=stored.get(key,default)
+    help_key='help_'+key
+    for prefix,name in [('view_time_','view_time'),('view_layer_','view_layer'),('section_x_','section'),('section_y_','section')]:
+        if key.startswith(prefix):help_key='help_'+name;break
+    if 'help' not in kwargs and help_key in t.entries:kwargs['help']=t(help_key)
+    # Rebind from the canonical value, just like model-input widgets. Hidden
+    # widgets can otherwise expose an older value left under the user key.
+    st.session_state[key]=stored.get(key,st.session_state.get(key,default))
     if 'options' in kwargs:
         options=kwargs['options']
         if kind=='multiselect':st.session_state[key]=[x for x in st.session_state[key] if x in options]
         elif st.session_state[key] not in options:st.session_state[key]=default
-    return getattr(st,kind)(t(label),key=key,on_change=_remember_view,args=(key,),**kwargs)
+    result=getattr(st,kind)(t(label),key=key,on_change=_remember_view,args=(key,),**kwargs)
+    # Keep the returned value even if no callback ran (initial render/reconnect).
+    stored[key]=result
+    return result
 
 
 def discard_run_tags():
-    retain_runs(st.session_state,st.session_state.get('retained_runs',[]))
+    try:names=st.session_state['retained_runs']
+    except KeyError:return
+    retain_runs(st.session_state,names)
 
 
 def local_frame(frame):
@@ -117,7 +134,8 @@ engines=find_engines();required=['mf2005','mt3dms']+(['mp7'] if c.track_particle
 missing=[n for n in required if not engines.get(n)]
 if missing:st.warning(t('missing_executables',names=', '.join(missing)))
 with st.container(key='run_label_panel'):
-    label=st.text_input(t('Optional run label'),max_chars=60,key='run_label',placeholder=t('label_placeholder'))
+    label=st.text_input(t('Optional run label'),max_chars=60,key='run_label',
+                       placeholder=run_label(st.session_state.next_run,c),help=t('help_run_label'))
 st.markdown('<style>'+run_label_css(label)+'</style>',unsafe_allow_html=True)
 full=len(st.session_state.history)>=10
 if full:st.info(t('history_full'))
@@ -242,5 +260,6 @@ if entries:
             with st.spinner(t('Preparing archive…')):st.session_state.export_bytes=(active,export_run(run))
         cached=st.session_state.get('export_bytes')
         if cached and cached[0]==active:st.download_button(t('Download run archive (ZIP)'),cached[1],'transport_run.zip','application/zip')
+    animation_panel(run,active,t,view)
 else:st.info(t('no_runs'))
-st.caption(t('footer'))
+st.caption(t('footer',version=__version__))

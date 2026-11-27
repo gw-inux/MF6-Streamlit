@@ -17,7 +17,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 BLUE = '#2563a6'
 ORANGE = '#cc6c24'
 REFERENCE = '#a12f78'
-PARTICLE = '#176b53'
+PARTICLE = '#123b75'
 PLUME_CMAP=colors.LinearSegmentedColormap.from_list('plume',['#ffffff','#eef6fc','#abd2e8','#4393c3','#2166ac','#ef8a62','#b2182b'])
 SIGNED_CMAP=colors.LinearSegmentedColormap.from_list('signed_plume',[(0.,'#542788'),(.25,'#b2abd2'),(.5,'#ffffff'),(.6,'#eef6fc'),(.72,'#4393c3'),(.86,'#ef8a62'),(1.,'#b2182b')])
 
@@ -279,8 +279,8 @@ def _particles(ax,paths,plane,lower,upper):
     for path in paths:
         mask=(path[:,f]>=lower-1e-8)&(path[:,f]<=upper+1e-8)
         xx=np.where(mask,path[:,a],np.nan);yy=np.where(mask,path[:,b],np.nan)
-        ax.plot(xx,yy,color=PARTICLE,lw=.55,alpha=.48,zorder=4)
-        if mask[-1]:ax.plot(xx[-1],yy[-1],'.',color=PARTICLE,ms=2.2,alpha=.8,zorder=5)
+        ax.plot(xx,yy,color=PARTICLE,lw=.32,alpha=.35,zorder=4)
+        if mask[-1]:ax.plot(xx[-1],yy[-1],'o',color=PARTICLE,ms=4.2,mec=PARTICLE,mew=0,alpha=1.,zorder=6)
 
 
 def plume_focus_limits(cfg, fields, paths=(), layer=0, threshold_percent=.1, padding=.2):
@@ -394,7 +394,7 @@ def _model_grid(ax,xedges,yedges=None):
 def plume_figure(run,time_index,layer=0,y_section=None,x_section=None,fill=True,
                  contours=True,opacity=.65,log=False,reference=None,
                  show_particles=True,comparison=None,observations=None,compare_top=False,show_heads=True,
-                 focus=False,focus_threshold=.1,show_grid=False,relative=False):
+                 focus=False,focus_threshold=.1,show_grid=False,relative=False,colour_scale=None):
     """Plan plume and two user-positioned sections/profiles.
 
     `reference` is a concentration cube on the active run's grid. `comparison`
@@ -419,7 +419,7 @@ def plume_figure(run,time_index,layer=0,y_section=None,x_section=None,fill=True,
     arrays=[c]
     if reference is not None:arrays.append(reference)
     arrays.extend(r.concentration[i] for r,i,k in comparisons)
-    norm,levels=_levels(arrays,log)
+    norm,levels=colour_scale if colour_scale is not None else _levels(arrays,log)
     fig=plt.figure(figsize=(10,7.3),layout='constrained')
     gs=fig.add_gridspec(2,2,height_ratios=(1.25,1))
     top=fig.add_subplot(gs[0,:]);xa=fig.add_subplot(gs[1,0]);ya=fig.add_subplot(gs[1,1])
@@ -445,7 +445,7 @@ def plume_figure(run,time_index,layer=0,y_section=None,x_section=None,fill=True,
     paths=_path_arrays(run,time) if show_particles else []
     if paths:
         _particles(top,paths,'xy',cfg.z_edges[layer+1],cfg.z_edges[layer])
-        handles.append(Line2D([],[],color=PARTICLE,lw=1));labels.append('MODPATH advection (slice)')
+        handles.append(Line2D([],[],color=PARTICLE,lw=.32,marker='o',ms=4.2,mec=PARTICLE,mew=0));labels.append('MODPATH advection (slice)')
     for i,(x,y,z) in enumerate(cfg.observations if observations is None else observations):
         top.plot(x,y,'x',color='black',ms=5,zorder=7)
         top.annotate(f'P{i+1}',(x,y),xytext=(4,4),textcoords='offset points',fontsize=7,zorder=7)

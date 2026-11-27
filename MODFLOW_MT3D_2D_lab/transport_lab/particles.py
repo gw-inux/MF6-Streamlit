@@ -39,6 +39,18 @@ def _local_points(number, dimensions=3):
             factors[np.argmin(factors)] *= divisor
             remainder //= divisor
         divisor += 1
+    if factors.max()/factors.min()>3:
+        # Prime counts must not collapse onto one row. Partition the unit cell
+        # into equal-volume boxes and use their centres; no random jitter.
+        def partition(low, high, count):
+            if count==1:return [(low+high)/2]
+            axis=int(np.argmax(high-low));left=count//2
+            cut=low[axis]+(high[axis]-low[axis])*left/count
+            upper=high.copy();upper[axis]=cut
+            lower=low.copy();lower[axis]=cut
+            return partition(low,upper,left)+partition(lower,high,count-left)
+        points=np.asarray(partition(np.zeros(dimensions),np.ones(dimensions),number))
+        return np.column_stack([points,np.full(number,.5)]) if dimensions==2 else points
     axes = [(np.arange(n) + 0.5) / n for n in factors]
     if dimensions == 2:
         axes.append(np.array([0.5]))
@@ -64,16 +76,27 @@ def build_releases(config):
     initially uniform concentration or pore-volume-weighted mass loading.
     """
     cells = config.source_cells()
-    n = int(config.particles_per_cell)
-    points = _local_points(n, dimensions=2 if config.nlay == 1 else 3)
+    total = config.source_particle_count
+    if total is None:
+        counts=np.full(len(cells),int(config.particles_per_cell),dtype=int)
+    else:
+        if total<len(cells):raise ValueError('Use at least one MODPATH particle per source cell.')
+        counts=np.full(len(cells),total//len(cells),dtype=int)
+        remainder=total%len(cells)
+        if remainder:
+            # Distribute the extra particles over the complete source footprint.
+            extra=((np.arange(remainder)+.5)*len(cells)/remainder).astype(int)
+            counts[extra]+=1
+    cell_points=[_local_points(int(n),dimensions=2 if config.nlay==1 else 3) for n in counts]
     times, masses = release_schedule(config)
-    if len(cells) * n * len(times) > 100_000:
+    if counts.sum() * len(times) > 100_000:
         raise ValueError('Reduce source size, particles per cell, or release groups (100,000 particles maximum).')
     porosity = config.arrays()[2]
     pore_volumes = np.array([porosity[k, i, j] * config.dx * config.dy * config.dz for k, i, j in cells])
     fractions = pore_volumes / pore_volumes.sum()
-    partlocs = [cell for cell in cells for _ in range(n)]
-    local = np.tile(points, (len(cells), 1))
+    partlocs = [cell for cell,n in zip(cells,counts) for _ in range(n)]
+    local = np.vstack(cell_points)
+    offsets=np.r_[0,np.cumsum(counts)]
     groups, records = [], []
     for group, (release_time, mass) in enumerate(zip(times, masses)):
         pdata = flopy.modpath.ParticleData(
@@ -84,9 +107,10 @@ def build_releases(config):
             particlegroupname=f'release_{group+1}', releasedata=float(release_time), particledata=pdata,
         ))
         for cell_idx, (k, i, j) in enumerate(cells):
+            points=cell_points[cell_idx];n=counts[cell_idx]
             for p, (lx, ly, lz) in enumerate(points):
                 records.append({
-                    'particlegroup': group, 'particleidloc': cell_idx * n + p,
+                    'particlegroup': group, 'particleidloc': int(offsets[cell_idx] + p),
                     'release_time': float(release_time), 'weight_g': float(mass * fractions[cell_idx] / n),
                     'x0': (j + lx) * config.dx,
                     'y0': config.width - (i + 1 - ly) * config.dy,

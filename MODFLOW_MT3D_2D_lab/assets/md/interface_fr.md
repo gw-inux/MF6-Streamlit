@@ -65,7 +65,7 @@ L'archive contient entrées, journaux, concentrations, charges, bilans et partic
 Lancez l'expérience de base avec un créneau pour voir panache, profils, courbes et comparaison des méthodes.
 
 <!-- key: footer -->
-MT3D 2D/3D · v0.5.1 · Version de travail pour l'enseignement en direct
+MT3D 2D/3D · v{version} · Version de travail pour l'enseignement en direct · Développé par Thomas Reimann · TU Dresden · The Groundwater Project
 
 <!-- key: transient_hint -->
 Le champ initial s'équilibre ; la charge à droite change à t = 0.
@@ -1014,3 +1014,465 @@ Profil y à x′ = {x:.3g} m
 
 <!-- key: fig_relative_section -->
 Coupe {axis}–z à {other}′ = {value:.3g} m
+
+<!-- key: MODPATH particle count -->
+Nombre de particules MODPATH
+
+<!-- key: particle_count_cell -->
+Par cellule source
+
+<!-- key: particle_count_total -->
+Source entière par lâcher
+
+<!-- key: Particles in the whole source per release -->
+Particules dans toute la source par lâcher
+
+<!-- key: particle_count_summary -->
+{count} particules dans {cells} cellules sources × {groups} lâchers = {total} particules.
+
+<!-- key: expert_transport_hint -->
+Tous les réglages du solveur de transport sont visibles. NPL / NPH et NPMIN / NPMAX contrôlent les particules MOC / HMOC ; MXPART limite leur total. Les aides précisent les méthodes concernées. MODPATH utilise des particules distinctes.
+
+<!-- key: Plume animation -->
+Animation du panache
+
+<!-- key: Animation view -->
+Vue de l’animation
+
+<!-- key: animation_2d -->
+Vue en plan et coupes
+
+<!-- key: animation_3d -->
+Concentrations 3D aux centres des cellules
+
+<!-- key: Animation frames -->
+Images de l’animation
+
+<!-- key: Playback speed (frames/s) -->
+Vitesse (images/s)
+
+<!-- key: Vertical exaggeration -->
+Exagération verticale
+
+<!-- key: Generate / refresh animation -->
+Générer / actualiser l’animation
+
+<!-- key: Generating animation… -->
+Création de l’animation…
+
+<!-- key: Download animation (HTML) -->
+Télécharger l’animation (HTML)
+
+<!-- key: Play -->
+Lire
+
+<!-- key: Pause -->
+Pause
+
+<!-- key: Animation frame -->
+Image de l’animation
+
+<!-- key: animation_layers_hint -->
+Ajoutez des couches dans les réglages experts pour la vue 3D.
+
+<!-- key: animation_hint -->
+Utilise les instants enregistrés du calcul affiché. Choisissez ci-dessous les couleurs et le zoom propres à l’animation ; l’échelle reste fixe dans le temps. Les autres paramètres 2D sont conservés. Comparaisons et références analytiques restent dans les figures statiques. Le lecteur apparaît sous les paramètres ; le fichier HTML téléchargé fonctionne hors ligne.
+
+<!-- key: animation_3d_hint -->
+La vue 3D montre les concentrations aux centres des cellules au-dessus du seuil, avec caméra fixe. Au plus {maximum} cellules régulièrement échantillonnées sont affichées ; calculs et exports conservent toutes les cellules. Les particules comparent l’advection. L’exagération est uniquement visuelle.
+
+<!-- key: animation_refresh_hint -->
+Les réglages ont changé. Générez à nouveau pour actualiser le lecteur.
+
+<!-- key: animation_failed -->
+Impossible de créer l’animation. Les résultats restent conservés.
+
+<!-- key: animation_size_limit -->
+L’animation dépasse 45 Mio. Réduisez le nombre d’images.
+
+<!-- key: help_s_percel -->
+Déplacement advectif maximal par pas, en largeurs de cellule. TVD exige ≤ 1.
+
+<!-- key: help_s_mxpart -->
+MOC/HMOC : capacité totale de particules mobiles, non par cellule.
+
+<!-- key: help_s_itrack -->
+MOC/MMOC/HMOC : 1 = Euler, 2 = Runge–Kutta d’ordre 4, 3 = suivi hybride.
+
+<!-- key: help_s_wd -->
+Méthodes caractéristiques : pondération de concentration lors du fractionnement ; 0,5–1.
+
+<!-- key: help_s_dceps -->
+MOC/HMOC : seuil du gradient relatif séparant les placements NPL et NPH.
+
+<!-- key: help_s_nplane -->
+MOC/HMOC : 0 = placement aléatoire ; positif = plans horizontaux par cellule.
+
+<!-- key: help_s_npl -->
+MOC/HMOC : particules initiales par cellule à gradient ≤ DCEPS ; zéro permis.
+
+<!-- key: help_s_nph -->
+MOC/HMOC : particules initiales par cellule à fort gradient. Les motifs fixes peuvent arrondir ce nombre.
+
+<!-- key: help_s_npmin -->
+MOC/HMOC : ajout de particules sous ce minimum par cellule.
+
+<!-- key: help_s_npmax -->
+MOC/HMOC : au-delà, remplacement des particules de la cellule par un ensemble de taille NPH.
+
+<!-- key: help_s_interp -->
+MMOC/HMOC : interpolation de concentration ; seule 1 (linéaire) est disponible.
+
+<!-- key: help_s_nlsink -->
+Cellules puits MMOC/HMOC : 0 = aléatoire ; positif = plans de particules.
+
+<!-- key: help_s_npsink -->
+MMOC/HMOC : particules représentant chaque cellule puits.
+
+<!-- key: help_s_dchmoc -->
+HMOC : MOC au-dessus de ce seuil de gradient relatif, MMOC en dessous.
+
+<!-- key: help_s_mxiter -->
+Limite d’itérations externes GCG. Une suffit pour ce transport conservatif linéaire.
+
+<!-- key: help_s_iter1 -->
+Limite d’itérations internes GCG pour les équations de transport.
+
+<!-- key: help_s_isolve -->
+Préconditionneur GCG : 1 = Jacobi, 2 = SSOR, 3 = Cholesky incomplet modifié (MIC).
+
+<!-- key: help_s_ncrs -->
+Termes croisés : 0 = approximation au second membre ; 1 = tenseur complet dans la matrice.
+
+<!-- key: help_s_accl -->
+Facteur de relaxation, uniquement pour SSOR (ISOLVE = 2).
+
+<!-- key: help_s_cclose -->
+Tolérance relative de variation de concentration GCG. Une valeur plus petite est plus stricte.
+
+<!-- key: help_s_iprgcg -->
+Imprime les variations toutes les N itérations GCG ; 0 en fin de période.
+
+<!-- key: help_s_dt0 -->
+Pas initial en jours ; 0 laisse MT3D le choisir.
+
+<!-- key: help_s_ttsmult -->
+Multiplicateur des pas pour les différences finies implicites ; ignoré par TVD et les caractéristiques.
+
+<!-- key: help_s_ttsmax -->
+Pas maximal en jours si TTSMULT > 1 ; 0 utilise la limite automatique.
+
+<!-- key: help_s_mxstrn -->
+Nombre maximal de pas de transport par pas d’écoulement ; la limite peut arrêter le calcul.
+
+<!-- key: help_s_timeout -->
+Durée maximale par exécutable. Plus de particules peuvent nécessiter plus de temps.
+
+<!-- key: help_s_hclose -->
+Tolérance PCG de variation de charge, en mètres.
+
+<!-- key: help_s_rclose -->
+Tolérance du résidu de débit PCG, en m³/jour.
+
+<!-- key: help_s_flow_mxiter -->
+Itérations externes maximales du solveur d’écoulement MODFLOW PCG.
+
+<!-- key: help_s_flow_iter1 -->
+Itérations internes PCG maximales par itération externe.
+
+<!-- key: help_particle_count_mode -->
+Choisir par cellule source ou un total exact pour toute la source à chaque lâcher.
+
+<!-- key: help_particles_per_cell -->
+Particules réparties régulièrement dans chaque cellule source à chaque lâcher. MODPATH uniquement, pas MOC.
+
+<!-- key: help_total_source_particles -->
+Total exact par lâcher sur toutes les cellules sources ; au moins une par cellule. Écart maximal d’une particule entre cellules ; masses pondérées par volume poreux.
+
+<!-- key: help_release_groups -->
+Lâchers aux milieux d’intervalles égaux pour impulsion ou apport continu. Plus de groupes affinent le temps ; Dirac utilise t = 0.
+
+<!-- key: help_run_label -->
+Laisser vide pour le nom suggéré. Un libellé remplace méthode/signal ; numéro et suffixe hétérogène restent automatiques.
+
+<!-- key: help_expert -->
+Afficher les couches et tous les paramètres des solveurs. Les valeurs masquées sont conservées.
+
+<!-- key: help_sliders -->
+Changer entre champs numériques et curseurs sans modifier les valeurs.
+
+<!-- key: help_extent -->
+Étendue physique en mètres. La modifier commence une nouvelle série.
+
+<!-- key: help_thickness -->
+Épaisseur captive ; base à 0 m, sommet à cette valeur. Couches d’épaisseur égale.
+
+<!-- key: help_grid_mode -->
+Fixer le nombre ou la largeur maximale des cellules. Le nombre est arrondi vers le haut en conservant le domaine.
+
+<!-- key: help_grid_count -->
+Nombre de cellules uniformes dans cette direction. Les calculs précédents sont conservés.
+
+<!-- key: help_cell_width -->
+Largeur maximale souhaitée en mètres. L’aperçu donne la largeur uniforme réelle.
+
+<!-- key: help_nlay -->
+Une couche donne un modèle en plan ; plusieurs couches égales permettent transport vertical et vues 3D.
+
+<!-- key: help_k -->
+Conductivité hydraulique horizontale de fond. Saisie en m/s, conversion en m/jour.
+
+<!-- key: help_porosity -->
+Fraction poreuse mobile ; contrôle vitesse interstitielle et stockage du soluté.
+
+<!-- key: help_ss -->
+Eau libérée par volume et baisse unitaire de charge (1/m). Aucun stockage en régime permanent ici.
+
+<!-- key: help_kv_ratio -->
+Conductivité verticale divisée par l’horizontale, dans chaque couche.
+
+<!-- key: help_zones_preset -->
+Choisir homogénéité, champ aléatoire reproductible ou lentille/chenal/barrière.
+
+<!-- key: help_zone_seed -->
+Graine aléatoire. Mêmes graine et réglages reproduisent le motif physique.
+
+<!-- key: help_random_unit -->
+Taille physique des blocs aléatoires dans cette direction, indépendante du maillage.
+
+<!-- key: help_random_k -->
+Bornes de conductivité aléatoire, tirage uniforme en espace logarithmique (m/s).
+
+<!-- key: help_random_ss -->
+Bornes du stockage spécifique log-uniforme (1/m). Conservé, inactif en écoulement permanent.
+
+<!-- key: help_random_por -->
+Bornes de porosité efficace uniforme, entre zéro et un.
+
+<!-- key: help_head -->
+Charge imposée sur cette colonne externe. Gauche supérieure à droite ; les deux au-dessus du toit.
+
+<!-- key: help_duration -->
+Durée totale du transport en jours, indépendante de la vitesse de l’animation.
+
+<!-- key: help_dispersion -->
+Inclure l’étalement mécanique proportionnel à la vitesse interstitielle. Sans cela restent advection et dispersion numérique.
+
+<!-- key: help_al -->
+Dispersivité longitudinale en mètres ; coefficient associé = αL × vitesse.
+
+<!-- key: help_trpt -->
+Dispersivité transversale horizontale divisée par longitudinale : αTH/αL.
+
+<!-- key: help_trpv -->
+Dispersivité transversale verticale divisée par longitudinale : αTV/αL. Utile en multicouche.
+
+<!-- key: help_source_kind -->
+Dirac : masse initiale à t = 0. Impulsion : apport constant jusqu’à sa fin. Continu : apport constant tout le calcul.
+
+<!-- key: help_source_mass -->
+Masse dissoute initiale répartie dans le volume poreux source (grammes).
+
+<!-- key: help_mass_rate -->
+Apport total (g/jour), réparti selon le volume poreux source. Aucune injection d’eau.
+
+<!-- key: help_pulse_duration -->
+L’apport cesse après ce temps (jours), inférieur à la durée totale.
+
+<!-- key: help_source_position -->
+Coordonnée absolue du centre source en mètres, ramenée à une cellule. Éviter les colonnes à charge imposée.
+
+<!-- key: help_source_cells -->
+Nombre de cellules sources dans cette direction. Vérifier l’emprise ; changer la géométrie commence une nouvelle série.
+
+<!-- key: help_source_all_layers -->
+Répartir la source sur toutes les couches, sinon sur la seule couche choisie.
+
+<!-- key: help_src_layer -->
+Couche recevant la source ; 1 est la couche supérieure.
+
+<!-- key: help_method -->
+Choisir l’advection MT3D : FD amont/centré, TVD, MOC avant, MMOC arrière ou HMOC hybride. Indépendant de MODPATH.
+
+<!-- key: help_track_particles -->
+Exécuter MODPATH 7 dans l’écoulement calculé. Advection seule, sans dispersion ni concentration calculée par MODPATH.
+
+<!-- key: help_observation -->
+Coordonnée absolue d’observation en mètres. Concentration de la cellule contenant le point, sans interpolation.
+
+<!-- key: help_nobs -->
+Comparer les concentrations en un à cinq points avec les calculs sauvegardés.
+
+<!-- key: help_outputs -->
+Temps sauvegardés, dont t = 0 ; fin d’impulsion aussi conservée. Plus de sorties affinent animation et courbes, pas les pas du solveur.
+
+<!-- key: help_length -->
+Étendue physique en mètres. La modifier commence une nouvelle série.
+
+<!-- key: help_width -->
+Étendue physique en mètres. La modifier commence une nouvelle série.
+
+<!-- key: help_ncol -->
+Nombre de cellules uniformes dans cette direction. Les calculs précédents sont conservés.
+
+<!-- key: help_nrow -->
+Nombre de cellules uniformes dans cette direction. Les calculs précédents sont conservés.
+
+<!-- key: help_cell_x -->
+Largeur maximale souhaitée en mètres. L’aperçu donne la largeur uniforme réelle.
+
+<!-- key: help_cell_y -->
+Largeur maximale souhaitée en mètres. L’aperçu donne la largeur uniforme réelle.
+
+<!-- key: help_random_unit_x -->
+Taille physique des blocs aléatoires dans cette direction, indépendante du maillage.
+
+<!-- key: help_random_unit_y -->
+Taille physique des blocs aléatoires dans cette direction, indépendante du maillage.
+
+<!-- key: help_zone_k_min -->
+Bornes de conductivité aléatoire, tirage uniforme en espace logarithmique (m/s).
+
+<!-- key: help_zone_k_max -->
+Bornes de conductivité aléatoire, tirage uniforme en espace logarithmique (m/s).
+
+<!-- key: help_zone_ss_min -->
+Bornes du stockage spécifique log-uniforme (1/m). Conservé, inactif en écoulement permanent.
+
+<!-- key: help_zone_ss_max -->
+Bornes du stockage spécifique log-uniforme (1/m). Conservé, inactif en écoulement permanent.
+
+<!-- key: help_zone_por_min -->
+Bornes de porosité efficace uniforme, entre zéro et un.
+
+<!-- key: help_zone_por_max -->
+Bornes de porosité efficace uniforme, entre zéro et un.
+
+<!-- key: help_head_left -->
+Charge imposée sur cette colonne externe. Gauche supérieure à droite ; les deux au-dessus du toit.
+
+<!-- key: help_head_right -->
+Charge imposée sur cette colonne externe. Gauche supérieure à droite ; les deux au-dessus du toit.
+
+<!-- key: help_src_x -->
+Coordonnée absolue du centre source en mètres, ramenée à une cellule. Éviter les colonnes à charge imposée.
+
+<!-- key: help_src_y -->
+Coordonnée absolue du centre source en mètres, ramenée à une cellule. Éviter les colonnes à charge imposée.
+
+<!-- key: help_src_ncol -->
+Nombre de cellules sources dans cette direction. Vérifier l’emprise ; changer la géométrie commence une nouvelle série.
+
+<!-- key: help_src_nrow -->
+Nombre de cellules sources dans cette direction. Vérifier l’emprise ; changer la géométrie commence une nouvelle série.
+
+<!-- key: help_animation_mode -->
+2D anime plan et coupes. 3D montre les concentrations calculées aux centres, avec vue fixe ; plusieurs couches nécessaires.
+
+<!-- key: help_animation_frames -->
+Jusqu’à 80 états sauvegardés, premier et dernier compris. Pas d’interpolation temporelle des concentrations.
+
+<!-- key: help_animation_fps -->
+Images par seconde réelle. Chaque image indique le temps simulé ; la lecture ne change pas le modèle.
+
+<!-- key: help_animation_exaggeration -->
+Étirer visuellement la hauteur 3D. Altitudes et calculs restent inchangés.
+
+<!-- key: help_generate_animation -->
+Rendu à la demande des résultats sauvegardés. Régénérer après réglage ; sans relancer le modèle.
+
+<!-- key: help_view_time -->
+Choisir un temps sauvegardé, sans relancer le modèle.
+
+<!-- key: help_view_layer -->
+Couche affichée en plan ; 1 est en haut.
+
+<!-- key: help_section -->
+Position absolue en mètres, dans la ligne/colonne contenant la coordonnée. Les axes relatifs ne déplacent pas la coupe.
+
+<!-- key: help_fill -->
+Colorer les cellules selon la concentration ; le zéro reste blanc.
+
+<!-- key: help_lines -->
+Tracer les isolignes de concentration sur les couleurs.
+
+<!-- key: help_show_heads -->
+Superposer les isopièzes calculées fines, étiquetées en mètres.
+
+<!-- key: help_log -->
+Couleurs logarithmiques pour concentrations positives. Valeurs non positives masquées uniquement à l’affichage.
+
+<!-- key: help_particle_paths -->
+Afficher positions et trajectoires MODPATH jusqu’au temps choisi. Maximum 120 trajectoires affichées ; exports complets.
+
+<!-- key: help_opacity -->
+Opacité : 1 est opaque ; plus petit révèle les éléments sous-jacents.
+
+<!-- key: help_focus_plume -->
+Zoom sur le panache positif et les trajectoires avec marge. Animation dans une fenêtre fixe sur les temps choisis.
+
+<!-- key: help_focus_threshold -->
+Zoom statique : pourcentage du pic du panache. En animation 3D : pourcentage du maximum absolu de l’échelle fixe pour afficher les cellules.
+
+<!-- key: help_analytical -->
+Comparer à la référence analytique homogène permanente. Écoulements hétérogènes ou transitoires hors hypothèses.
+
+<!-- key: help_compare -->
+Comparer les calculs au temps disponible le plus proche, aux coupes du calcul affiché.
+
+<!-- key: help_analytic_on -->
+Comparer à la référence analytique homogène permanente. Écoulements hétérogènes ou transitoires hors hypothèses.
+
+<!-- key: help_btc_analytical -->
+Comparer à la référence analytique homogène permanente. Écoulements hétérogènes ou transitoires hors hypothèses.
+
+<!-- key: help_compare_sections -->
+Comparer les calculs au temps disponible le plus proche, aux coupes du calcul affiché.
+
+<!-- key: help_overlay_runs -->
+Comparer les calculs au temps disponible le plus proche, aux coupes du calcul affiché.
+
+<!-- key: help_compare_top -->
+Comparer les calculs au temps disponible le plus proche, aux coupes du calcul affiché.
+
+<!-- key: help_btc_runs -->
+Comparer les concentrations en un à cinq points avec les calculs sauvegardés.
+
+<!-- key: Animation settings -->
+Paramètres de l’animation
+
+<!-- key: Animation colour scale -->
+Échelle de couleurs de l’animation
+
+<!-- key: animation_colour_enhanced -->
+Faibles concentrations renforcées (échelle fixe)
+
+<!-- key: animation_colour_linear -->
+Linéaire (échelle fixe)
+
+<!-- key: animation_colour_log -->
+Logarithmique (échelle fixe)
+
+<!-- key: help_animation_colour -->
+Le renforcement utilise une transformation puissance (exposant 0,35) pour révéler les faibles concentrations. Toutes les images conservent les mêmes limites physiques de concentration ; zéro reste blanc. Les échelles linéaire et renforcée montrent les valeurs numériques négatives ; l’échelle logarithmique masque les valeurs non positives. Les données calculées ne changent pas.
+
+<!-- key: Zoom animation to plume -->
+Zoomer l’animation sur le panache
+
+<!-- key: help_animation_focus -->
+Un cadrage fixe englobe le panache positif et les trajectoires MODPATH affichées à tous les instants sélectionnés, avec une marge de 20 %. Indépendant du zoom statique. Désactiver pour voir tout le domaine. Disponible en 2D et 3D.
+
+<!-- key: Plume threshold (% of peak) -->
+Seuil du panache (% du maximum)
+
+<!-- key: help_animation_threshold -->
+Le zoom inclut les concentrations supérieures à ce pourcentage du maximum positif de chaque image. En 3D, ce seuil définit aussi les cellules affichées par rapport à la concentration absolue maximale de l’échelle fixe. Valeur initiale : 0,1 %. Effet uniquement visuel.
+
+<!-- key: animation_progress -->
+Création de l’animation… {percent} %
+
+<!-- key: MODPATH settings -->
+Paramètres MODPATH
+
+<!-- key: expert_transport_location_hint -->
+Les paramètres experts MT3D se trouvent dans le volet dépliable séparé **Paramètres experts du solveur de transport**, juste en dessous. Les paramètres MODPATH viennent ensuite.

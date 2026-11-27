@@ -65,7 +65,7 @@ x = {x0:.2f}–{x1:.2f} m; y = {y0:.2f}–{y1:.2f} m; z = {z0:.2f}–{z1:.2f} m.
 运行默认脉冲实验，以查看羽流、剖面、突破曲线及方法比较。
 
 <!-- key: footer -->
-MT3D 二维/三维 · v0.5.1 · 课堂教学工作版本
+MT3D 二维/三维 · v{version} · 课堂教学工作版本 · 开发者： Thomas Reimann · TU Dresden · The Groundwater Project
 
 <!-- key: transient_hint -->
 初始流场先达到平衡，右侧水头在 t = 0 时改变。
@@ -1014,3 +1014,465 @@ x′ = {x:.3g} m 处的 y 向剖面
 
 <!-- key: fig_relative_section -->
 {other}′ = {value:.3g} m 处的 {axis}–z 剖面
+
+<!-- key: MODPATH particle count -->
+MODPATH 粒子数量
+
+<!-- key: particle_count_cell -->
+每个源单元
+
+<!-- key: particle_count_total -->
+每次释放的整个源区
+
+<!-- key: Particles in the whole source per release -->
+整个源区每次释放的粒子数
+
+<!-- key: particle_count_summary -->
+{cells} 个源单元中共 {count} 个粒子 × {groups} 次释放 = {total} 个粒子。
+
+<!-- key: expert_transport_hint -->
+显示全部运移求解器设置。NPL / NPH 和 NPMIN / NPMAX 控制 MOC / HMOC 粒子；MXPART 限制其总数。帮助说明适用方法。MODPATH 使用独立粒子。
+
+<!-- key: Plume animation -->
+羽流动画
+
+<!-- key: Animation view -->
+动画视图
+
+<!-- key: animation_2d -->
+俯视图和剖面
+
+<!-- key: animation_3d -->
+单元中心的三维浓度
+
+<!-- key: Animation frames -->
+动画帧数
+
+<!-- key: Playback speed (frames/s) -->
+播放速度（帧/秒）
+
+<!-- key: Vertical exaggeration -->
+垂向放大倍数
+
+<!-- key: Generate / refresh animation -->
+生成／更新动画
+
+<!-- key: Generating animation… -->
+正在生成动画…
+
+<!-- key: Download animation (HTML) -->
+下载动画（HTML）
+
+<!-- key: Play -->
+播放
+
+<!-- key: Pause -->
+暂停
+
+<!-- key: Animation frame -->
+动画帧
+
+<!-- key: animation_layers_hint -->
+在专家设置中添加分层以使用三维视图。
+
+<!-- key: animation_hint -->
+使用当前显示算例的已保存时刻。可在下方单独选择动画颜色和缩放；色标在各时刻保持一致。保留其他二维绘图设置。算例比较和解析参考仍在静态图中显示。生成的播放器显示在设置下方；下载的 HTML 文件可离线播放。
+
+<!-- key: animation_3d_hint -->
+三维视图以固定视角显示超过阈值的单元中心浓度。最多均匀采样显示 {maximum} 个单元；计算和导出保留全部单元。粒子用于平流比较。垂向放大仅影响显示。
+
+<!-- key: animation_refresh_hint -->
+设置已更改。请重新生成以更新播放器。
+
+<!-- key: animation_failed -->
+无法生成动画。模型结果已保留。
+
+<!-- key: animation_size_limit -->
+动画超过 45 MiB。请选择更少帧后重新生成。
+
+<!-- key: help_s_percel -->
+每步最大平流距离，以单元宽度计。TVD 要求 ≤ 1。
+
+<!-- key: help_s_mxpart -->
+MOC/HMOC：移动粒子总容量，并非每个单元的粒子数。
+
+<!-- key: help_s_itrack -->
+MOC/MMOC/HMOC：1 = 欧拉，2 = 四阶龙格–库塔，3 = 混合追踪。
+
+<!-- key: help_s_wd -->
+特征线方法：算子分裂中的浓度权重，0.5–1。
+
+<!-- key: help_s_dceps -->
+MOC/HMOC：区分 NPL 与 NPH 布置的相对浓度梯度阈值。
+
+<!-- key: help_s_nplane -->
+MOC/HMOC：0 = 随机布置；正值 = 每单元的水平粒子平面数。
+
+<!-- key: help_s_npl -->
+MOC/HMOC：梯度 ≤ DCEPS 的单元内初始粒子数；允许为零。
+
+<!-- key: help_s_nph -->
+MOC/HMOC：高梯度单元内初始粒子数。固定布置可能调整该数量。
+
+<!-- key: help_s_npmin -->
+MOC/HMOC：单元粒子数低于此下限时添加粒子。
+
+<!-- key: help_s_npmax -->
+MOC/HMOC：超过此上限时，将该单元粒子替换为 NPH 个粒子。
+
+<!-- key: help_s_interp -->
+MMOC/HMOC：浓度插值；仅支持 1（线性）。
+
+<!-- key: help_s_nlsink -->
+MMOC/HMOC 汇单元：0 = 随机布置；正值 = 粒子平面数。
+
+<!-- key: help_s_npsink -->
+MMOC/HMOC：代表每个汇单元的粒子数。
+
+<!-- key: help_s_dchmoc -->
+HMOC：高于相对梯度阈值使用 MOC，否则使用 MMOC。
+
+<!-- key: help_s_mxiter -->
+GCG 外迭代上限。本线性保守运移模型一次即可。
+
+<!-- key: help_s_iter1 -->
+求解运移方程的 GCG 内迭代上限。
+
+<!-- key: help_s_isolve -->
+GCG 预条件器：1 = Jacobi，2 = SSOR，3 = 修正不完全 Cholesky（MIC）。
+
+<!-- key: help_s_ncrs -->
+弥散交叉项：0 = 右端项近似；1 = 矩阵包含完整张量。
+
+<!-- key: help_s_accl -->
+仅供 SSOR（ISOLVE = 2）使用的松弛系数。
+
+<!-- key: help_s_cclose -->
+GCG 收敛的相对浓度变化容差。值越小要求越严格。
+
+<!-- key: help_s_iprgcg -->
+每 N 次 GCG 迭代打印浓度变化；0 表示每个应力期末打印。
+
+<!-- key: help_s_dt0 -->
+初始运移步长（天）；0 由 MT3D 自动选择。
+
+<!-- key: help_s_ttsmult -->
+隐式 FD 的连续步长倍率；TVD 和特征线方法不使用此增长控制。
+
+<!-- key: help_s_ttsmax -->
+TTSMULT > 1 时的最大步长（天）；0 使用自动上限。
+
+<!-- key: help_s_mxstrn -->
+每个流动时间步内的最大运移步数；达到上限可能停止运行。
+
+<!-- key: help_s_timeout -->
+每个原生程序的实际运行时间上限。更多粒子可能需要更多时间。
+
+<!-- key: help_s_hclose -->
+PCG 水头变化收敛容差，单位米。
+
+<!-- key: help_s_rclose -->
+PCG 流量残差收敛容差，单位 m³/天。
+
+<!-- key: help_s_flow_mxiter -->
+MODFLOW PCG 流动求解器最大外迭代次数。
+
+<!-- key: help_s_flow_iter1 -->
+每次流动外迭代的最大 PCG 内迭代次数。
+
+<!-- key: help_particle_count_mode -->
+选择每个源单元的粒子数，或每次释放整个源区的准确总数。
+
+<!-- key: help_particles_per_cell -->
+每次释放时均匀布置在每个源单元内部。仅控制 MODPATH，不控制 MOC。
+
+<!-- key: help_total_source_particles -->
+每次释放的准确总数，分布于所有源单元；每单元至少一个。单元间数量最多相差一，质量权重按孔隙体积分配。
+
+<!-- key: help_release_groups -->
+以等时间间隔中点释放近似脉冲或连续输入。增加批次可细化释放时序；Dirac 仅在 t = 0 释放一次。
+
+<!-- key: help_run_label -->
+留空使用建议名称。自定义名称替换方法／信号文字；编号和非均质后缀仍自动生成。
+
+<!-- key: help_expert -->
+显示分层控制及所有支持的流动／运移求解参数。隐藏时仍保留原值。
+
+<!-- key: help_sliders -->
+切换数字输入与滑块，不改变模型值。
+
+<!-- key: help_extent -->
+模型物理范围（米）。更改范围将开始新的比较序列。
+
+<!-- key: help_thickness -->
+承压含水层厚度；底面高程为 0 米，顶面为此值。各层等厚划分。
+
+<!-- key: help_grid_mode -->
+指定单元数量或最大宽度。宽度模式向上取整单元数，同时保持物理范围。
+
+<!-- key: help_grid_count -->
+该方向的等间距单元数。网格加密保留以前的比较运行。
+
+<!-- key: help_cell_width -->
+所需最大单元宽度（米）。预览显示实际等间距宽度。
+
+<!-- key: help_nlay -->
+单层为平面模型；多个等厚层可模拟垂向运移并显示三维视图。
+
+<!-- key: help_k -->
+背景水平渗透系数。输入 m/s，模型转换为 m/天。
+
+<!-- key: help_porosity -->
+可动孔隙体积分数；控制孔隙水速度和溶质储存。
+
+<!-- key: help_ss -->
+单位含水层体积、单位水头下降释放的水量（1/m）。本界面采用稳态流，无储水项作用。
+
+<!-- key: help_kv_ratio -->
+垂向与水平渗透系数之比，应用于每层。
+
+<!-- key: help_zones_preset -->
+选择均质属性、可重复随机场，或预设透镜体／通道／屏障。
+
+<!-- key: help_zone_seed -->
+随机种子。相同种子与设置重现相同物理分布。
+
+<!-- key: help_random_unit -->
+该方向随机块的物理尺寸，独立于数值网格加密。
+
+<!-- key: help_random_k -->
+随机渗透系数范围，在对数空间均匀采样（m/s）。
+
+<!-- key: help_random_ss -->
+对数均匀分布的比贮水量范围（1/m）。保存于模型，稳态流时不生效。
+
+<!-- key: help_random_por -->
+均匀采样的有效孔隙度范围；必须介于零与一之间。
+
+<!-- key: help_head -->
+该外侧列的指定水头。左侧须高于右侧，且两者不低于含水层顶面。
+
+<!-- key: help_duration -->
+模拟运移总时长（天），与动画播放速度无关。
+
+<!-- key: help_dispersion -->
+包含与孔隙水速度成比例的机械弥散。关闭后仅保留平流与数值扩散。
+
+<!-- key: help_al -->
+沿流向纵向弥散度（米）；对应弥散系数 = αL × 速度。
+
+<!-- key: help_trpt -->
+水平横向与纵向弥散度之比：αTH/αL。
+
+<!-- key: help_trpv -->
+垂向横向与纵向弥散度之比：αTV/αL。多层时适用。
+
+<!-- key: help_source_kind -->
+Dirac：t = 0 时的初始溶解质量。脉冲：至脉冲结束前恒定输入。连续：整个运行期间恒定输入。
+
+<!-- key: help_source_mass -->
+初始分布于源区孔隙体积中的溶解总质量（克）。
+
+<!-- key: help_mass_rate -->
+溶质总输入速率（克/天），按源区孔隙体积分配。不注入水。
+
+<!-- key: help_pulse_duration -->
+在此时间（天）后停止输入，须小于总运移时长。
+
+<!-- key: help_source_position -->
+源中心绝对坐标（米），吸附到模型单元。源区不能占用指定水头列。
+
+<!-- key: help_source_cells -->
+该方向源单元数。请检查实际源范围；更改源几何将开启新序列。
+
+<!-- key: help_source_all_layers -->
+将源分布于全部层，否则仅使用所选层。
+
+<!-- key: help_src_layer -->
+源所在层；1 为最上层。
+
+<!-- key: help_method -->
+选择 MT3D 平流方法：FD 迎风／中心、TVD、正向 MOC、反向 MMOC 或混合 HMOC。与 MODPATH 独立。
+
+<!-- key: help_track_particles -->
+在计算流场中运行 MODPATH 7。粒子仅代表平流；MODPATH 不计算弥散或浓度。
+
+<!-- key: help_observation -->
+观测点绝对坐标（米）。读取所在单元浓度，不进行单元间插值。
+
+<!-- key: help_nobs -->
+使用已保存运行比较一至五个观测点的浓度。
+
+<!-- key: help_outputs -->
+保存时刻数，包含 t = 0，并额外保留脉冲结束时刻。增加输出细化动画和曲线采样，不提高求解步长精度。
+
+<!-- key: help_length -->
+模型物理范围（米）。更改范围将开始新的比较序列。
+
+<!-- key: help_width -->
+模型物理范围（米）。更改范围将开始新的比较序列。
+
+<!-- key: help_ncol -->
+该方向的等间距单元数。网格加密保留以前的比较运行。
+
+<!-- key: help_nrow -->
+该方向的等间距单元数。网格加密保留以前的比较运行。
+
+<!-- key: help_cell_x -->
+所需最大单元宽度（米）。预览显示实际等间距宽度。
+
+<!-- key: help_cell_y -->
+所需最大单元宽度（米）。预览显示实际等间距宽度。
+
+<!-- key: help_random_unit_x -->
+该方向随机块的物理尺寸，独立于数值网格加密。
+
+<!-- key: help_random_unit_y -->
+该方向随机块的物理尺寸，独立于数值网格加密。
+
+<!-- key: help_zone_k_min -->
+随机渗透系数范围，在对数空间均匀采样（m/s）。
+
+<!-- key: help_zone_k_max -->
+随机渗透系数范围，在对数空间均匀采样（m/s）。
+
+<!-- key: help_zone_ss_min -->
+对数均匀分布的比贮水量范围（1/m）。保存于模型，稳态流时不生效。
+
+<!-- key: help_zone_ss_max -->
+对数均匀分布的比贮水量范围（1/m）。保存于模型，稳态流时不生效。
+
+<!-- key: help_zone_por_min -->
+均匀采样的有效孔隙度范围；必须介于零与一之间。
+
+<!-- key: help_zone_por_max -->
+均匀采样的有效孔隙度范围；必须介于零与一之间。
+
+<!-- key: help_head_left -->
+该外侧列的指定水头。左侧须高于右侧，且两者不低于含水层顶面。
+
+<!-- key: help_head_right -->
+该外侧列的指定水头。左侧须高于右侧，且两者不低于含水层顶面。
+
+<!-- key: help_src_x -->
+源中心绝对坐标（米），吸附到模型单元。源区不能占用指定水头列。
+
+<!-- key: help_src_y -->
+源中心绝对坐标（米），吸附到模型单元。源区不能占用指定水头列。
+
+<!-- key: help_src_ncol -->
+该方向源单元数。请检查实际源范围；更改源几何将开启新序列。
+
+<!-- key: help_src_nrow -->
+该方向源单元数。请检查实际源范围；更改源几何将开启新序列。
+
+<!-- key: help_animation_mode -->
+二维播放平面及剖面。三维以固定视角显示计算的单元中心浓度，需要多个层。
+
+<!-- key: help_animation_frames -->
+最多选择 80 个已保存快照，包含首末时刻。不在时刻间插值浓度。
+
+<!-- key: help_animation_fps -->
+每实际秒显示的帧数。每帧标注真实模拟时刻；播放不改变模型。
+
+<!-- key: help_animation_exaggeration -->
+调整三维区域的显示高度。高程与数值计算不变。
+
+<!-- key: help_generate_animation -->
+仅在请求时渲染保存结果。改变视图设置后重新生成；不会重新运行模型。
+
+<!-- key: help_view_time -->
+选择保存时刻，不重新运行模型。
+
+<!-- key: help_view_layer -->
+俯视图所示层；1 为最上层。
+
+<!-- key: help_section -->
+剖面绝对位置（米），采用所在行／列。相对坐标显示不会移动剖面。
+
+<!-- key: help_fill -->
+按浓度色标填充单元；零浓度保持白色。
+
+<!-- key: help_lines -->
+在填色上绘制浓度等值线。
+
+<!-- key: help_show_heads -->
+叠加细线计算水头等值线，标注单位为米。
+
+<!-- key: help_log -->
+对正浓度使用对数色标。非正值仅在此显示中隐藏。
+
+<!-- key: help_particle_paths -->
+显示至所选时刻的 MODPATH 位置和细路径。最多显示 120 条轨迹；导出保留全部粒子。
+
+<!-- key: help_opacity -->
+填色不透明度：1 为完全不透明；较小值可显示底层要素。
+
+<!-- key: help_focus_plume -->
+缩放到正浓度羽流与显示的 MODPATH 轨迹并加边距。动画在所选时段使用固定范围。
+
+<!-- key: help_focus_threshold -->
+静态聚焦：各羽流峰值的百分比。三维动画：按固定色标最大绝对值的百分比筛选显示单元。
+
+<!-- key: help_analytical -->
+与均质稳态流解析参考比较。非均质或非稳态流不满足其假设。
+
+<!-- key: help_compare -->
+在当前运行的剖面位置，以各运行最近保存时刻进行比较。
+
+<!-- key: help_analytic_on -->
+与均质稳态流解析参考比较。非均质或非稳态流不满足其假设。
+
+<!-- key: help_btc_analytical -->
+与均质稳态流解析参考比较。非均质或非稳态流不满足其假设。
+
+<!-- key: help_compare_sections -->
+在当前运行的剖面位置，以各运行最近保存时刻进行比较。
+
+<!-- key: help_overlay_runs -->
+在当前运行的剖面位置，以各运行最近保存时刻进行比较。
+
+<!-- key: help_compare_top -->
+在当前运行的剖面位置，以各运行最近保存时刻进行比较。
+
+<!-- key: help_btc_runs -->
+使用已保存运行比较一至五个观测点的浓度。
+
+<!-- key: Animation settings -->
+动画设置
+
+<!-- key: Animation colour scale -->
+动画色标
+
+<!-- key: animation_colour_enhanced -->
+增强低浓度显示（固定色标）
+
+<!-- key: animation_colour_linear -->
+线性（固定色标）
+
+<!-- key: animation_colour_log -->
+对数（固定色标）
+
+<!-- key: help_animation_colour -->
+增强模式使用幂映射（指数为 0.35）突出低浓度。各帧使用相同的实际浓度范围，零浓度保持白色。线性和增强模式保留数值计算产生的负值；对数模式隐藏非正值。不改变计算数据。
+
+<!-- key: Zoom animation to plume -->
+将动画缩放至羽流范围
+
+<!-- key: help_animation_focus -->
+使用一个固定视窗，涵盖所有选定时刻的正浓度羽流及已显示的 MODPATH 轨迹，并增加 20% 边距。与静态图的缩放独立。关闭后显示整个模型区域。适用于二维和三维。
+
+<!-- key: Plume threshold (% of peak) -->
+羽流阈值（峰值百分比）
+
+<!-- key: help_animation_threshold -->
+缩放范围包含高于每帧正浓度峰值此百分比的浓度。三维模式还将此值用作网格单元的显示阈值，相对于固定色标的最大绝对浓度。默认 0.1%。仅影响显示。
+
+<!-- key: animation_progress -->
+正在生成动画… {percent}%
+
+<!-- key: MODPATH settings -->
+MODPATH 设置
+
+<!-- key: expert_transport_location_hint -->
+MT3D 专家参数位于紧接下方的独立折叠面板 **运移求解器专家设置** 中。MODPATH 设置位于其后。

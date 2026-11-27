@@ -65,7 +65,7 @@ Das Laufarchiv enthält Modelleingaben, Protokolle, Konzentrations-/Potentialhö
 Starten Sie das voreingestellte Pulsexperiment, um Stofffahne, Profile, Beobachtungskurven und Methodenvergleich anzuzeigen.
 
 <!-- key: footer -->
-MT3D 2D/3D-Transportlabor · v0.5.1 · Arbeitsversion für die begleitete Lehre
+MT3D 2D/3D-Transportlabor · v{version} · Arbeitsversion für die begleitete Lehre · Entwickelt von Thomas Reimann · TU Dresden · The Groundwater Project
 
 <!-- key: transient_hint -->
 Das ursprüngliche Strömungsfeld wird zuerst stationär berechnet; die rechte Potentialhöhe ändert sich bei t = 0.
@@ -1014,3 +1014,465 @@ y-Profil bei x′ = {x:.3g} m
 
 <!-- key: fig_relative_section -->
 {axis}–z-Schnitt bei {other}′ = {value:.3g} m
+
+<!-- key: MODPATH particle count -->
+MODPATH-Partikelzahl
+
+<!-- key: particle_count_cell -->
+Je Quellzelle
+
+<!-- key: particle_count_total -->
+Gesamte Quelle je Freisetzung
+
+<!-- key: Particles in the whole source per release -->
+Partikel in der gesamten Quelle je Freisetzung
+
+<!-- key: particle_count_summary -->
+{count} Partikel in {cells} Quellzellen × {groups} Freisetzungen = {total} Partikel.
+
+<!-- key: expert_transport_hint -->
+Alle Transportlöser-Einstellungen sind sichtbar. NPL / NPH und NPMIN / NPMAX steuern MOC-/HMOC-Partikel; MXPART begrenzt ihre Gesamtzahl. Hinweise erläutern den Methodenbezug. MODPATH nutzt separate Partikel.
+
+<!-- key: Plume animation -->
+Schadstofffahne animieren
+
+<!-- key: Animation view -->
+Animationsansicht
+
+<!-- key: animation_2d -->
+Draufsicht und Schnitte
+
+<!-- key: animation_3d -->
+3D-Konzentrationen in Zellmitten
+
+<!-- key: Animation frames -->
+Animationsbilder
+
+<!-- key: Playback speed (frames/s) -->
+Wiedergabegeschwindigkeit (Bilder/s)
+
+<!-- key: Vertical exaggeration -->
+Vertikale Überhöhung
+
+<!-- key: Generate / refresh animation -->
+Animation erstellen / aktualisieren
+
+<!-- key: Generating animation… -->
+Animation wird erstellt…
+
+<!-- key: Download animation (HTML) -->
+Animation herunterladen (HTML)
+
+<!-- key: Play -->
+Abspielen
+
+<!-- key: Pause -->
+Pause
+
+<!-- key: Animation frame -->
+Animationsbild
+
+<!-- key: animation_layers_hint -->
+Für die 3D-Ansicht in den Experteneinstellungen weitere Schichten ergänzen.
+
+<!-- key: animation_hint -->
+Verwendet gespeicherte Zeiten des angezeigten Laufs. Farben und Zoom der Animation können unten unabhängig gewählt werden; die Farbskala bleibt zeitlich konstant. Andere 2D-Darstellungsoptionen werden übernommen. Vergleiche und analytische Überlagerungen bleiben in statischen Diagrammen. Die fertige Animation erscheint unter den Einstellungen; die heruntergeladene HTML-Datei funktioniert offline.
+
+<!-- key: animation_3d_hint -->
+3D zeigt Zellmitten-Konzentrationen oberhalb der Schwelle bei fester Kamera. Maximal {maximum} gleichmäßig ausgewählte Zellen werden dargestellt; Berechnungen und Exporte enthalten alle Zellen. Partikel dienen dem Advektionsvergleich. Die Überhöhung betrifft nur die Darstellung.
+
+<!-- key: animation_refresh_hint -->
+Plot- oder Animationseinstellungen geändert. Zum Aktualisieren erneut erstellen.
+
+<!-- key: animation_failed -->
+Animation konnte nicht erstellt werden. Die Modellergebnisse bleiben erhalten.
+
+<!-- key: animation_size_limit -->
+Animation überschreitet 45 MiB. Weniger Bilder wählen und erneut erstellen.
+
+<!-- key: help_s_percel -->
+Maximaler advektiver Weg je Transportschritt in Zellbreiten. TVD erfordert ≤ 1.
+
+<!-- key: help_s_mxpart -->
+MOC/HMOC: Kapazität für alle bewegten Partikel, keine Partikelzahl je Zelle.
+
+<!-- key: help_s_itrack -->
+MOC/MMOC/HMOC: 1 = Euler, 2 = Runge–Kutta 4. Ordnung, 3 = hybrides Tracking.
+
+<!-- key: help_s_wd -->
+Charakteristikenverfahren: Konzentrationsgewichtung bei Operatoraufspaltung; 0,5–1.
+
+<!-- key: help_s_dceps -->
+MOC/HMOC: Schwelle des relativen Konzentrationsgradienten zwischen NPL- und NPH-Belegung.
+
+<!-- key: help_s_nplane -->
+MOC/HMOC: 0 = zufällige Anordnung; positiv = horizontale Partikelebenen je Zelle.
+
+<!-- key: help_s_npl -->
+MOC/HMOC: Startpartikel je Zelle mit Gradient ≤ DCEPS; null zulässig.
+
+<!-- key: help_s_nph -->
+MOC/HMOC: Startpartikel je Zelle mit hohem Gradienten. Feste Muster können die Zahl runden.
+
+<!-- key: help_s_npmin -->
+MOC/HMOC: Partikel ergänzen, wenn die Zellbelegung dieses Minimum unterschreitet.
+
+<!-- key: help_s_npmax -->
+MOC/HMOC: Bei Überschreitung wird die Zellbelegung durch NPH Partikel ersetzt.
+
+<!-- key: help_s_interp -->
+MMOC/HMOC: Konzentrationsinterpolation; nur 1 (linear) wird unterstützt.
+
+<!-- key: help_s_nlsink -->
+MMOC/HMOC-Senkenzellen: 0 = zufällige Anordnung; positiv = Partikelebenen.
+
+<!-- key: help_s_npsink -->
+MMOC/HMOC: Partikel zur Darstellung jeder Senkenzelle.
+
+<!-- key: help_s_dchmoc -->
+HMOC: Oberhalb dieser relativen Gradientenschwelle MOC, darunter MMOC.
+
+<!-- key: help_s_mxiter -->
+Maximale äußere GCG-Iterationen. Für dieses lineare konservative Modell genügt eine.
+
+<!-- key: help_s_iter1 -->
+Maximale innere GCG-Iterationen zur Lösung der Transportgleichungen.
+
+<!-- key: help_s_isolve -->
+GCG-Vorkonditionierer: 1 = Jacobi, 2 = SSOR, 3 = modifiziertes unvollständiges Cholesky (MIC).
+
+<!-- key: help_s_ncrs -->
+Dispersions-Kreuzterme: 0 = Näherung auf rechter Seite; 1 = vollständiger Tensor in der Matrix.
+
+<!-- key: help_s_accl -->
+Relaxationsfaktor, nur für SSOR (ISOLVE = 2).
+
+<!-- key: help_s_cclose -->
+Relative Konzentrationsänderung für GCG-Konvergenz. Kleinere Werte verschärfen das Kriterium.
+
+<!-- key: help_s_iprgcg -->
+Konzentrationsänderungen alle N GCG-Iterationen ausgeben; 0 am Ende jeder Stressperiode.
+
+<!-- key: help_s_dt0 -->
+Anfängliche Transportschrittlänge in Tagen; 0 lässt MT3D automatisch wählen.
+
+<!-- key: help_s_ttsmult -->
+Schrittmultiplikator für impliziten FD-Transport; Charakteristikenverfahren und TVD verwenden ihn nicht.
+
+<!-- key: help_s_ttsmax -->
+Maximale Schrittlänge in Tagen bei TTSMULT > 1; 0 nutzt die automatische Begrenzung.
+
+<!-- key: help_s_mxstrn -->
+Maximale Transportschritte je Strömungszeitschritt; Erreichen der Grenze kann den Lauf stoppen.
+
+<!-- key: help_s_timeout -->
+Rechenzeitlimit je Programm. Größere Partikelzahlen benötigen gegebenenfalls mehr Zeit.
+
+<!-- key: help_s_hclose -->
+PCG-Konvergenztoleranz der Potenzialhöhenänderung in Metern.
+
+<!-- key: help_s_rclose -->
+PCG-Konvergenztoleranz des Strömungsresiduums in m³/Tag.
+
+<!-- key: help_s_flow_mxiter -->
+Maximale äußere Iterationen des MODFLOW-PCG-Strömungslösers.
+
+<!-- key: help_s_flow_iter1 -->
+Maximale innere PCG-Iterationen je äußerer Strömungsiteration.
+
+<!-- key: help_particle_count_mode -->
+Partikel je Quellzelle oder eine genaue Gesamtzahl für die Quelle je Freisetzungszeit wählen.
+
+<!-- key: help_particles_per_cell -->
+Partikel werden je Freisetzung gleichmäßig in jeder Quellzelle verteilt. Gilt nur für MODPATH, nicht MOC.
+
+<!-- key: help_total_source_particles -->
+Genaue Anzahl je Freisetzung für alle Quellzellen; mindestens eine je Zelle. Zellbelegungen unterscheiden sich höchstens um eins; Massegewichte folgen dem Porenvolumen.
+
+<!-- key: help_release_groups -->
+Gleichmäßige Freisetzungen zur Intervallmitte nähern Puls/Dauereintrag an. Mehr Gruppen verfeinern den Zeitverlauf; Dirac nutzt eine Freisetzung bei t = 0.
+
+<!-- key: help_run_label -->
+Leer lassen für den vorgeschlagenen Namen. Eigener Text ersetzt Methode/Signal; Nummerierung und Heterogenitätszusatz bleiben automatisch.
+
+<!-- key: help_expert -->
+Schichtsteuerung und alle unterstützten Strömungs-/Transportlöserparameter anzeigen. Verborgene Werte bleiben erhalten.
+
+<!-- key: help_sliders -->
+Zwischen Zahlenfeldern und Schiebereglern wechseln, ohne Modellwerte zu ändern.
+
+<!-- key: help_extent -->
+Physische Modellausdehnung in Metern. Eine Änderung beginnt eine neue Vergleichsserie.
+
+<!-- key: help_thickness -->
+Mächtigkeit des gespannten Aquifers; Sohle bei 0 m, Oberkante auf diesem Wert. Schichten teilen die Mächtigkeit gleichmäßig.
+
+<!-- key: help_grid_mode -->
+Zellzahl oder maximale Zellbreiten vorgeben. Bei Breitenvorgabe wird die Zellzahl aufgerundet; die Ausdehnung bleibt gleich.
+
+<!-- key: help_grid_count -->
+Anzahl gleich großer Zellen in dieser Richtung. Verfeinerung erhält frühere Vergleichsläufe.
+
+<!-- key: help_cell_width -->
+Gewünschte maximale Zellbreite in Metern. Die Vorschau zeigt die tatsächliche gleichmäßige Breite.
+
+<!-- key: help_nlay -->
+Eine Schicht ergibt ein Draufsichtmodell; mehrere gleich mächtige Schichten erlauben vertikalen Transport und 3D-Ansichten.
+
+<!-- key: help_k -->
+Horizontale Hintergrund-Durchlässigkeit. Eingabe in m/s; Umrechnung in m/Tag erfolgt intern.
+
+<!-- key: help_porosity -->
+Mobiler Porenvolumenanteil; bestimmt Abstandsgeschwindigkeit und gelöste Massenspeicherung.
+
+<!-- key: help_ss -->
+Wasserabgabe je Aquifervolumen und Potenzialhöhenabsenkung (1/m). In dieser stationären Oberfläche ist kein Speicherterm aktiv.
+
+<!-- key: help_kv_ratio -->
+Vertikale geteilt durch horizontale Durchlässigkeit, angewendet in jeder Schicht.
+
+<!-- key: help_zones_preset -->
+Homogene Eigenschaften, reproduzierbares Zufallsfeld oder definierte Linse/Kanal/Barriere wählen.
+
+<!-- key: help_zone_seed -->
+Startwert des Zufallsfelds. Gleicher Wert und gleiche Einstellungen reproduzieren das räumliche Muster.
+
+<!-- key: help_random_unit -->
+Physische Größe zufälliger Blöcke in dieser Richtung, unabhängig von der numerischen Gitterverfeinerung.
+
+<!-- key: help_random_k -->
+Grenzen zufälliger Durchlässigkeit; gleichmäßige Ziehung im logarithmischen Raum (m/s).
+
+<!-- key: help_random_ss -->
+Grenzen logarithmisch gleichverteilter spezifischer Speicherung (1/m). Im Modell gespeichert, bei stationärer Strömung inaktiv.
+
+<!-- key: help_random_por -->
+Grenzen gleichverteilter effektiver Porosität; Werte müssen zwischen null und eins liegen.
+
+<!-- key: help_head -->
+Vorgegebene Potenzialhöhe dieser Randspalte. Links muss höher als rechts sein; beide mindestens auf Aquiferoberkante.
+
+<!-- key: help_duration -->
+Gesamte simulierte Transportzeit in Tagen, unabhängig von der Animationsgeschwindigkeit.
+
+<!-- key: help_dispersion -->
+Mechanische Ausbreitung proportional zur Abstandsgeschwindigkeit einschalten. Ausgeschaltet bleiben Advektion und numerische Dispersion.
+
+<!-- key: help_al -->
+Longitudinale Dispersivität entlang der Strömung in Metern; zugehöriger Dispersionskoeffizient = αL × Geschwindigkeit.
+
+<!-- key: help_trpt -->
+Horizontale transversale geteilt durch longitudinale Dispersivität: αTH/αL.
+
+<!-- key: help_trpv -->
+Vertikale transversale geteilt durch longitudinale Dispersivität: αTV/αL. Bei mehreren Schichten relevant.
+
+<!-- key: help_source_kind -->
+Dirac: anfängliche gelöste Masse bei t = 0. Puls: konstanter Eintrag bis Pulsende. Kontinuierlich: konstanter Eintrag während des gesamten Laufs.
+
+<!-- key: help_source_mass -->
+Anfängliche gelöste Gesamtmasse im Porenvolumen der Quelle (Gramm).
+
+<!-- key: help_mass_rate -->
+Gesamter Stoffeintrag (g/Tag), verteilt nach Quell-Porenvolumen. Es wird kein Wasser injiziert.
+
+<!-- key: help_pulse_duration -->
+Nach dieser Zeit (Tage) endet der Eintrag; sie muss kürzer als die gesamte Transportdauer sein.
+
+<!-- key: help_source_position -->
+Absolute Quellmittelpunkt-Koordinate in Metern, einer Modellzelle zugeordnet. Randspalten mit vorgegebenem Potenzial sind ausgeschlossen.
+
+<!-- key: help_source_cells -->
+Quellzellenzahl in dieser Richtung. Tatsächliche Ausdehnung in Vorschau prüfen; Geometrieänderung startet neue Serie.
+
+<!-- key: help_source_all_layers -->
+Quelle über alle Schichten verteilen; sonst nur die ausgewählte Schicht verwenden.
+
+<!-- key: help_src_layer -->
+Schicht mit Stoffquelle; 1 ist die oberste Schicht.
+
+<!-- key: help_method -->
+MT3D-Advektion wählen: FD up/zentral, TVD, vorwärts MOC, rückwärts MMOC oder hybrid HMOC. Unabhängig von MODPATH.
+
+<!-- key: help_track_particles -->
+MODPATH 7 im berechneten Strömungsfeld ausführen. Partikel zeigen nur Advektion; MODPATH berechnet keine Dispersion oder Konzentrationen.
+
+<!-- key: help_observation -->
+Absolute Beobachtungskoordinate in Metern. Konzentration wird aus der zugehörigen Zelle entnommen, nicht interpoliert.
+
+<!-- key: help_nobs -->
+Konzentrationen an einem bis fünf Beobachtungspunkten anhand gespeicherter Läufe vergleichen.
+
+<!-- key: help_outputs -->
+Gespeicherte Transportzeiten einschließlich t = 0; Pulsende wird zusätzlich gespeichert. Mehr Ausgaben verfeinern Animation und Kurven, nicht die Solver-Zeitschrittgenauigkeit.
+
+<!-- key: help_length -->
+Physische Modellausdehnung in Metern. Eine Änderung beginnt eine neue Vergleichsserie.
+
+<!-- key: help_width -->
+Physische Modellausdehnung in Metern. Eine Änderung beginnt eine neue Vergleichsserie.
+
+<!-- key: help_ncol -->
+Anzahl gleich großer Zellen in dieser Richtung. Verfeinerung erhält frühere Vergleichsläufe.
+
+<!-- key: help_nrow -->
+Anzahl gleich großer Zellen in dieser Richtung. Verfeinerung erhält frühere Vergleichsläufe.
+
+<!-- key: help_cell_x -->
+Gewünschte maximale Zellbreite in Metern. Die Vorschau zeigt die tatsächliche gleichmäßige Breite.
+
+<!-- key: help_cell_y -->
+Gewünschte maximale Zellbreite in Metern. Die Vorschau zeigt die tatsächliche gleichmäßige Breite.
+
+<!-- key: help_random_unit_x -->
+Physische Größe zufälliger Blöcke in dieser Richtung, unabhängig von der numerischen Gitterverfeinerung.
+
+<!-- key: help_random_unit_y -->
+Physische Größe zufälliger Blöcke in dieser Richtung, unabhängig von der numerischen Gitterverfeinerung.
+
+<!-- key: help_zone_k_min -->
+Grenzen zufälliger Durchlässigkeit; gleichmäßige Ziehung im logarithmischen Raum (m/s).
+
+<!-- key: help_zone_k_max -->
+Grenzen zufälliger Durchlässigkeit; gleichmäßige Ziehung im logarithmischen Raum (m/s).
+
+<!-- key: help_zone_ss_min -->
+Grenzen logarithmisch gleichverteilter spezifischer Speicherung (1/m). Im Modell gespeichert, bei stationärer Strömung inaktiv.
+
+<!-- key: help_zone_ss_max -->
+Grenzen logarithmisch gleichverteilter spezifischer Speicherung (1/m). Im Modell gespeichert, bei stationärer Strömung inaktiv.
+
+<!-- key: help_zone_por_min -->
+Grenzen gleichverteilter effektiver Porosität; Werte müssen zwischen null und eins liegen.
+
+<!-- key: help_zone_por_max -->
+Grenzen gleichverteilter effektiver Porosität; Werte müssen zwischen null und eins liegen.
+
+<!-- key: help_head_left -->
+Vorgegebene Potenzialhöhe dieser Randspalte. Links muss höher als rechts sein; beide mindestens auf Aquiferoberkante.
+
+<!-- key: help_head_right -->
+Vorgegebene Potenzialhöhe dieser Randspalte. Links muss höher als rechts sein; beide mindestens auf Aquiferoberkante.
+
+<!-- key: help_src_x -->
+Absolute Quellmittelpunkt-Koordinate in Metern, einer Modellzelle zugeordnet. Randspalten mit vorgegebenem Potenzial sind ausgeschlossen.
+
+<!-- key: help_src_y -->
+Absolute Quellmittelpunkt-Koordinate in Metern, einer Modellzelle zugeordnet. Randspalten mit vorgegebenem Potenzial sind ausgeschlossen.
+
+<!-- key: help_src_ncol -->
+Quellzellenzahl in dieser Richtung. Tatsächliche Ausdehnung in Vorschau prüfen; Geometrieänderung startet neue Serie.
+
+<!-- key: help_src_nrow -->
+Quellzellenzahl in dieser Richtung. Tatsächliche Ausdehnung in Vorschau prüfen; Geometrieänderung startet neue Serie.
+
+<!-- key: help_animation_mode -->
+2D animiert Draufsicht und Profile/Schnitte. 3D zeigt berechnete Zellmitten-Konzentrationen aus fester Perspektive und benötigt mehrere Schichten.
+
+<!-- key: help_animation_frames -->
+Bis zu 80 gespeicherte Zustände einschließlich Anfang und Ende wählen. Keine zeitliche Konzentrationsinterpolation.
+
+<!-- key: help_animation_fps -->
+Bilder je realer Sekunde. Jedes Bild zeigt die tatsächliche Modellzeit; Wiedergabe verändert das Modell nicht.
+
+<!-- key: help_animation_exaggeration -->
+Dargestellte Höhe des 3D-Gebiets skalieren. Höhenkoordinaten und Berechnungen bleiben unverändert.
+
+<!-- key: help_generate_animation -->
+Gespeicherte Ergebnisse erst auf Anforderung rendern. Nach Ansichtänderung neu erstellen; kein neuer Modelllauf.
+
+<!-- key: help_view_time -->
+Gespeicherte Transportzeit wählen; kein neuer Modelllauf.
+
+<!-- key: help_view_layer -->
+In Draufsicht gezeigte Schicht; 1 ist oben.
+
+<!-- key: help_section -->
+Absolute Schnittposition in Metern, aus zugehöriger Zeile/Spalte. Relative Achsen verschieben den Schnitt nicht.
+
+<!-- key: help_fill -->
+Modellzellen nach Konzentrationsfarbskala füllen; Konzentration null bleibt weiß.
+
+<!-- key: help_lines -->
+Konzentrations-Isolinien über der Farbfüllung anzeigen.
+
+<!-- key: help_show_heads -->
+Dünne berechnete Potenzialhöhenlinien mit Beschriftung in Metern anzeigen.
+
+<!-- key: help_log -->
+Logarithmische Farben für positive Konzentrationen. Nichtpositive Zellen werden nur in dieser Darstellung ausgeblendet.
+
+<!-- key: help_particle_paths -->
+MODPATH-Positionen und dünne Bahnen bis zur gewählten Zeit anzeigen. Maximal 120 Bahnen dargestellt; Exporte enthalten alle Partikel.
+
+<!-- key: help_opacity -->
+Deckkraft der Farbfüllung: 1 ist undurchsichtig; kleinere Werte zeigen den Hintergrund.
+
+<!-- key: help_focus_plume -->
+Auf positive Fahne und gezeigte MODPATH-Bahnen mit Rand zoomen. Animation nutzt ein festes Fenster über alle gewählten Zeiten.
+
+<!-- key: help_focus_threshold -->
+Statischer Fokus: Prozent des jeweiligen Fahnenmaximums. In 3D-Animation: Prozent des maximalen Betrags der festen Farbskala zur Zellauswahl.
+
+<!-- key: help_analytical -->
+Mit homogener stationärer analytischer Referenz vergleichen. Heterogene oder instationäre Strömung liegt außerhalb ihrer Annahmen.
+
+<!-- key: help_compare -->
+Gespeicherte Läufe zur nächstverfügbaren Zeit an den Schnittpositionen des angezeigten Laufs vergleichen.
+
+<!-- key: help_analytic_on -->
+Mit homogener stationärer analytischer Referenz vergleichen. Heterogene oder instationäre Strömung liegt außerhalb ihrer Annahmen.
+
+<!-- key: help_btc_analytical -->
+Mit homogener stationärer analytischer Referenz vergleichen. Heterogene oder instationäre Strömung liegt außerhalb ihrer Annahmen.
+
+<!-- key: help_compare_sections -->
+Gespeicherte Läufe zur nächstverfügbaren Zeit an den Schnittpositionen des angezeigten Laufs vergleichen.
+
+<!-- key: help_overlay_runs -->
+Gespeicherte Läufe zur nächstverfügbaren Zeit an den Schnittpositionen des angezeigten Laufs vergleichen.
+
+<!-- key: help_compare_top -->
+Gespeicherte Läufe zur nächstverfügbaren Zeit an den Schnittpositionen des angezeigten Laufs vergleichen.
+
+<!-- key: help_btc_runs -->
+Konzentrationen an einem bis fünf Beobachtungspunkten anhand gespeicherter Läufe vergleichen.
+
+<!-- key: Animation settings -->
+Animationseinstellungen
+
+<!-- key: Animation colour scale -->
+Farbskala der Animation
+
+<!-- key: animation_colour_enhanced -->
+Kleine Konzentrationen verstärkt (feste Skala)
+
+<!-- key: animation_colour_linear -->
+Linear (feste Skala)
+
+<!-- key: animation_colour_log -->
+Logarithmisch (feste Skala)
+
+<!-- key: help_animation_colour -->
+Die verstärkte Darstellung verwendet eine Potenzabbildung (Exponent 0,35), um kleine Konzentrationen sichtbar zu machen. Alle Bilder haben dieselben physikalischen Konzentrationsgrenzen; Null bleibt weiß. Lineare und verstärkte Skalen zeigen auch negative numerische Werte; logarithmische Farben blenden nichtpositive Werte aus. Die berechneten Daten bleiben unverändert.
+
+<!-- key: Zoom animation to plume -->
+Animation auf die Schadstofffahne zoomen
+
+<!-- key: help_animation_focus -->
+Ein fester Ausschnitt umfasst die positive Schadstofffahne und dargestellte MODPATH-Pfade über alle ausgewählten Zeiten, mit 20 % Rand. Unabhängig vom Zoom des statischen Diagramms. Ausschalten zeigt das gesamte Modellgebiet. Für 2D und 3D verfügbar.
+
+<!-- key: Plume threshold (% of peak) -->
+Schwellenwert der Fahne (% des Maximums)
+
+<!-- key: help_animation_threshold -->
+Der Zoom umfasst Konzentrationen oberhalb dieses Anteils des positiven Maximums jedes Bildes. In 3D legt dieser Wert zusätzlich die Sichtbarkeitsgrenze der Zellen als Anteil der maximalen absoluten Konzentration der festen Skala fest. Standard: 0,1 %. Betrifft nur die Darstellung.
+
+<!-- key: animation_progress -->
+Animation wird erstellt… {percent} %
+
+<!-- key: MODPATH settings -->
+MODPATH-Einstellungen
+
+<!-- key: expert_transport_location_hint -->
+Die MT3D-Expertenparameter befinden sich im separaten Aufklappbereich **Experteneinstellungen des Transportlösers** direkt darunter. Die MODPATH-Einstellungen folgen anschließend.

@@ -35,7 +35,7 @@ def clear_history(state,delete_workspaces=True):
     for key in list(views):
         if key in ('overlay_runs','btc_runs','retained_runs') or key.startswith(('view_time_','view_layer_','section_x_','section_y_')):views.pop(key,None)
     for key in list(state):
-        if key in ('displayed_run','remove_run','export_bytes','overlay_runs','btc_runs','retained_runs') or key.startswith(('view_time_','view_layer_','section_x_','section_y_')):
+        if key in ('displayed_run','remove_run','export_bytes','animation_bytes','overlay_runs','btc_runs','retained_runs') or key.startswith(('view_time_','view_layer_','section_x_','section_y_')):
             state.pop(key,None)
 
 
@@ -67,6 +67,7 @@ def add_run(state,run,label=''):
     state['_view_values']['overlay_runs']=[n for n,_ in state['history'] if n!=name]
     state.pop('overlay_runs',None)
     state.pop('export_bytes',None)
+    state.pop('animation_bytes',None)
     return name
 
 
@@ -88,3 +89,4 @@ def retain_runs(state,names):
         for key in list(bucket):
             if any(key==prefix+n for n in removed for prefix in ('view_time_','view_layer_','section_x_','section_y_')):bucket.pop(key,None)
     if state.get('export_bytes') and state['export_bytes'][0] in removed:state.pop('export_bytes',None)
+    if state.get('animation_bytes') and state['animation_bytes'][0] in removed:state.pop('animation_bytes',None)

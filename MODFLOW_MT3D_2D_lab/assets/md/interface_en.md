@@ -65,7 +65,7 @@ The run archive includes model inputs, logs, concentration/head arrays, mass dia
 Run the baseline pulse experiment to view the plume, profiles, observation curves and method comparison.
 
 <!-- key: footer -->
-MT3D 2D/3D Transport Lab · v0.5.1 · Working version for live teaching
+MT3D 2D/3D Transport Lab · v{version} · Working version for live teaching · Developed by Thomas Reimann · TU Dresden · The Groundwater Project
 
 <!-- key: transient_hint -->
 The original flow field first equilibrates; the right head changes at t = 0.
@@ -1014,3 +1014,465 @@ y profile at x′ = {x:.3g} m
 
 <!-- key: fig_relative_section -->
 {axis}–z section at {other}′ = {value:.3g} m
+
+<!-- key: MODPATH particle count -->
+MODPATH particle count
+
+<!-- key: particle_count_cell -->
+Per source cell
+
+<!-- key: particle_count_total -->
+Whole source per release
+
+<!-- key: Particles in the whole source per release -->
+Particles in the whole source per release
+
+<!-- key: particle_count_summary -->
+{count} particles across {cells} source cells × {groups} releases = {total} particles.
+
+<!-- key: expert_transport_hint -->
+All transport solver controls are shown. NPL / NPH and NPMIN / NPMAX control MOC / HMOC particles; MXPART limits their total. Help icons explain method applicability. MODPATH uses separate particles.
+
+<!-- key: Plume animation -->
+Plume animation
+
+<!-- key: Animation view -->
+Animation view
+
+<!-- key: animation_2d -->
+Top view and sections
+
+<!-- key: animation_3d -->
+3D cell-centre concentrations
+
+<!-- key: Animation frames -->
+Animation frames
+
+<!-- key: Playback speed (frames/s) -->
+Playback speed (frames/s)
+
+<!-- key: Vertical exaggeration -->
+Vertical exaggeration
+
+<!-- key: Generate / refresh animation -->
+Generate / refresh animation
+
+<!-- key: Generating animation… -->
+Generating animation…
+
+<!-- key: Download animation (HTML) -->
+Download animation (HTML)
+
+<!-- key: Play -->
+Play
+
+<!-- key: Pause -->
+Pause
+
+<!-- key: Animation frame -->
+Animation frame
+
+<!-- key: animation_layers_hint -->
+Add layers in expert settings for a 3D view.
+
+<!-- key: animation_hint -->
+Uses saved times of the displayed run. Choose independent animation colours and zoom below; the colour scale stays fixed across time. Other 2D plot settings are retained. Comparisons and analytical overlays stay in static plots. The generated player appears below these settings; downloaded HTML plays offline.
+
+<!-- key: animation_3d_hint -->
+3D shows cell-centre concentrations above the threshold, with a fixed camera. At most {maximum} evenly sampled cells are displayed; calculations and exports retain all cells. Particle markers are an advective comparison. Vertical exaggeration changes display only.
+
+<!-- key: animation_refresh_hint -->
+Plot or animation settings changed. Generate again to update the player.
+
+<!-- key: animation_failed -->
+Animation could not be generated. Stored model results are retained.
+
+<!-- key: animation_size_limit -->
+Animation exceeds 45 MiB. Choose fewer frames and generate again.
+
+<!-- key: help_s_percel -->
+Maximum advective travel per transport step, in cell widths. TVD requires ≤ 1.
+
+<!-- key: help_s_mxpart -->
+MOC/HMOC: total moving-particle capacity, not particles per cell.
+
+<!-- key: help_s_itrack -->
+MOC/MMOC/HMOC: 1 = Euler, 2 = fourth-order Runge–Kutta, 3 = hybrid tracking.
+
+<!-- key: help_s_wd -->
+Characteristic methods: concentration weighting during operator splitting; 0.5–1.
+
+<!-- key: help_s_dceps -->
+MOC/HMOC: relative concentration-gradient threshold separating NPL and NPH placement.
+
+<!-- key: help_s_nplane -->
+MOC/HMOC: 0 = random placement; positive = horizontal particle planes per cell.
+
+<!-- key: help_s_npl -->
+MOC/HMOC: initial particles per low-gradient cell (gradient ≤ DCEPS); zero allowed.
+
+<!-- key: help_s_nph -->
+MOC/HMOC: initial particles per high-gradient cell. Fixed patterns may round this count.
+
+<!-- key: help_s_npmin -->
+MOC/HMOC: insert particles when the cell count falls below this minimum.
+
+<!-- key: help_s_npmax -->
+MOC/HMOC: exceeding this cell count triggers replacement by an NPH-sized set.
+
+<!-- key: help_s_interp -->
+MMOC/HMOC: concentration interpolation; only 1 (linear) is supported.
+
+<!-- key: help_s_nlsink -->
+MMOC/HMOC sink cells: 0 = random placement; positive = particle planes.
+
+<!-- key: help_s_npsink -->
+MMOC/HMOC: particles representing each sink cell.
+
+<!-- key: help_s_dchmoc -->
+HMOC: use MOC above this relative-gradient threshold, MMOC below it.
+
+<!-- key: help_s_mxiter -->
+GCG outer iteration limit. One is sufficient for this linear conservative-transport model.
+
+<!-- key: help_s_iter1 -->
+GCG inner iteration limit for solving the transport equations.
+
+<!-- key: help_s_isolve -->
+GCG preconditioner: 1 = Jacobi, 2 = SSOR, 3 = modified incomplete Cholesky (MIC).
+
+<!-- key: help_s_ncrs -->
+Dispersion cross terms: 0 = right-hand-side approximation; 1 = full tensor in the matrix.
+
+<!-- key: help_s_accl -->
+Relaxation factor used only by SSOR (ISOLVE = 2).
+
+<!-- key: help_s_cclose -->
+Relative concentration-change tolerance for GCG convergence. Smaller values tighten convergence.
+
+<!-- key: help_s_iprgcg -->
+Print concentration changes every N GCG iterations; 0 prints at each stress-period end.
+
+<!-- key: help_s_dt0 -->
+Initial transport-step length in days; 0 lets MT3D choose it automatically.
+
+<!-- key: help_s_ttsmult -->
+Successive step multiplier for implicit FD transport; characteristic and TVD methods ignore this growth control.
+
+<!-- key: help_s_ttsmax -->
+Upper step length in days when TTSMULT > 1; 0 uses the native automatic limit.
+
+<!-- key: help_s_mxstrn -->
+Maximum transport steps within one flow time step; reaching the limit can stop the run.
+
+<!-- key: help_s_timeout -->
+Wall-clock limit for each native executable. Larger particle counts may need more time.
+
+<!-- key: help_s_hclose -->
+PCG head-change convergence tolerance, in metres.
+
+<!-- key: help_s_rclose -->
+PCG flow-residual convergence tolerance, in m³/day.
+
+<!-- key: help_s_flow_mxiter -->
+Maximum outer iterations of the MODFLOW PCG flow solver.
+
+<!-- key: help_s_flow_iter1 -->
+Maximum inner PCG iterations per outer flow iteration.
+
+<!-- key: help_particle_count_mode -->
+Choose particles per source cell or an exact total for the whole source at each release time.
+
+<!-- key: help_particles_per_cell -->
+Particles are evenly placed inside each source cell at each release. This controls MODPATH only, not MOC.
+
+<!-- key: help_total_source_particles -->
+Exact count per release, spread over all source cells; at least one per cell. Cell counts differ by at most one; mass weights follow pore volume.
+
+<!-- key: help_release_groups -->
+Equal-time midpoint releases approximate pulse or continuous input. More batches refine release timing; Dirac uses one release at t = 0.
+
+<!-- key: help_run_label -->
+Leave blank to use the suggested name. A custom label replaces the method/signal text; numbering and the heterogeneous suffix remain automatic.
+
+<!-- key: help_expert -->
+Expose layer controls and every supported flow/transport solver parameter. Existing values are retained when hidden.
+
+<!-- key: help_sliders -->
+Switch between numeric fields and sliders without changing model values.
+
+<!-- key: help_extent -->
+Physical domain extent in metres. Changing extent starts a new comparison series.
+
+<!-- key: help_thickness -->
+Confined aquifer thickness; bottom elevation is 0 m and the top equals this value. Layers divide the thickness evenly.
+
+<!-- key: help_grid_mode -->
+Set cell numbers or maximum cell widths. Width mode rounds cell counts upward while preserving the physical domain.
+
+<!-- key: help_grid_count -->
+Number of uniform cells in this direction. Refinement retains previous comparison runs.
+
+<!-- key: help_cell_width -->
+Requested maximum cell width in metres. The preview reports the actual uniform width.
+
+<!-- key: help_nlay -->
+One layer gives a plan-view model; multiple equal-thickness layers enable vertical transport and 3D views.
+
+<!-- key: help_k -->
+Background horizontal hydraulic conductivity. Enter m/s; the model converts to m/day.
+
+<!-- key: help_porosity -->
+Mobile pore-volume fraction; controls pore-water velocity and solute storage.
+
+<!-- key: help_ss -->
+Water released per aquifer volume per unit head decline (1/m). No storage term acts in this steady-flow interface.
+
+<!-- key: help_kv_ratio -->
+Vertical hydraulic conductivity divided by horizontal conductivity, applied in every layer.
+
+<!-- key: help_zones_preset -->
+Choose homogeneous properties, a repeatable random field, or a defined lens/channel/barrier.
+
+<!-- key: help_zone_seed -->
+Repeatable random-field seed. The same seed and settings reproduce the same physical pattern.
+
+<!-- key: help_random_unit -->
+Physical size of random blocks in this direction, independent of numerical grid refinement.
+
+<!-- key: help_random_k -->
+Bounds for random hydraulic conductivity, sampled uniformly in log space (m/s).
+
+<!-- key: help_random_ss -->
+Bounds for log-uniform specific storage (1/m). Stored for the model, inactive under steady flow.
+
+<!-- key: help_random_por -->
+Bounds for uniformly sampled effective porosity; values must lie between zero and one.
+
+<!-- key: help_head -->
+Specified hydraulic head on this outer column. Left must exceed right; both must be at or above the aquifer top.
+
+<!-- key: help_duration -->
+Total simulated transport time in days. This is independent of the animation playback speed.
+
+<!-- key: help_dispersion -->
+Include mechanical spreading proportional to pore-water velocity. Turning this off isolates advection and numerical spreading.
+
+<!-- key: help_al -->
+Longitudinal dispersivity along flow, in metres; the associated dispersion coefficient is αL times speed.
+
+<!-- key: help_trpt -->
+Horizontal transverse dispersivity divided by longitudinal dispersivity: αTH/αL.
+
+<!-- key: help_trpv -->
+Vertical transverse dispersivity divided by longitudinal dispersivity: αTV/αL. Relevant with multiple layers.
+
+<!-- key: help_source_kind -->
+Dirac: initial dissolved mass at t = 0. Pulse: constant loading until pulse end. Continuous: constant loading throughout the run.
+
+<!-- key: help_source_mass -->
+Total dissolved mass initially distributed through source pore volume (grams).
+
+<!-- key: help_mass_rate -->
+Total solute loading rate (g/day), apportioned by source pore volume. No water is injected.
+
+<!-- key: help_pulse_duration -->
+Loading stops after this time (days); it must be shorter than total transport duration.
+
+<!-- key: help_source_position -->
+Absolute source-centre coordinate in metres, snapped to a model cell. The source must avoid specified-head columns.
+
+<!-- key: help_source_cells -->
+Number of source cells in this direction. Preview the actual footprint; changing source geometry starts a new series.
+
+<!-- key: help_source_all_layers -->
+Distribute the source over every layer; otherwise use the selected layer only.
+
+<!-- key: help_src_layer -->
+Layer receiving the source; 1 is the uppermost layer.
+
+<!-- key: help_method -->
+Choose MT3D advection: FD up/central, TVD, forward MOC, backward MMOC or hybrid HMOC. This does not select MODPATH.
+
+<!-- key: help_track_particles -->
+Run MODPATH 7 in the computed flow field. Particles represent advection only; no dispersion or concentrations are calculated by MODPATH.
+
+<!-- key: help_observation -->
+Absolute observation coordinate in metres. Concentration is sampled from the containing cell, not interpolated between cells.
+
+<!-- key: help_nobs -->
+Compare concentrations at one to five observation points using the stored runs.
+
+<!-- key: help_outputs -->
+Number of saved transport times, including t = 0. Pulse end is also retained. More outputs improve animation and curve sampling, not solver time-step accuracy.
+
+<!-- key: help_length -->
+Physical domain extent in metres. Changing extent starts a new comparison series.
+
+<!-- key: help_width -->
+Physical domain extent in metres. Changing extent starts a new comparison series.
+
+<!-- key: help_ncol -->
+Number of uniform cells in this direction. Refinement retains previous comparison runs.
+
+<!-- key: help_nrow -->
+Number of uniform cells in this direction. Refinement retains previous comparison runs.
+
+<!-- key: help_cell_x -->
+Requested maximum cell width in metres. The preview reports the actual uniform width.
+
+<!-- key: help_cell_y -->
+Requested maximum cell width in metres. The preview reports the actual uniform width.
+
+<!-- key: help_random_unit_x -->
+Physical size of random blocks in this direction, independent of numerical grid refinement.
+
+<!-- key: help_random_unit_y -->
+Physical size of random blocks in this direction, independent of numerical grid refinement.
+
+<!-- key: help_zone_k_min -->
+Bounds for random hydraulic conductivity, sampled uniformly in log space (m/s).
+
+<!-- key: help_zone_k_max -->
+Bounds for random hydraulic conductivity, sampled uniformly in log space (m/s).
+
+<!-- key: help_zone_ss_min -->
+Bounds for log-uniform specific storage (1/m). Stored for the model, inactive under steady flow.
+
+<!-- key: help_zone_ss_max -->
+Bounds for log-uniform specific storage (1/m). Stored for the model, inactive under steady flow.
+
+<!-- key: help_zone_por_min -->
+Bounds for uniformly sampled effective porosity; values must lie between zero and one.
+
+<!-- key: help_zone_por_max -->
+Bounds for uniformly sampled effective porosity; values must lie between zero and one.
+
+<!-- key: help_head_left -->
+Specified hydraulic head on this outer column. Left must exceed right; both must be at or above the aquifer top.
+
+<!-- key: help_head_right -->
+Specified hydraulic head on this outer column. Left must exceed right; both must be at or above the aquifer top.
+
+<!-- key: help_src_x -->
+Absolute source-centre coordinate in metres, snapped to a model cell. The source must avoid specified-head columns.
+
+<!-- key: help_src_y -->
+Absolute source-centre coordinate in metres, snapped to a model cell. The source must avoid specified-head columns.
+
+<!-- key: help_src_ncol -->
+Number of source cells in this direction. Preview the actual footprint; changing source geometry starts a new series.
+
+<!-- key: help_src_nrow -->
+Number of source cells in this direction. Preview the actual footprint; changing source geometry starts a new series.
+
+<!-- key: help_animation_mode -->
+2D repeats the plan and profiles/sections. 3D shows computed cell-centre concentrations with a fixed viewpoint; it requires multiple layers.
+
+<!-- key: help_animation_frames -->
+Select up to 80 saved snapshots, including first and last. No concentration interpolation between times.
+
+<!-- key: help_animation_fps -->
+Frames shown per real second. Each frame reports its actual simulated time; playback does not change the model.
+
+<!-- key: help_animation_exaggeration -->
+Scale the visual height of the 3D domain. Elevations and numerical calculations remain unchanged.
+
+<!-- key: help_generate_animation -->
+Render saved results only when requested. Regenerate after changing view settings; the model is not rerun.
+
+<!-- key: help_view_time -->
+Choose a saved transport time; this does not rerun the model.
+
+<!-- key: help_view_layer -->
+Layer displayed in plan view; 1 is the top layer.
+
+<!-- key: help_section -->
+Absolute section position in metres; sampled from the nearest containing row/column. Relative plotting does not move the section.
+
+<!-- key: help_fill -->
+Fill model cells using the concentration colour scale; zero concentration remains white.
+
+<!-- key: help_lines -->
+Draw concentration isolines over the colour fill.
+
+<!-- key: help_show_heads -->
+Overlay thin computed hydraulic-head contours, labelled in metres.
+
+<!-- key: help_log -->
+Use logarithmic colours for positive concentrations. Nonpositive cells are hidden in this display only.
+
+<!-- key: help_particle_paths -->
+Show MODPATH positions and thin paths up to the selected time. Display samples at most 120 trajectories; exports retain all particles.
+
+<!-- key: help_opacity -->
+Colour-fill opacity: 1 is opaque; smaller values reveal underlying features.
+
+<!-- key: help_focus_plume -->
+Zoom around the positive plume and displayed MODPATH trajectories, adding a margin. Animation uses one fixed window over its selected times.
+
+<!-- key: help_focus_threshold -->
+Static focus: percent of each plume peak. In 3D animation: percent of the fixed colour-scale maximum magnitude used to display cells.
+
+<!-- key: help_analytical -->
+Compare with the homogeneous, steady-flow analytical reference. Heterogeneous or transient flow is outside its assumptions.
+
+<!-- key: help_compare -->
+Compare saved runs at their nearest available times on the displayed run’s section locations.
+
+<!-- key: help_analytic_on -->
+Compare with the homogeneous, steady-flow analytical reference. Heterogeneous or transient flow is outside its assumptions.
+
+<!-- key: help_btc_analytical -->
+Compare with the homogeneous, steady-flow analytical reference. Heterogeneous or transient flow is outside its assumptions.
+
+<!-- key: help_compare_sections -->
+Compare saved runs at their nearest available times on the displayed run’s section locations.
+
+<!-- key: help_overlay_runs -->
+Compare saved runs at their nearest available times on the displayed run’s section locations.
+
+<!-- key: help_compare_top -->
+Compare saved runs at their nearest available times on the displayed run’s section locations.
+
+<!-- key: help_btc_runs -->
+Compare concentrations at one to five observation points using the stored runs.
+
+<!-- key: Animation settings -->
+Animation settings
+
+<!-- key: Animation colour scale -->
+Animation colour scale
+
+<!-- key: animation_colour_enhanced -->
+Enhanced low concentrations (fixed scale)
+
+<!-- key: animation_colour_linear -->
+Linear (fixed scale)
+
+<!-- key: animation_colour_log -->
+Logarithmic (fixed scale)
+
+<!-- key: help_animation_colour -->
+Enhanced colours use a power mapping (exponent 0.35) to reveal smaller concentrations. Every frame uses the same physical concentration limits; zero remains white. Linear and enhanced scales retain negative numerical values; logarithmic colours hide nonpositive values. Numerical data are unchanged.
+
+<!-- key: Zoom animation to plume -->
+Zoom animation to plume
+
+<!-- key: help_animation_focus -->
+Use one fixed window enclosing the positive plume and displayed MODPATH paths over all selected times, with 20% padding. Independent of static-plot zoom. Turn off to show the whole domain. Available in 2D and 3D.
+
+<!-- key: Plume threshold (% of peak) -->
+Plume threshold (% of peak)
+
+<!-- key: help_animation_threshold -->
+Zoom includes concentrations above this percentage of each frame’s positive peak. In 3D, this also sets the cell-display cutoff as a percentage of the fixed scale’s maximum absolute concentration. Default 0.1%. This affects display only.
+
+<!-- key: animation_progress -->
+Generating animation… {percent}%
+
+<!-- key: MODPATH settings -->
+MODPATH settings
+
+<!-- key: expert_transport_location_hint -->
+The MT3D expert parameters are in the separate **Expert transport solver settings** expander directly below. MODPATH settings follow afterwards.
